@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  is_lichen_starter_nuxt:
+    ports:
+      - 8080:8080
+    env_file:
+      - ./local.env
+    container_name: is_lichen_starter_nuxt
+    image: is_lichen_starter_nuxt:local
+    build:
+      context: ../.
+      dockerfile: Dockerfile
+      #volumes:
+      #- ../:/usr/src/nuxt-app
+      #command: sh -c "cd /usr/src/nuxt-app && npm run dev"
+      #command: sh -c "tail -f /dev/null"

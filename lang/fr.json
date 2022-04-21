@@ -1,0 +1,17 @@
+{
+	"nav": {
+		"about": "À propos de",
+		"news": "Nouvelles",
+		"help": "Aide",
+		"donate": "Faites un don",
+		"language": "Langua",
+		"submit": "Soumettre",
+		"explore": "Explorer",
+		"myEbird": "Mon {0}",
+		"science": "Science"
+	},
+	"search": {
+		"speciesName": "Nom d'espèce",
+		"clearFilters": "Effacer les filtres"
+	}
+}

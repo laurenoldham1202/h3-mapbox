@@ -1,0 +1,1 @@
+export default require('./es-419.json')
