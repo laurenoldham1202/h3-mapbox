@@ -41,29 +41,58 @@
             this.map = new M.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11', // style URL
-                center: this.centerCoords,
-                zoom: 4 // starting zoom
+                center: this.coords,
+                zoom: 13,
+                doubleClickZoom: false,
             })
 
             this.map.on('load', () => {
 
-                const hexFromBbox = h3.polyfill(this.bboxRev, 5)
-                const bbox4 = geojson2h3.h3SetToFeatureCollection(hexFromBbox)
-
-                this.addHexLayer({geojson: bbox4, id: 'res4', maxzoom: 6, color: 'purple'})
-
-                const childrenRes5 = this.getChildrenHexIndices(hexFromBbox, 6)
-                const childrenRes5GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes5)
-                this.addHexLayer({geojson: childrenRes5GeoJson, id: 'res5', minzoom: 6, maxzoom: 7, color: 'mediumvioletred'})
-
-                const childrenRes6 = this.getChildrenHexIndices(childrenRes5, 7)
-                const childrenRes6GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes6)
-                this.addHexLayer({geojson: childrenRes6GeoJson, id: 'res6', minzoom: 7, maxzoom: 8, color: 'deeppink'})
-
+                // const hexFromBbox = h3.polyfill(this.bboxRev, 5)
+                // const bbox4 = geojson2h3.h3SetToFeatureCollection(hexFromBbox)
+                //
+                // this.addHexLayer({geojson: bbox4, id: 'res4', maxzoom: 6, color: 'purple'})
+                //
+                // const childrenRes5 = this.getChildrenHexIndices(hexFromBbox, 6)
+                // const childrenRes5GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes5)
+                // this.addHexLayer({geojson: childrenRes5GeoJson, id: 'res5', minzoom: 6, maxzoom: 7, color: 'mediumvioletred'})
+                //
+                // const childrenRes6 = this.getChildrenHexIndices(childrenRes5, 7)
+                // const childrenRes6GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes6)
+                // this.addHexLayer({geojson: childrenRes6GeoJson, id: 'res6', minzoom: 7, maxzoom: 8, color: 'deeppink'})
+                //
                 // const childrenRes7 = this.getChildrenHexIndices(childrenRes5, 8)
                 // const childrenRes7GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes7)
                 // this.addHexLayer({geojson: childrenRes7GeoJson, id: 'res7', minzoom: 8, maxzoom: 11, color: 'mediumorchid'})
 
+
+                const children = this.hexagonRing({...this.coords, res: 9, rings: 50})
+                const geojson = geojson2h3.h3SetToFeatureCollection(children, hex => ({index: hex}))
+                this.addHexLayer({geojson, id: 'ring', color: 'blue'})
+
+                this.map.on('mouseover', 'ring', () => {
+                    this.map.getCanvas().style.cursor = 'pointer'
+                })
+                this.map.on('mouseout', 'ring', () => {
+                    this.map.getCanvas().style.cursor = 'grab'
+                })
+
+                this.map.on('click', 'ring', (e) => {
+                    const feature = e.features[0]
+
+                    this.map.setFeatureState({source: 'ring', id: feature.id}, {selected: !feature.state.selected})
+                })
+
+                // console.log(children)
+                // const x = h3.h3ToParent(children, 8)
+                // console.log(x)
+                // const parents = this.getParents(children, 8)
+                // const g8 = geojson2h3.h3SetToFeatureCollection(parents)
+                // this.addHexLayer({geojson: g8, id: 'g8', color: 'green'})
+                //
+                // const p2 = this.getParents(parents, 7)
+                // const g7 = geojson2h3.h3SetToFeatureCollection(p2)
+                // this.addHexLayer({geojson: g7, id: 'g7', color: 'yellow'})
 
 
 
@@ -219,9 +248,12 @@
                 // Reduce hexagon list to a map with random values
                 return kRing.reduce((res, hexagon) => ({...res, [hexagon]: Math.random()}), {});
             },
-            hexGeoJson(options: HexConfigOptions): GeoJSON.FeatureCollection {
+            hexagonRing(options: HexConfigOptions): string[] {
                 const centerHex = h3.geoToH3(options.lat, options.lng, options.res);
-                const ring = h3.kRing(centerHex, options.rings);
+                return h3.kRing(centerHex, options.rings);
+            },
+            hexGeoJson(options: HexConfigOptions): GeoJSON.FeatureCollection {
+                const ring = this.hexagonRing(options)
                 // kRing.reduce((res, hexagon) => ({...res, [hexagon]: Math.random()}), {});
                 // return geojson2h3.h3SetToFeatureCollection(Object.keys(ring), hex => ({value: hexCodes[hex]}))
                 return geojson2h3.h3SetToFeatureCollection(ring)
@@ -230,7 +262,8 @@
             addHexLayer(options: HexLayerOptions): void {
                 this.map.addSource(options.id, {
                     type: 'geojson',
-                    data: options.geojson
+                    data: options.geojson,
+                    generateId: true,
                 })
 
                 this.map.addLayer({
@@ -240,7 +273,8 @@
                     ...(options.minzoom && { minzoom: options.minzoom }) as any,
                     ...(options.maxzoom && { maxzoom: options.maxzoom }) as any,
                     paint: {
-                        'fill-color': options.color || 'black',
+                        // 'fill-color': options.color || 'black',
+                        'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'yellow', options.color || 'black'],
                         'fill-opacity': 0.4
                     }
                 })
@@ -251,6 +285,13 @@
                     children.push(...h3.h3ToChildren(parent, res))
                 })
                 return children
+            },
+            getParents(children, res) {
+                const parents: string[] = []
+                children.forEach(child => {
+                    parents.push(h3.h3ToParent(child, res))
+                })
+                return Array.from(new Set(parents))
             }
         }
 
