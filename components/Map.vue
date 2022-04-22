@@ -20,10 +20,19 @@
         rings: number,
     }
 
+    interface HexLayerOptions {
+        geojson: GeoJSON.FeatureCollection,
+        id: string,
+        color?: string,
+        minzoom?: number,
+        maxzoom?: number,
+    }
+
     export default Vue.extend({
         data: () => ({
             map: undefined as any,
             coords: { lng: -76.486729, lat: 42.479490} as M.LngLat,
+            centerCoords: { lng: -100.486729, lat: 37.479490} as M.LngLat,
             bbox: [[-104.6527823561,36.3116770845],[-94.7570348445,36.3116770845],[-94.7570348445,42.9637944979],[-104.6527823561,42.9637944979],[-104.6527823561,36.3116770845]] as any,
             bboxRev: [[36.3116770845,-104.6527823561],[36.3116770845,-94.7570348445],[42.9637944979,-94.7570348445],[42.9637944979,-104.6527823561],[36.3116770845,-104.6527823561]] as any
         }),
@@ -32,30 +41,29 @@
             this.map = new M.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11', // style URL
-                center: this.coords,
-                zoom: 7 // starting zoom
+                center: this.centerCoords,
+                zoom: 4 // starting zoom
             })
 
             this.map.on('load', () => {
 
-                const hexFromBbox = h3.polyfill(this.bboxRev, 4)
-                console.log(hexFromBbox)
+                const hexFromBbox = h3.polyfill(this.bboxRev, 5)
                 const bbox4 = geojson2h3.h3SetToFeatureCollection(hexFromBbox)
-                this.map.addSource('test', {
-                    type: 'geojson',
-                    data: bbox4
-                })
 
-                this.map.addLayer({
-                    id: 'test',
-                    source: 'test',
-                    type: 'fill',
-                    maxzoom: 7,
-                    paint: {
-                        'fill-opacity': 0.2,
-                        'fill-color': 'blue'
-                    }
-                })
+                this.addHexLayer({geojson: bbox4, id: 'res4', maxzoom: 6, color: 'purple'})
+
+                const childrenRes5 = this.getChildrenHexIndices(hexFromBbox, 6)
+                const childrenRes5GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes5)
+                this.addHexLayer({geojson: childrenRes5GeoJson, id: 'res5', minzoom: 6, maxzoom: 7, color: 'mediumvioletred'})
+
+                const childrenRes6 = this.getChildrenHexIndices(childrenRes5, 7)
+                const childrenRes6GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes6)
+                this.addHexLayer({geojson: childrenRes6GeoJson, id: 'res6', minzoom: 7, maxzoom: 8, color: 'deeppink'})
+
+                // const childrenRes7 = this.getChildrenHexIndices(childrenRes5, 8)
+                // const childrenRes7GeoJson = geojson2h3.h3SetToFeatureCollection(childrenRes7)
+                // this.addHexLayer({geojson: childrenRes7GeoJson, id: 'res7', minzoom: 8, maxzoom: 11, color: 'mediumorchid'})
+
 
 
 
@@ -218,23 +226,31 @@
                 // return geojson2h3.h3SetToFeatureCollection(Object.keys(ring), hex => ({value: hexCodes[hex]}))
                 return geojson2h3.h3SetToFeatureCollection(ring)
             },
-            addHexLayer(id: string, geojson: GeoJSON.FeatureCollection, color: string, maxzoom: number, minzoom?: number) {
-                this.map.addSource(id, {
+            // id: string, geojson: GeoJSON.FeatureCollection, color: string, maxzoom: number, minzoom?: number
+            addHexLayer(options: HexLayerOptions): void {
+                this.map.addSource(options.id, {
                     type: 'geojson',
-                    data: geojson
+                    data: options.geojson
                 })
 
                 this.map.addLayer({
-                    id,
-                    source: id,
+                    id: options.id,
+                    source: options.id,
                     type: 'fill',
-                    ...(minzoom && { minzoom }) as any,
-                    maxzoom,
+                    ...(options.minzoom && { minzoom: options.minzoom }) as any,
+                    ...(options.maxzoom && { maxzoom: options.maxzoom }) as any,
                     paint: {
-                        'fill-color': color,
+                        'fill-color': options.color || 'black',
                         'fill-opacity': 0.4
                     }
                 })
+            },
+            getChildrenHexIndices(parentHexArray: string[], res: number): string[] {
+                const children: string[] = []
+                parentHexArray.forEach(parent => {
+                    children.push(...h3.h3ToChildren(parent, res))
+                })
+                return children
             }
         }
 
