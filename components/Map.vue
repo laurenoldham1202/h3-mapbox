@@ -48,6 +48,27 @@
 
             this.map.on('load', () => {
 
+
+                //
+                // this.map.addSource('tiles', {
+                //     type: 'vector',
+                //     tiles: ['http://localhost:8081/data/hexjoin/{z}/{x}/{y}.pbf']
+                // })
+                //
+                // this.map.addLayer({
+                //     id: 'tiles',
+                //     source: 'tiles',
+                //     'source-layer': 'hex',
+                //     type: 'fill',
+                //     paint: {
+                //         'fill-opacity': 0.3
+                //     }
+                // })
+                //
+                // this.map.on('mousemove', 'tiles', (e) => {
+                //     console.log(e.features[0])
+                // })
+                //
                 // const hexFromBbox = h3.polyfill(this.bboxRev, 5)
                 // const bbox4 = geojson2h3.h3SetToFeatureCollection(hexFromBbox)
                 //
@@ -70,6 +91,18 @@
                 const geojson = geojson2h3.h3SetToFeatureCollection(children, hex => ({index: hex}))
                 this.addHexLayer({geojson, id: 'ring', color: 'blue'})
 
+                const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
+                // console.log(x)
+                const y = geojson2h3.h3SetToFeatureCollection(x, hex => ({index: hex}))
+                // console.log(JSON.stringify(y))
+                this.addHexLayer({geojson: y, id: 'y', color: 'darkblue'})
+
+
+                // const p = this.getChildrenHexIndices(x, 9)
+                // console.log(p)
+                // console.log(JSON.stringify(geojson2h3.h3SetToFeatureCollection(p, hex => ({index: hex}))))
+
+
                 this.map.on('mouseover', 'ring', () => {
                     this.map.getCanvas().style.cursor = 'pointer'
                 })
@@ -77,10 +110,49 @@
                     this.map.getCanvas().style.cursor = 'grab'
                 })
 
+                const selected: string[] = []
                 this.map.on('click', 'ring', (e) => {
                     const feature = e.features[0]
+                    // console.log(e)
 
+                    const index = feature.properties.index
+
+                    // console.log(feature)
+                    if (selected.includes(index)) {
+                        selected.splice(selected.indexOf(index), 1)
+                    } else {
+                        selected.push(index)
+                    }
+                    // console.log(selected)
+                    // console.log('child id:', feature.id)
                     this.map.setFeatureState({source: 'ring', id: feature.id}, {selected: !feature.state.selected})
+
+                    // console.log(selected)
+                    const par = this.getParents(selected, 8)
+                    // console.log(par)
+
+                    // console.log(this.map.getSource('y'))
+
+                    // console.log(this.map.getSource('ring'))
+                    // console.log(this.map.getSource('y'))
+                    // console.log(this.map.getLayer('y'))
+
+                    // console.log(e)
+                    const t = this.map.queryRenderedFeatures(e.point, {layers: ['y']})
+                    this.map.setFeatureState({source: 'y', id: t[0].id}, {selected: true})
+                    console.log(t)
+
+                    par.forEach(p => {
+                        // TODO Need to find id associated with indexed value
+                        // console.log(p)
+                        // this.map.setFeatureState({source: 'y', id: p}, {selected: true})
+                    })
+
+
+
+
+
+
                 })
 
                 // console.log(children)
