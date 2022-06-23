@@ -42,32 +42,64 @@
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11', // style URL
                 center: this.coords,
-                zoom: 13,
+                zoom: 9,
                 doubleClickZoom: false,
             })
 
             this.map.on('load', () => {
 
+                // this.map.on('zoom', () => {
+                //     console.log(this.map.getZoom())
+                // })
+                //
 
-                //
-                // this.map.addSource('tiles', {
-                //     type: 'vector',
-                //     tiles: ['http://localhost:8081/data/hexjoin/{z}/{x}/{y}.pbf']
-                // })
-                //
-                // this.map.addLayer({
-                //     id: 'tiles',
-                //     source: 'tiles',
-                //     'source-layer': 'hex',
-                //     type: 'fill',
-                //     paint: {
-                //         'fill-opacity': 0.3
-                //     }
-                // })
-                //
-                // this.map.on('mousemove', 'tiles', (e) => {
-                //     console.log(e.features[0])
-                // })
+
+                this.map.addSource('tiles', {
+                    type: 'vector',
+                    promoteId: 'index',
+                    tiles: ['http://localhost:8081/data/join-7-8/{z}/{x}/{y}.pbf'],
+                    // tiles: ['http://localhost:8081/data/join-new-ids/{z}/{x}/{y}.pbf']
+                })
+
+                this.map.addLayer({
+                    id: 'tiles',
+                    source: 'tiles',
+                    'source-layer': 'hex',
+                    type: 'fill',
+                    paint: {
+                        'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'yellow', 'blue' || 'black'],
+                        'fill-opacity': 0.3
+                    }
+                })
+
+                this.map.on('click', 'tiles', (e) => {
+                    console.log(e.features[0])
+
+                    // TODO Make each res have a different source-layer?
+                    this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: e.features[0].id}, {selected: true})
+
+                    const c = this.getChildrenHexIndices([e.features[0].properties.index], 8)
+                    console.log(c)
+                    c.forEach(i => {
+
+                        this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}, {selected: true})
+                    })
+
+                    // TODO Handle deselections
+                    // TODO Handle partially selected parents
+                    const p = this.getParents([e.features[0].properties.index], 7)
+                    console.log(p)
+                    p.forEach(i => {
+
+                        this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}, {selected: true})
+                    })
+
+                    // const t = this.map.queryRenderedFeatures(e.point, {layers: ['tiles']})
+                    // console.log(t)
+
+                })
+
+
                 //
                 // const hexFromBbox = h3.polyfill(this.bboxRev, 5)
                 // const bbox4 = geojson2h3.h3SetToFeatureCollection(hexFromBbox)
@@ -89,13 +121,29 @@
 
                 const children = this.hexagonRing({...this.coords, res: 9, rings: 50})
                 const geojson = geojson2h3.h3SetToFeatureCollection(children, hex => ({index: hex}))
-                this.addHexLayer({geojson, id: 'ring', color: 'blue'})
+                // console.log(JSON.stringify(geojson))
+                // this.addHexLayer({geojson, id: 'ring', color: 'blue'})
 
-                const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
+
+                const parents = this.getParents(children, 8)
+                // console.log(parents)
+                // const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
                 // console.log(x)
-                const y = geojson2h3.h3SetToFeatureCollection(x, hex => ({index: hex}))
+                const y = geojson2h3.h3SetToFeatureCollection(parents, hex => ({index: hex}))
                 // console.log(JSON.stringify(y))
-                this.addHexLayer({geojson: y, id: 'y', color: 'darkblue'})
+                // this.addHexLayer({geojson: y, id: 'y', color: 'darkblue'})
+
+
+
+                const parents2 = this.getParents(parents, 7)
+                // console.log(parents)
+                // const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
+                // console.log(x)
+                const y2 = geojson2h3.h3SetToFeatureCollection(parents2, hex => ({index: hex}))
+                // console.log(JSON.stringify(y2))
+                // this.addHexLayer({geojson: y2, id: 'y2', color: 'darkgreen'})
+
+
 
 
                 // const p = this.getChildrenHexIndices(x, 9)
