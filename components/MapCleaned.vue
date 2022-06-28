@@ -96,10 +96,24 @@ export default Vue.extend({
 					{ selected: !feature.state.selected }
 				)
 
+                const pa = this.getParents([feature.properties.h3_address], 7)
+                // console.log(pa)
+                const ch = this.getChildrenHexIndices(pa, 8)
+                ch.forEach(c => {
+                    const x = this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected
+                    // console.log(x)
+                })
+
+                const y = ch.map(c => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected).filter(x => x !== undefined)
+                // console.log(y, Array.from(new Set(y)))
+                console.log(y.includes(false) && !y.includes(true))
+                // console.log(ch)
+
                 const resOptions = [5, 6, 7, 8]
                 resOptions.forEach(res => {
+                    // console.log(feature.properties.h3_resolution)
                     const c = this.getChildrenHexIndices([feature.properties.h3_address], res)
-                    // console.log(c)
+                    // console.log('CHILDREN RES', res, c)
                     c.forEach((i) => {
                     	this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !feature.state.selected })
                     })
@@ -119,11 +133,11 @@ export default Vue.extend({
 
 
                     const p = this.getParents([feature.properties.h3_address], res)
-                    // // const ch = this.getChildrenHexIndices(p, res)
+                    // const ch = this.getChildrenHexIndices(p, res)
                     //
+                    // console.log('PARENTS RES', res, p)
                     // console.log('parents: ', p)
-                    // // console.log('children: ', ch)
-                    // // console.log(p)
+                    // console.log('children OF PARENTS: ', ch)
                     p.forEach((i) => {
                     //
                     //
@@ -131,12 +145,13 @@ export default Vue.extend({
                     //     if (count[i] > 6) {
                     //       // console.log('deselect', i)
                     //       //   this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !feature.state.selected })
-                    //     } else if (count[i]) {
-                    //         count[i] += 1
-                    //     } else {
-                    //         count[i] = 1
-                    //     }
-                    //     // console.log(count)
+                    //     } else
+                            if (count[i]) {
+                            count[i] += 1
+                        } else {
+                            count[i] = 1
+                        }
+                        // console.log(count)
                     	this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !feature.state.selected })
 
                     })
