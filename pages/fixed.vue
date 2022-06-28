@@ -9,7 +9,8 @@
 		<!-- Main -->
 		<template v-slot:mainContent>
 			<div class="u-inset-md">
-                <Map></Map>
+<!--                <Map></Map>-->
+                <MapCleaned></MapCleaned>
             </div>
 		</template>
 		<!-- Sidebar -->

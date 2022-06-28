@@ -73,25 +73,28 @@
                 })
 
                 this.map.on('click', 'tiles', (e) => {
-                    console.log(e.features[0])
+                    // console.log(e.features[0])
 
                     // TODO Make each res have a different source-layer?
-                    this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: e.features[0].id}, {selected: true})
+                    this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: e.features[0].id}, {selected: !e.features[0].state.selected})
 
                     const c = this.getChildrenHexIndices([e.features[0].properties.index], 8)
-                    console.log(c)
+                    // console.log(c)
                     c.forEach(i => {
 
                         this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}, {selected: true})
                     })
 
-                    // TODO Handle deselections
+                    // TODO Handle deselections - hardcoding true for parents is interfering w first feature state setting
                     // TODO Handle partially selected parents
+                    // TODO Test multiple selections with shape draws
                     const p = this.getParents([e.features[0].properties.index], 7)
-                    console.log(p)
+                    // console.log(p)
                     p.forEach(i => {
+                        // console.log(this.map.getFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}))
 
-                        this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}, {selected: true})
+                        // TODO Need to handle parents conditionally to not overwrite initial feature state
+                        // this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}, {selected: this.map.getFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}).selected})
                     })
 
                     // const t = this.map.queryRenderedFeatures(e.point, {layers: ['tiles']})
@@ -130,6 +133,7 @@
                 // const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
                 // console.log(x)
                 const y = geojson2h3.h3SetToFeatureCollection(parents, hex => ({index: hex}))
+                // console.log(y)
                 // console.log(JSON.stringify(y))
                 // this.addHexLayer({geojson: y, id: 'y', color: 'darkblue'})
 
@@ -140,8 +144,26 @@
                 // const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
                 // console.log(x)
                 const y2 = geojson2h3.h3SetToFeatureCollection(parents2, hex => ({index: hex}))
+                // console.log(y2)
+
+                const parents3 = this.getParents(parents2, 6)
+                // console.log(parents)
+                // const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
+                // console.log(x)
+                const y3 = geojson2h3.h3SetToFeatureCollection(parents3, hex => ({index: hex}))
+                // console.log(y3)
                 // console.log(JSON.stringify(y2))
-                // this.addHexLayer({geojson: y2, id: 'y2', color: 'darkgreen'})
+                // this.addHexLayer({geojson: y3, id: 'y3', color: 'darkgreen'})
+
+
+                const parents4 = this.getParents(parents2, 5)
+                // console.log(parents)
+                // const x = this.hexagonRing({...this.coords, res: 8, rings: 20})
+                // console.log(x)
+                const y4 = geojson2h3.h3SetToFeatureCollection(parents4, hex => ({index: hex}))
+                // console.log(y4)
+                // console.log(JSON.stringify(y2))
+                this.addHexLayer({geojson: y4, id: 'y4', color: 'darkgreen'})
 
 
 
