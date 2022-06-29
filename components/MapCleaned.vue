@@ -94,15 +94,103 @@ export default Vue.extend({
 
 				const pa = this.getParents([feature.properties.h3_address], feature.properties.h3_resolution - 1)
 				// console.log(pa)
+                // const pa2 = this.getParents(pa, feature.properties.h3_resolution - 2)
+                // console.log(pa2)
 				const ch = this.getChildrenHexIndices(pa, feature.properties.h3_resolution)
-				const y = ch
+                // console.log(ch)
+                // const ch2 = this.getChildrenHexIndices(pa2, feature.properties.h3_resolution - 1)
+                // console.log(ch2)
+
+
+                const resOptions = [5, 6, 7, 8]
+                const parentRes = resOptions.filter(res => res < feature.properties.h3_resolution)
+                // console.log(parentRes)
+                const parents = {}
+                parentRes.forEach(res => {
+                    const parent = this.getParents([feature.properties.h3_address], res)
+                    const children = this.getChildrenHexIndices(parent, res + 1)
+                    const selectedChildren = children.map((c) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected).filter((x) => x !== undefined)
+                    parents[parent[0]] = {
+                        children: children,
+                        deselectParent: selectedChildren.includes(false) && !selectedChildren.includes(true)
+                        // deselectParent: selectedChildren
+                    }
+                    // parents[parent[0]] = children
+                })
+                // const parents = parentRes.map(res => this.getParents([feature.properties.h3_address], res))
+                // console.log(parents)
+                Object.entries(parents).forEach(([parent, children]) => {
+                    const y = children.children
+                        .map((c) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected)
+                        // .filter((x) => x !== undefined)
+                    const deselectParent = y.includes(false) && !y.includes(true)
+                    // console.log(parent, children.children, y, deselectParent)
+                    // console.log('CLICKED:', feature.id)
+                    console.log('parent:', parent)
+
+
+                    console.log('children:', children.children, y)
+                    // console.log('deselect immediate parent:', deselectParent)
+
+                    if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }).selected === undefined) {
+
+                        this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }, { selected: !deselectParent })
+                    } else {
+
+                        children.children.forEach(c => {
+                            if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected) {
+                                console.log('selected child:', c, Object.keys(parents).includes(c))
+                                this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }, { selected: !Object.keys(parents).includes(c)})
+                                this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }, { selected: !Object.keys(parents).includes(c)})
+
+                            }
+                        })
+
+                    }
+
+
+                    // children.forEach(child => {
+                    //     // console.log(parent, child, this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected)
+                    //     // console.log(this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected)
+                    //
+                    //     // if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected === undefined) {
+                    //     // // console.log(res, i, !deselectParent)
+                    //     //     this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }, { selected: !deselectParent })
+                    //     // }
+                    // })
+                })
+
+                console.log('______________________')
+
+
+
+
+                const y = ch
 					.map((c) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected)
 					.filter((x) => x !== undefined)
 				// console.log(y, Array.from(new Set(y)))
 				const deselectParent = y.includes(false) && !y.includes(true)
 				// console.log(ch)
 
-				const resOptions = [5, 6, 7, 8]
+
+                const lowerRes = resOptions.filter(res => res < feature.properties.h3_resolution)
+                // console.log(lowerRes)
+                const chRes = lowerRes.map(res => res + 1)
+                // console.log(chRes)
+
+                const lowerParents = lowerRes.map(res => this.getParents([feature.properties.h3_address], res))
+                // console.log(lowerParents)
+
+
+                const t = lowerParents.map(p => this.getChildrenHexIndices(p, 8))
+                // console.log(t)
+
+                // lowerParents.forEach(p => {
+                //     // console.log(p)
+                //     const t = lowerRes.map(res => this.getChildrenHexIndices(p, res + 1))
+                //     console.log(t)
+                // })
+
 				resOptions.forEach((res) => {
 					// console.log(feature.properties.h3_resolution)
 					const c = this.getChildrenHexIndices([feature.properties.h3_address], res)
@@ -114,14 +202,18 @@ export default Vue.extend({
 
 
 					const p = this.getParents([feature.properties.h3_address], res)
+                    // console.log(res, p)
 
 					p.forEach((i) => {
-					    console.log(this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected)
+					    // console.log(this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected)
 						// if (res !== feature.properties.h3_resolution) {
 
+                        // this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !feature.state.selected })
+
 						if ((res === feature.properties.h3_resolution - 1) || this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected === undefined) {
+						// if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected === undefined) {
 						    // console.log(res, i, !deselectParent)
-							this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !deselectParent })
+							// this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !deselectParent })
 						}
 					})
 
