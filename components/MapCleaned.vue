@@ -139,11 +139,24 @@ export default Vue.extend({
 							const childrenDefined = childrenStatus.filter((status) => status !== undefined)
 							const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
 
-							if (deselectParent) {
-								// only deselects immediate parent
-								this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: false })
-							} else {
-							}
+                            this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
+
+                            setTimeout(() => {
+                                const cs = childrenOfParents.map(
+                                    (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
+                                )
+                                const dp = childrenDefined.includes(false) && !childrenDefined.includes(true)
+                                this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !dp })
+
+
+                                console.log(cs)
+                            }, 100)
+
+                            // if (deselectParent) {
+							// 	// only deselects immediate parent
+							// 	this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: false })
+							// } else {
+							// }
 						}
 					}
 				})
