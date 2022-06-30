@@ -48,7 +48,7 @@ export default Vue.extend({
 			[42.9637944979, -104.6527823561],
 			[36.3116770845, -104.6527823561],
 		] as any,
-        deselected: undefined as any
+		deselected: undefined as any,
 	}),
 	mounted(): void {
 		;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
@@ -61,10 +61,6 @@ export default Vue.extend({
 		})
 
 		this.map.on('load', () => {
-			// this.map.on('zoom', () => {
-			//     console.log(this.map.getZoom())
-			// })
-
 			this.map.addSource('tiles', {
 				type: 'vector',
 				promoteId: 'h3_address',
@@ -84,26 +80,14 @@ export default Vue.extend({
 				},
 			})
 
-			const parents = []
-			const count = {}
-			this.map.on('click', 'tiles', (e) => {
+			this.map.on('click', 'tiles', (e: any) => {
 				// console.log(e.features[0])
 				const feature = e.features[0]
 				const clickedRes = feature.properties.h3_resolution
 				const clickedId = feature.id
 
-				// - When hex is !selected=true, select all PARENTS and CHILDREN
-				// - If hex selected=true when clicked, deselect that hex
-				// - If ^ was parent, deselect all children
-				// - If ^ was the LAST selected child, deselect immediate parent
-				// - Check ALL preceding parents - if children are not selected=true, deselect
-
-				const allParents = []
 				this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: feature.id }, { selected: !feature.state.selected })
 				const resOptions = [5, 6, 7, 8]
-
-				const all = resOptions.filter((res) => res < clickedRes).map((res) => this.getParents([clickedId], res)[0])
-				// console.log(all)
 
 				resOptions.forEach((res) => {
 					if (res > clickedRes) {
@@ -131,281 +115,33 @@ export default Vue.extend({
 								{ selected: !feature.state.selected }
 							)
 						} else {
-						    // console.log(res, childrenOfParents)
-
-                            // console.log(res, clickedRes)
-                            if (res === clickedRes - 1) {
-                                const childrenStatus = childrenOfParents.map(
-                                	(child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
-                                )
-                                const childrenDefined = childrenStatus.filter((status) => status !== undefined)
-                                const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
-
-                                this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
-                            } else if (res === clickedRes - 2) {
-                                // console.log(res, childrenOfParents)
-                                setTimeout(() => {
-
-                                    const childrenStatus = childrenOfParents.map(
-                                        (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
-                                    )
-                                    const childrenDefined = childrenStatus.filter((status) => status !== undefined)
-                                    const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
-
-                                    this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
-                                }, 0)
-
-                            } else if (res === clickedRes - 3) {
-                                console.log(res, childrenOfParents)
-                                setTimeout(() => {
-                                    const childrenStatus = childrenOfParents.map(
-                                        (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
-                                    )
-                                    console.log(childrenStatus)
-                                    const childrenDefined = childrenStatus.filter((status) => status !== undefined)
-                                    const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
-
-                                    this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
-                                }, 10)
-                            }
-							// FIXME: this includes second child initial click
-
-							// // TODO Need to select highest parent level and exclude current res children
-							// const childrenStatus = childrenOfParents.map(
-							// 	(child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
-							// )
-							// const childrenDefined = childrenStatus.filter((status) => status !== undefined)
-							// const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
-                            //
-                            // this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
-                            //
-                            // if (deselectParent) {
-                            //     this.deselected = parents[0]
-                            // }
-
-                            // setTimeout(() => {
-                            //     const cs = childrenOfParents.map(
-                            //         (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
-                            //     )
-                            //     const dp = childrenDefined.includes(false) && !childrenDefined.includes(true)
-                            //     this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !dp })
-                            //
-                            //
-                            //     console.log(cs)
-                            // }, 100)
-
-                            // if (deselectParent) {
-							// 	// only deselects immediate parent
-							// 	this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: false })
-							// } else {
-							// }
+							if (res === clickedRes - 1) {
+								this.deselectParent(childrenOfParents, parents[0])
+							} else if (res === clickedRes - 2) {
+								setTimeout(() => {
+									this.deselectParent(childrenOfParents, parents[0])
+								}, 0)
+							} else if (res === clickedRes - 3) {
+								setTimeout(() => {
+									this.deselectParent(childrenOfParents, parents[0])
+								}, 10)
+							}
 						}
-
 					}
 				})
-				// const parentRes = resOptions.filter(res => res < clickedRes)
-				// const childrenRes = resOptions.filter(res => res > clickedRes)
-				// // console.log('parent:', parentRes, 'children:', childrenRes)
-				//
-				// if (parentRes.length) {
-				//     const parents = parentRes.map(res => this.getParents([feature.id], res)).map(id => this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: id }, { selected: !feature.state.selected }))
-				//     // console.log(parents)
-				// } else if (childrenRes.length) {
-				//     const children = childrenRes.map(res => this.getChildrenHexIndices([feature.id], res))
-				//     // console.log(children)
-				//     children.forEach(child => {
-				//         child.forEach(id => {
-				//             this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: id }, { selected: !feature.state.selected })
-				//         })
-				//     })
-				// }
-
-				// 	const pa = this.getParents([feature.properties.h3_address], feature.properties.h3_resolution - 1)
-				// 	// console.log(pa)
-				//     // const pa2 = this.getParents(pa, feature.properties.h3_resolution - 2)
-				//     // console.log(pa2)
-				// 	const ch = this.getChildrenHexIndices(pa, feature.properties.h3_resolution)
-				//     // console.log(ch)
-				//     // const ch2 = this.getChildrenHexIndices(pa2, feature.properties.h3_resolution - 1)
-				//     // console.log(ch2)
-				//
-				//
-				//     const resOptions = [5, 6, 7, 8]
-				//     const parentRes = resOptions.filter(res => res < feature.properties.h3_resolution)
-				//     // console.log(parentRes)
-				//     const parents = {}
-				//     parentRes.forEach(res => {
-				//         const parent = this.getParents([feature.properties.h3_address], res)
-				//         const children = this.getChildrenHexIndices(parent, res + 1)
-				//         const selectedChildren = children.map((c) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected).filter((x) => x !== undefined)
-				//         parents[parent[0]] = {
-				//             children: children,
-				//             deselectParent: selectedChildren.includes(false) && !selectedChildren.includes(true)
-				//             // deselectParent: selectedChildren
-				//         }
-				//         // parents[parent[0]] = children
-				//     })
-				//     // const parents = parentRes.map(res => this.getParents([feature.properties.h3_address], res))
-				//     // console.log(parents)
-				//     Object.entries(parents).forEach(([parent, children]) => {
-				//         const y = children.children
-				//             .map((c) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected)
-				//             // .filter((x) => x !== undefined)
-				//         const deselectParent = y.includes(false) && !y.includes(true)
-				//         // console.log(parent, children.children, y, deselectParent)
-				//         // console.log('CLICKED:', feature.id)
-				//         // console.log('parent:', parent, 'deselect parent?', deselectParent)
-				//
-				//
-				//         // console.log('children:', children.children, y)
-				//
-				//         // console.log('deselect immediate parent:', deselectParent)
-				//
-				//         // // TODO test selecting and reseelcting same pixels
-				//         // if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }).selected === undefined) {
-				//         //
-				//         //     this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }, { selected: !deselectParent })
-				//         //
-				//         //
-				//         // } else {
-				//         //     // console.log(children)
-				//         //
-				//         //     children.children.forEach(c => {
-				//         //
-				//         //         // console.log(parent, c, this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected)
-				//         //
-				//         //         if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected) {
-				//         //
-				//         //             console.log('parent:', parent, this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }).selected)
-				//         //             console.log('child:', c, Object.keys(parents).includes(c))
-				//         //
-				//         //             this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }, { selected: !Object.keys(parents).includes(c)})
-				//         //
-				//         //
-				//         //             // IF CHILDREN OF PARENT ARE ALL SELECTED=FALSE, DESELECT PARENT
-				//         //             if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }).selected && Object.keys(parents).includes(c)) {
-				//         //                 // console.log('clear', parent)
-				//         //             }
-				//         //             // this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }, { selected: !Object.keys(parents).includes(c)})
-				//         //
-				//         //         }
-				//         //
-				//         //         //
-				//         //         // const x = children.children.map(x => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: x }).selected)
-				//         //         // console.log(parent, children.children, children.children.map(x => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: x }).selected))
-				//         //         //
-				//         //         // if (x.includes(false) && !x.includes(true)) {
-				//         //         //     console.log('clear', parent)
-				//         //         //     this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }, { selected: false})
-				//         //         //
-				//         //         // }
-				//         //
-				//         //         // console.log(c,this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected)
-				//         //     })
-				//         //
-				//         //
-				//         //
-				//         //
-				//         // }
-				//
-				//
-				//         // children.forEach(child => {
-				//         //     // console.log(parent, child, this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected)
-				//         //     // console.log(this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected)
-				//         //
-				//         //     // if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected === undefined) {
-				//         //     // // console.log(res, i, !deselectParent)
-				//         //     //     this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }, { selected: !deselectParent })
-				//         //     // }
-				//         // })
-				//     })
-				//
-				//
-				//     console.log('______________________')
-				//
-				//
-				//
-				//
-				//     const y = ch
-				// 		.map((c) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: c }).selected)
-				// 		.filter((x) => x !== undefined)
-				// 	// console.log(y, Array.from(new Set(y)))
-				// 	const deselectParent = y.includes(false) && !y.includes(true)
-				// 	// console.log(ch)
-				//
-				//
-				//     const lowerRes = resOptions.filter(res => res < feature.properties.h3_resolution)
-				//     // console.log(lowerRes)
-				//     const chRes = lowerRes.map(res => res + 1)
-				//     // console.log(chRes)
-				//
-				//     const lowerParents = lowerRes.map(res => this.getParents([feature.properties.h3_address], res))
-				//     // console.log(lowerParents)
-				//
-				//
-				//     const t = lowerParents.map(p => this.getChildrenHexIndices(p, 8))
-				//     // console.log(t)
-				//
-				//     // lowerParents.forEach(p => {
-				//     //     // console.log(p)
-				//     //     const t = lowerRes.map(res => this.getChildrenHexIndices(p, res + 1))
-				//     //     console.log(t)
-				//     // })
-				//
-				// 	resOptions.forEach((res) => {
-				// 		// console.log(feature.properties.h3_resolution)
-				// 		const c = this.getChildrenHexIndices([feature.properties.h3_address], res)
-				// 		// console.log('CHILDREN RES', res, c)
-				// 		c.forEach((i) => {
-				// 			this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !feature.state.selected })
-				// 		})
-				//
-				//
-				//
-				// 		const p = this.getParents([feature.properties.h3_address], res)
-				//         // console.log(res, p)
-				//
-				// 		p.forEach((i) => {
-				// 		    // console.log(this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected)
-				// 			// if (res !== feature.properties.h3_resolution) {
-				//
-				//             // this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !feature.state.selected })
-				//
-				// 			if ((res === feature.properties.h3_resolution - 1) || this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected === undefined) {
-				// 			// if (this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected === undefined) {
-				// 			    // console.log(res, i, !deselectParent)
-				// 				this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: !deselectParent })
-				// 			}
-				// 		})
-				//
-				// 	})
-				//
-				//
-				//
-				// 	// const c = this.getChildrenHexIndices([e.features[0].properties.index], 8)
-				// 	// // console.log(c)
-				// 	// c.forEach((i) => {
-				// 	// 	this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }, { selected: true })
-				// 	// })
-				// 	//
-				// 	// // TODO Handle deselections - hardcoding true for parents is interfering w first feature state setting
-				// 	// // TODO Handle partially selected parents
-				// 	// // TODO Test multiple selections with shape draws
-				// 	// const p = this.getParents([e.features[0].properties.index], 7)
-				// 	// // console.log(p)
-				// 	// p.forEach((i) => {
-				// 	// 	console.log(this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: i }).selected)
-				// 	//
-				// 	// 	// TODO Need to handle parents conditionally to not overwrite initial feature state
-				// 	// 	// this.map.setFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}, {selected: this.map.getFeatureState({source: 'tiles', 'sourceLayer': 'hex', id: i}).selected})
-				// 	// })
-				// 	//
-				// 	// // const t = this.map.queryRenderedFeatures(e.point, {layers: ['tiles']})
-				// 	// // console.log(t)
 			})
 		})
 	},
 	methods: {
+		deselectParent(childrenOfParents: string[], parent: string) {
+			const childrenStatus = childrenOfParents.map(
+				(child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
+			)
+			const childrenDefined = childrenStatus.filter((status) => status !== undefined)
+			const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
+
+			this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }, { selected: !deselectParent })
+		},
 		getChildrenHexIndices(parentHexArray: string[], res: number): string[] {
 			const children: string[] = []
 			parentHexArray.forEach((parent) => {
@@ -413,7 +149,7 @@ export default Vue.extend({
 			})
 			return children
 		},
-		getParents(children, res) {
+		getParents(children: any[], res: number) {
 			const parents: string[] = []
 			children.forEach((child) => {
 				parents.push(h3.h3ToParent(child, res))
