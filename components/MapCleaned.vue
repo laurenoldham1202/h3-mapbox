@@ -48,8 +48,14 @@ export default Vue.extend({
 			[42.9637944979, -104.6527823561],
 			[36.3116770845, -104.6527823561],
 		] as any,
-		deselected: undefined as any,
+		selected: [] as any[],
 	}),
+	watch: {
+		selected(selected) {
+			// TODO Only push to array if not already in array?
+			console.log(Array.from(new Set(selected)))
+		},
+	},
 	mounted(): void {
 		;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
 		this.map = new M.Map({
@@ -87,6 +93,15 @@ export default Vue.extend({
 				const clickedId = feature.id
 
 				this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: feature.id }, { selected: !feature.state.selected })
+
+				// TODO Make fn
+				if (feature.state.selected) {
+					this.selected.splice(this.selected.indexOf(feature.id), 1)
+				} else {
+					this.selected.push(feature.id)
+				}
+				// console.log(this.selected)
+
 				const resOptions = [5, 6, 7, 8]
 
 				resOptions.forEach((res) => {
@@ -99,6 +114,12 @@ export default Vue.extend({
 								{ source: 'tiles', sourceLayer: 'hex', id: child },
 								{ selected: !feature.state.selected }
 							)
+
+							if (feature.state.selected) {
+								this.selected.splice(this.selected.indexOf(child), 1)
+							} else {
+								this.selected.push(child)
+							}
 						})
 					} else if (res < clickedRes) {
 						// console.log('parents:', res)
@@ -114,18 +135,22 @@ export default Vue.extend({
 								{ source: 'tiles', sourceLayer: 'hex', id: parents[0] },
 								{ selected: !feature.state.selected }
 							)
-						} else {
-							if (res === clickedRes - 1) {
-								this.deselectParent(childrenOfParents, parents[0])
-							} else if (res === clickedRes - 2) {
-								setTimeout(() => {
-									this.deselectParent(childrenOfParents, parents[0])
-								}, 0)
-							} else if (res === clickedRes - 3) {
-								setTimeout(() => {
-									this.deselectParent(childrenOfParents, parents[0])
-								}, 10)
+
+							if (feature.state.selected) {
+								this.selected.splice(this.selected.indexOf([parents[0]]), 1)
+							} else {
+								this.selected.push(parents[0])
 							}
+						} else if (res === clickedRes - 1) {
+							this.deselectParent(childrenOfParents, parents[0])
+						} else if (res === clickedRes - 2) {
+							setTimeout(() => {
+								this.deselectParent(childrenOfParents, parents[0])
+							}, 0)
+						} else if (res === clickedRes - 3) {
+							setTimeout(() => {
+								this.deselectParent(childrenOfParents, parents[0])
+							}, 10)
 						}
 					}
 				})
@@ -141,6 +166,12 @@ export default Vue.extend({
 			const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
 
 			this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parent }, { selected: !deselectParent })
+
+			if (deselectParent) {
+				this.selected.splice(this.selected.indexOf([parent]), 1)
+			} else {
+				this.selected.push(parent)
+			}
 		},
 		getChildrenHexIndices(parentHexArray: string[], res: number): string[] {
 			const children: string[] = []
