@@ -48,6 +48,7 @@ export default Vue.extend({
 			[42.9637944979, -104.6527823561],
 			[36.3116770845, -104.6527823561],
 		] as any,
+        deselected: undefined as any
 	}),
 	mounted(): void {
 		;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
@@ -130,27 +131,68 @@ export default Vue.extend({
 								{ selected: !feature.state.selected }
 							)
 						} else {
+						    // console.log(res, childrenOfParents)
+
+                            // console.log(res, clickedRes)
+                            if (res === clickedRes - 1) {
+                                const childrenStatus = childrenOfParents.map(
+                                	(child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
+                                )
+                                const childrenDefined = childrenStatus.filter((status) => status !== undefined)
+                                const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
+
+                                this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
+                            } else if (res === clickedRes - 2) {
+                                // console.log(res, childrenOfParents)
+                                setTimeout(() => {
+
+                                    const childrenStatus = childrenOfParents.map(
+                                        (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
+                                    )
+                                    const childrenDefined = childrenStatus.filter((status) => status !== undefined)
+                                    const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
+
+                                    this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
+                                }, 0)
+
+                            } else if (res === clickedRes - 3) {
+                                console.log(res, childrenOfParents)
+                                setTimeout(() => {
+                                    const childrenStatus = childrenOfParents.map(
+                                        (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
+                                    )
+                                    console.log(childrenStatus)
+                                    const childrenDefined = childrenStatus.filter((status) => status !== undefined)
+                                    const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
+
+                                    this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
+                                }, 10)
+                            }
 							// FIXME: this includes second child initial click
 
-							// TODO Need to select highest parent level and exclude current res children
-							const childrenStatus = childrenOfParents.map(
-								(child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
-							)
-							const childrenDefined = childrenStatus.filter((status) => status !== undefined)
-							const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
+							// // TODO Need to select highest parent level and exclude current res children
+							// const childrenStatus = childrenOfParents.map(
+							// 	(child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
+							// )
+							// const childrenDefined = childrenStatus.filter((status) => status !== undefined)
+							// const deselectParent = childrenDefined.includes(false) && !childrenDefined.includes(true)
+                            //
+                            // this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
+                            //
+                            // if (deselectParent) {
+                            //     this.deselected = parents[0]
+                            // }
 
-                            this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !deselectParent })
-
-                            setTimeout(() => {
-                                const cs = childrenOfParents.map(
-                                    (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
-                                )
-                                const dp = childrenDefined.includes(false) && !childrenDefined.includes(true)
-                                this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !dp })
-
-
-                                console.log(cs)
-                            }, 100)
+                            // setTimeout(() => {
+                            //     const cs = childrenOfParents.map(
+                            //         (child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
+                            //     )
+                            //     const dp = childrenDefined.includes(false) && !childrenDefined.includes(true)
+                            //     this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }, { selected: !dp })
+                            //
+                            //
+                            //     console.log(cs)
+                            // }, 100)
 
                             // if (deselectParent) {
 							// 	// only deselects immediate parent
@@ -158,6 +200,7 @@ export default Vue.extend({
 							// } else {
 							// }
 						}
+
 					}
 				})
 				// const parentRes = resOptions.filter(res => res < clickedRes)
