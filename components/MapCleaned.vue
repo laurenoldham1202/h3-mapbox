@@ -127,7 +127,6 @@ export default Vue.extend({
 						// allParents.push(parents[0])
 						const childrenOfParents = this.getChildrenHexIndices(parents, res + 1)
 						const parentState = this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }).selected
-						// TODO Need to deselect parents
 
 						// select parent elements if child clicked for first time
 						if (!parentState) {
