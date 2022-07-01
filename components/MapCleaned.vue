@@ -8,6 +8,8 @@ import * as M from 'mapbox-gl'
 import geojson2h3 from 'geojson2h3'
 import * as h3 from 'h3-js'
 import { GeoJSON } from 'GeoJSON'
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
 export interface HexObject {
 	[key: string]: number
@@ -65,6 +67,15 @@ export default Vue.extend({
 			zoom: 12,
 			doubleClickZoom: false,
 		})
+
+        const Draw = new MapboxDraw({
+            displayControlsDefault: false,
+            controls: {
+                polygon: true,
+                trash: true
+            },
+        });
+        this.map.addControl(Draw, 'top-left');
 
 		this.map.on('load', () => {
 			this.map.addSource('tiles', {
@@ -190,10 +201,14 @@ export default Vue.extend({
 })
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 #map-2 {
 	width: 1000px;
 	height: 800px;
 	background: purple;
+}
+
+.mapboxgl-ctrl-group button {
+    color: black;
 }
 </style>
