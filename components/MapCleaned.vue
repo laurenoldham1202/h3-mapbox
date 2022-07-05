@@ -11,6 +11,10 @@ import { GeoJSON } from 'GeoJSON'
 import MapboxDraw from '@mapbox/mapbox-gl-draw'
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 import FreehandMode from 'mapbox-gl-draw-freehand-mode'
+import intersect from '@turf/intersect'
+import bbox from '@turf/bbox'
+import DrawRectangle from 'mapbox-gl-draw-rectangle-mode';
+
 
 export interface HexObject {
 	[key: string]: number
@@ -71,12 +75,14 @@ export default Vue.extend({
 
 		const Draw = new MapboxDraw({
 			displayControlsDefault: false,
+            defaultMode: 'draw_polygon',
 			controls: {
 				polygon: true,
 				trash: true,
 			},
 			modes: Object.assign(MapboxDraw.modes, {
-				draw_polygon: FreehandMode,
+				// draw_polygon: FreehandMode,
+				draw_polygon: DrawRectangle,
 			}),
 		})
 		this.map.addControl(Draw, 'top-left')
@@ -100,6 +106,41 @@ export default Vue.extend({
 					'fill-opacity': 0.3,
 				},
 			})
+
+            this.map.on('draw.create', (e) => {
+                // console.log(e.features[0])
+
+                const f = this.map.queryRenderedFeatures({layers: ['tiles']})
+                const clickedRes = f[0].properties.h3_resolution
+                const selected = f.map(x => x.id)
+                console.log(clickedRes, selected)
+
+                const resOptions = [5, 6, 7, 8]
+
+                resOptions.forEach((res) => {
+                    if (res > clickedRes) {
+                        // console.log('Find children for', res)
+                        selected.forEach(clickedId => {
+                            this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: clickedId }, { selected: true })
+
+                            const children = this.getChildrenHexIndices([clickedId], res)
+                        // console.log(children)
+                        children.forEach((child) => {
+                            this.map.setFeatureState(
+                                { source: 'tiles', sourceLayer: 'hex', id: child },
+                                { selected: true }
+                            )
+
+                            // if (feature.state.selected) {
+                            //     this.selected.splice(this.selected.indexOf(child), 1)
+                            // } else {
+                            //     this.selected.push(child)
+                            // }
+                        })
+                        })
+                    }
+                })
+            })
 
 			this.map.on('click', 'tiles', (e: any) => {
 				// console.log(e.features[0])
