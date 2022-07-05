@@ -181,6 +181,7 @@ export default {
 
 	// Build Configuration: https://go.nuxtjs.dev/config-build
 	build: {
+		transpile: ['mapbox-gl-draw-freehand-mode', '@mapbox/mapbox-gl-draw'],
 		extend(config, ctx) {
 			// tell webpack where to find files if the import starts with @
 			config.resolve.alias = {

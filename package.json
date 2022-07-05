@@ -30,6 +30,7 @@
     "h3-js": "^3.7.2",
     "isbot": "^3.3.4",
     "mapbox-gl": "^2.8.1",
+    "mapbox-gl-draw-freehand-mode": "^2.1.0",
     "null-loader": "^4.0.1",
     "nuxt": "^2.14.12",
     "nuxt-session": "^1.0.3",

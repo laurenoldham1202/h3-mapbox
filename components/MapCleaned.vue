@@ -8,8 +8,9 @@ import * as M from 'mapbox-gl'
 import geojson2h3 from 'geojson2h3'
 import * as h3 from 'h3-js'
 import { GeoJSON } from 'GeoJSON'
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import MapboxDraw from '@mapbox/mapbox-gl-draw'
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
+import FreehandMode from 'mapbox-gl-draw-freehand-mode'
 
 export interface HexObject {
 	[key: string]: number
@@ -68,14 +69,17 @@ export default Vue.extend({
 			doubleClickZoom: false,
 		})
 
-        const Draw = new MapboxDraw({
-            displayControlsDefault: false,
-            controls: {
-                polygon: true,
-                trash: true
-            },
-        });
-        this.map.addControl(Draw, 'top-left');
+		const Draw = new MapboxDraw({
+			displayControlsDefault: false,
+			controls: {
+				polygon: true,
+				trash: true,
+			},
+			modes: Object.assign(MapboxDraw.modes, {
+				draw_polygon: FreehandMode,
+			}),
+		})
+		this.map.addControl(Draw, 'top-left')
 
 		this.map.on('load', () => {
 			this.map.addSource('tiles', {
@@ -209,6 +213,6 @@ export default Vue.extend({
 }
 
 .mapboxgl-ctrl-group button {
-    color: black;
+	color: black;
 }
 </style>
