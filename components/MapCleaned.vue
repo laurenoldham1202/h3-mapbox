@@ -13,7 +13,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 import FreehandMode from 'mapbox-gl-draw-freehand-mode'
 import intersect from '@turf/intersect'
 import bbox from '@turf/bbox'
-import DrawRectangle from 'mapbox-gl-draw-rectangle-mode';
+import DrawRectangle from 'mapbox-gl-draw-rectangle-mode'
 
 import { USA } from '~/assets/us'
 
@@ -76,7 +76,7 @@ export default Vue.extend({
 
 		const Draw = new MapboxDraw({
 			displayControlsDefault: false,
-            defaultMode: 'draw_polygon',
+			defaultMode: 'draw_polygon',
 			controls: {
 				polygon: true,
 				trash: true,
@@ -108,174 +108,55 @@ export default Vue.extend({
 			// 	},
 			// })
 
-            // console.log(USA)
-            //
-            // this.map.addSource('x', {
-            //     type: 'geojson',
-            //     data: USA
-            // })
-            //
-            // this.map.addLayer({
-            //     id: 'x',
-            //     source: 'x',
-            //     type: 'fill',
-            //     paint: {
-            //         'fill-opacity': 0.3
-            //     }
-            // })
+			const hex = geojson2h3.featureToH3Set(USA, 3)
+			const geo = geojson2h3.h3SetToFeatureCollection(hex, (hex) => ({ index: hex }))
 
-            const hex = geojson2h3.featureToH3Set(USA, 3)
+			this.map.addSource('usa', {
+				type: 'geojson',
+				data: geo,
+				promoteId: 'index',
+			})
 
-            // const geo = h3.h3SetToMultiPolygon(hex)
-            const geo = geojson2h3.h3SetToFeatureCollection(hex, (hex) => ({index: hex}))
-            // console.log(geo)
+			this.map.addLayer({
+				id: 'usa',
+				source: 'usa',
+				type: 'fill',
+				paint: {
+					'fill-opacity': 0.3,
+					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'blue'],
+				},
+			})
 
+			this.map.on('draw.create', (e) => {
+				const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), { layers: ['usa'] })
+				console.log(selected)
 
-            this.map.addSource('x', {
-                type: 'geojson',
-                data: geo,
-                promoteId: 'index'
-            })
+                // TODO Create different custom buttons for select and deselect?
+				selected.forEach((hex) => {
+					this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
+				})
 
-            this.map.addLayer({
-                id: 'x',
-                source: 'x',
-                type: 'fill',
-                paint: {
-                    'fill-opacity': 0.3,
-                    'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'blue'],
+				Draw.delete(e.features[0].id)
+			})
 
-                }
-            })
-
-
-            this.map.on('draw.create', (e) => {
-
-
-                const f = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), {layers: ['x']})
-                console.log(f)
-
-                f.forEach(x => {
-                    this.map.setFeatureState({ source: 'x', id: x.id}, {selected: true})
-                })
-
-
-                // console.log(JSON.stringify(e.features[0]))
-
-                // const f = this.map.queryRenderedFeatures({layers: ['tiles']})
-                // const clickedRes = f[0].properties.h3_resolution
-                // const selected = f.map(x => x.id)
-                // console.log(clickedRes, selected)
-                //
-                // const resOptions = [5, 6, 7, 8]
-                //
-                // resOptions.forEach((res) => {
-                //     if (res > clickedRes) {
-                //         // console.log('Find children for', res)
-                //         selected.forEach(clickedId => {
-                //             this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: clickedId }, { selected: true })
-                //
-                //             const children = this.getChildrenHexIndices([clickedId], res)
-                //         // console.log(children)
-                //         children.forEach((child) => {
-                //             this.map.setFeatureState(
-                //                 { source: 'tiles', sourceLayer: 'hex', id: child },
-                //                 { selected: true }
-                //             )
-                //
-                //             // if (feature.state.selected) {
-                //             //     this.selected.splice(this.selected.indexOf(child), 1)
-                //             // } else {
-                //             //     this.selected.push(child)
-                //             // }
-                //         })
-                //         })
-                //     }
-                // })
-            })
-
-			this.map.on('click', 'x', (e: any) => {
+			this.map.on('click', 'usa', (e: any) => {
 				// console.log(e.features[0])
 				const feature = e.features[0]
-                // console.log(feature)
-			// 	const clickedRes = feature.properties.h3_resolution
-			// 	const clickedId = feature.id
-            //
-			// 	this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: feature.id }, { selected: !feature.state.selected })
-            //
-			// 	// TODO Make fn
-			// 	if (feature.state.selected) {
-			// 		this.selected.splice(this.selected.indexOf(feature.id), 1)
-			// 	} else {
-			// 		this.selected.push(feature.id)
-			// 	}
-			// 	// console.log(this.selected)
-            //
-			// 	const resOptions = [5, 6, 7, 8]
-            //
-			// 	resOptions.forEach((res) => {
-			// 		if (res > clickedRes) {
-			// 			// console.log('Find children for', res)
-			// 			const children = this.getChildrenHexIndices([clickedId], res)
-			// 			// console.log(children)
-			// 			children.forEach((child) => {
-			// 				this.map.setFeatureState(
-			// 					{ source: 'tiles', sourceLayer: 'hex', id: child },
-			// 					{ selected: !feature.state.selected }
-			// 				)
-            //
-			// 				if (feature.state.selected) {
-			// 					this.selected.splice(this.selected.indexOf(child), 1)
-			// 				} else {
-			// 					this.selected.push(child)
-			// 				}
-			// 			})
-			// 		} else if (res < clickedRes) {
-			// 			// console.log('parents:', res)
-			// 			const parents = this.getParents([clickedId], res)
-			// 			// allParents.push(parents[0])
-			// 			const childrenOfParents = this.getChildrenHexIndices(parents, res + 1)
-			// 			const parentState = this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: parents[0] }).selected
-            //
-			// 			// select parent elements if child clicked for first time
-			// 			if (!parentState) {
-			// 				this.map.setFeatureState(
-			// 					{ source: 'tiles', sourceLayer: 'hex', id: parents[0] },
-			// 					{ selected: !feature.state.selected }
-			// 				)
-            //
-			// 				if (feature.state.selected) {
-			// 					this.selected.splice(this.selected.indexOf([parents[0]]), 1)
-			// 				} else {
-			// 					this.selected.push(parents[0])
-			// 				}
-			// 			} else if (res === clickedRes - 1) {
-			// 				this.deselectParent(childrenOfParents, parents[0])
-			// 			} else if (res === clickedRes - 2) {
-			// 				setTimeout(() => {
-			// 					this.deselectParent(childrenOfParents, parents[0])
-			// 				}, 0)
-			// 			} else if (res === clickedRes - 3) {
-			// 				setTimeout(() => {
-			// 					this.deselectParent(childrenOfParents, parents[0])
-			// 				}, 10)
-			// 			}
-			// 		}
-			// 	})
 			})
 		})
 	},
 	methods: {
-        bboxToPixel(polygon: any) { // TODO type
-            // generate bounding box from polygon the user drew
-            const box = bbox(polygon);
-            // convert geographic coordinates to pixel coordinates on the map for `queryRenderedFeatures` formatting
-            // https://docs.mapbox.com/mapbox-gl-js/api/map/#map#project
-            const nePixel = this.map.project([box[2], box[3]]);
-            const swPixel = this.map.project([box[0], box[1]]);
-            // formatted as [{x: 10, y: 10}, {x: 20, y: 20}]
-            return [swPixel, nePixel];
-        },
+		bboxToPixel(polygon: any) {
+			// TODO type
+			// generate bounding box from polygon the user drew
+			const box = bbox(polygon)
+			// convert geographic coordinates to pixel coordinates on the map for `queryRenderedFeatures` formatting
+			// https://docs.mapbox.com/mapbox-gl-js/api/map/#map#project
+			const nePixel = this.map.project([box[2], box[3]])
+			const swPixel = this.map.project([box[0], box[1]])
+			// formatted as [{x: 10, y: 10}, {x: 20, y: 20}]
+			return [swPixel, nePixel]
+		},
 		deselectParent(childrenOfParents: string[], parent: string) {
 			const childrenStatus = childrenOfParents.map(
 				(child) => this.map.getFeatureState({ source: 'tiles', sourceLayer: 'hex', id: child }).selected
