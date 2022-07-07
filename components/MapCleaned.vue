@@ -15,6 +15,7 @@ import intersect from '@turf/intersect'
 import bbox from '@turf/bbox'
 import DrawRectangle from 'mapbox-gl-draw-rectangle-mode';
 
+import { USA } from '~/assets/us'
 
 export interface HexObject {
 	[key: string]: number
@@ -38,7 +39,7 @@ interface HexLayerOptions {
 export default Vue.extend({
 	data: () => ({
 		map: undefined as any,
-		coords: { lng: -91.35, lat: 37 } as M.LngLat,
+		coords: { lng: -86.35, lat: 37 } as M.LngLat,
 		// coords: { lng: -76.486729, lat: 42.47949 } as M.LngLat,
 		centerCoords: { lng: -100.486729, lat: 36.47949 } as M.LngLat,
 		bbox: [
@@ -69,7 +70,7 @@ export default Vue.extend({
 			container: 'map-2',
 			style: 'mapbox://styles/mapbox/streets-v11', // style URL
 			center: this.coords,
-			zoom: 12,
+			zoom: 4,
 			doubleClickZoom: false,
 		})
 
@@ -81,8 +82,8 @@ export default Vue.extend({
 				trash: true,
 			},
 			modes: Object.assign(MapboxDraw.modes, {
-				// draw_polygon: FreehandMode,
-				draw_polygon: DrawRectangle,
+				draw_polygon: FreehandMode,
+				// draw_polygon: DrawRectangle,
 			}),
 		})
 		this.map.addControl(Draw, 'top-left')
@@ -107,39 +108,78 @@ export default Vue.extend({
 				},
 			})
 
+            // console.log(USA)
+            //
+            // this.map.addSource('x', {
+            //     type: 'geojson',
+            //     data: USA
+            // })
+            //
+            // this.map.addLayer({
+            //     id: 'x',
+            //     source: 'x',
+            //     type: 'fill',
+            //     paint: {
+            //         'fill-opacity': 0.3
+            //     }
+            // })
+
+            const hex = geojson2h3.featureToH3Set(USA, 3)
+            console.log(hex)
+
+            // const geo = h3.h3SetToMultiPolygon(hex)
+            const geo = geojson2h3.h3SetToFeatureCollection(hex)
+            console.log(geo)
+
+
+            this.map.addSource('x', {
+                type: 'geojson',
+                data: geo
+            })
+
+            this.map.addLayer({
+                id: 'x',
+                source: 'x',
+                type: 'fill',
+                paint: {
+                    'fill-opacity': 0.3
+                }
+            })
+
+
             this.map.on('draw.create', (e) => {
-                // console.log(e.features[0])
+                // console.log(JSON.stringify(e.features[0]))
 
-                const f = this.map.queryRenderedFeatures({layers: ['tiles']})
-                const clickedRes = f[0].properties.h3_resolution
-                const selected = f.map(x => x.id)
-                console.log(clickedRes, selected)
-
-                const resOptions = [5, 6, 7, 8]
-
-                resOptions.forEach((res) => {
-                    if (res > clickedRes) {
-                        // console.log('Find children for', res)
-                        selected.forEach(clickedId => {
-                            this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: clickedId }, { selected: true })
-
-                            const children = this.getChildrenHexIndices([clickedId], res)
-                        // console.log(children)
-                        children.forEach((child) => {
-                            this.map.setFeatureState(
-                                { source: 'tiles', sourceLayer: 'hex', id: child },
-                                { selected: true }
-                            )
-
-                            // if (feature.state.selected) {
-                            //     this.selected.splice(this.selected.indexOf(child), 1)
-                            // } else {
-                            //     this.selected.push(child)
-                            // }
-                        })
-                        })
-                    }
-                })
+                // const f = this.map.queryRenderedFeatures({layers: ['tiles']})
+                // const clickedRes = f[0].properties.h3_resolution
+                // const selected = f.map(x => x.id)
+                // console.log(clickedRes, selected)
+                //
+                // const resOptions = [5, 6, 7, 8]
+                //
+                // resOptions.forEach((res) => {
+                //     if (res > clickedRes) {
+                //         // console.log('Find children for', res)
+                //         selected.forEach(clickedId => {
+                //             this.map.setFeatureState({ source: 'tiles', sourceLayer: 'hex', id: clickedId }, { selected: true })
+                //
+                //             const children = this.getChildrenHexIndices([clickedId], res)
+                //         // console.log(children)
+                //         children.forEach((child) => {
+                //             this.map.setFeatureState(
+                //                 { source: 'tiles', sourceLayer: 'hex', id: child },
+                //                 { selected: true }
+                //             )
+                //
+                //             // if (feature.state.selected) {
+                //             //     this.selected.splice(this.selected.indexOf(child), 1)
+                //             // } else {
+                //             //     this.selected.push(child)
+                //             // }
+                //         })
+                //         })
+                //     }
+                // })
             })
 
 			this.map.on('click', 'tiles', (e: any) => {
