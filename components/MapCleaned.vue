@@ -92,10 +92,14 @@ export default Vue.extend({
 			this.map.addSource('tiles', {
 				type: 'vector',
 				promoteId: 'h3_address',
-				tiles: ['http://localhost:8081/data/test/{z}/{x}/{y}.pbf'],
+				tiles: ['http://localhost:8081/data/range-test/{z}/{x}/{y}.pbf'],
 				maxzoom: 9,
 				// tiles: ['http://localhost:8081/data/join-new-ids/{z}/{x}/{y}.pbf']
 			})
+
+            this.map.on('zoom', () => {
+                // console.log(this.map.getZoom())
+            })
 
 			// this.map.addLayer({
 			// 	id: 'tiles',
@@ -108,6 +112,22 @@ export default Vue.extend({
 			// 	},
 			// })
 
+
+            const shp = {"id":"e541903ac62aa1867de7f3cad8e9ae70","type":"Feature","properties":{},"geometry":{"coordinates":[[[-95.20742187499955,44.384407236660934],[-97.49257812499935,44.32156135607303],[-101.44765624999951,41.55552975462436],[-104.87539062499943,41.35791954134666],[-106.0179687499995,40.96089425396141],[-106.89687499999947,39.890427476779905],[-107.33632812499944,38.528478441103516],[-107.24843749999953,36.223971656062346],[-106.54531249999941,35.1532323637759],[-103.5570312499995,33.92247743491963],[-97.66835937499957,33.7764905296592],[-95.11953124999927,32.525594402240415],[-90.72499999999948,32.969122198383786],[-89.75820312499923,33.99537726897219],[-87.9124999999994,38.04557392217728],[-88.00039062499934,39.41675145008787],[-89.14296874999941,40.96089425396141],[-88.9671874999992,41.94894273855695],[-90.02187499999937,42.728526362280434],[-95.20742187499955,44.384407236660934],[-95.20742187499955,44.384407236660934]]],"type":"Polygon"}}
+
+            this.map.addSource('shp', {
+                type: 'geojson',
+                data: shp
+            })
+            this.map.addLayer({
+                id: 'shp',
+                source: 'shp',
+                type: 'fill',
+                paint: {
+                    'fill-color': 'transparent',
+                    'fill-outline-color': 'purple'
+                }
+            })
 			const hex = geojson2h3.featureToH3Set(USA, 3)
 			const geo = geojson2h3.h3SetToFeatureCollection(hex, (hex) => ({ index: hex }))
 
@@ -127,14 +147,51 @@ export default Vue.extend({
 				},
 			})
 
-			this.map.on('draw.create', (e) => {
-				const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), { layers: ['usa'] })
-				console.log(selected)
+            this.map.addSource('children', {
+                type: 'geojson',
+                data: {},
+                promoteId: 'index'
+            })
+
+            const ch = []
+            this.map.addLayer({
+                id: 'children',
+                source: 'children',
+                type: 'fill',
+                paint: {
+                    'fill-opacity': 0.3,
+                    'fill-outline-color': 'blue',
+                    'fill-color': 'transparent'
+                }
+            })
+
+
+            this.map.on('draw.create', (e) => {
+				const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), { layers: ['usa', 'children'] })
+				// console.log(selected)
+
+                // console.log(JSON.stringify(e.features[0]))
 
                 // TODO Create different custom buttons for select and deselect?
 				selected.forEach((hex) => {
-					this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
+				    console.log(hex.id)
+				    // TODO filter out base layer and create new deeper hex layer?
+					// this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
+
+                    //parseInt(hex.id[1]) + 1
+                    const children = h3.h3ToChildren(hex.id, parseInt(hex.id[1]) + 1)
+                    // console.log(children)
+
+                    const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
+                    ch.push(...geo2.features)
+
+
+
 				})
+
+
+                // console.log(ch)
+                this.map.getSource('children').setData({ type: 'FeatureCollection', features: Array.from(new Set(ch))})
 
 				Draw.delete(e.features[0].id)
 			})
@@ -146,6 +203,7 @@ export default Vue.extend({
 		})
 	},
 	methods: {
+	    // TODO Need to intersect and not use outright bbox
 		bboxToPixel(polygon: any) {
 			// TODO type
 			// generate bounding box from polygon the user drew
