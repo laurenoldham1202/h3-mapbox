@@ -167,22 +167,29 @@ export default Vue.extend({
 
 			this.map.addSource('grpchi', {
 				type: 'vector',
-				tiles: ['https://test.cdn.shorebirdviz.ebird.org/statusviz/v3/grpchi/hi-res/{z}/{x}/{y}.pbf'],
+				tiles: ['http://localhost:8081/data/range-outline/{z}/{x}/{y}.pbf'],
                 maxzoom: 7,
 			})
 			this.map.addLayer({
 				id: 'grpchi',
 				source: 'grpchi',
-                'source-layer': 'grpchi',
+                'source-layer': 'hex',
 				type: 'fill',
-                filter: ['>', ['get', 'resident'], 0],
+                // filter: ['>', ['get', 'resident'], 0],
 				paint: {
 					// 'fill-color': 'transparent',
 					// 'fill-outline-color': 'purple',
 				},
 			})
+
 			const hex = geojson2h3.featureToH3Set(range, 3)
 			const geo = geojson2h3.h3SetToFeatureCollection(hex, (hex) => ({ index: hex }))
+
+            // const geojson = {"id":"8eb25ba70d452d97e1ddfcce5dd3c509","type":"Feature","properties":{},"geometry":{"coordinates":[[[-99.33506625318147,45.13314712628562],[-101.00487955708923,45.13314712628562],[-101.56148399172514,42.683079866666105],[-102.36546817508791,41.62863803346093],[-103.66421185590485,40.9782147291387],[-103.91159160463224,39.65795874143228],[-103.23129729563291,39.1322398894163],[-101.49963905454342,38.84381654664111],[-100.57196499681673,38.3119933246779],[-97.17049345181951,37.971513567475],[-97.04680357745609,36.84165053422949],[-96.6757339543653,36.49440699140514],[-94.6348510273673,36.792140282626605],[-93.58348709527718,38.36050350728348],[-95.68621495945743,38.55421925672027],[-95.50068014791177,39.61032990250396],[-96.98495864027439,40.791188855481806],[-96.73757889154703,41.44346493969201],[-96.18097445691163,41.90540315049239],[-96.49019914282017,43.000506465552206],[-96.79942382872926,43.3612818895958],[-98.28370232109134,43.496022931319146],[-98.84030675572728,44.29816727163572],[-98.77846181854555,45.00210923171318],[-99.08768650445464,45.08950120560945],[-99.33506625318147,45.13314712628562],[-99.33506625318147,45.13314712628562]]],"type":"Polygon"}}
+            // const h = geojson2h3.featureToH3Set(geojson, 8)
+            // // console.log(h)
+			// const g = geojson2h3.h3SetToFeature(h, (hex) => ({ index: hex }))
+            // console.log(g)
 
 			this.map.addSource('usa', {
 				type: 'geojson',
@@ -232,14 +239,14 @@ export default Vue.extend({
 			})
 
 
-			// this.map.on('draw.create', (e) => {
+			this.map.on('draw.create', (e) => {
 			// 	if (!this.selectMode) {
 			// 		const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), {
 			// 			layers: ['usa', 'children'],
 			// 		})
 			// 		// console.log(selected)
             //
-			// 		// console.log(JSON.stringify(e.features[0]))
+					console.log(JSON.stringify(e.features[0]))
             //
 			// 		// TODO Create different custom buttons for select and deselect?
 			// 		selected.forEach((hex) => {
@@ -285,39 +292,35 @@ export default Vue.extend({
             //             }
 			// 		})
 			// 	}
-			// })
+			})
 
 			this.map.on('click', ['usa', 'children'], (e: any) => {
 				// console.log(e.features[0])
 				const feature = e.features[0]
-                console.log(feature)
+                // console.log(feature)
 
-                // const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), {
-                //     layers: ['usa'],
-                // })
-                // console.log(selected)
-                //
-                // 		selected.forEach((hex) => {
-                // 			// console.log(hex.id)
-                // 			// TODO filter out base layer and create new deeper hex layer?
-                // 			// this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
-                //
-                // 			//parseInt(hex.id[1]) + 1
-                			const res = parseInt(feature.id[1]) + 1
-                			const children = h3.h3ToChildren(feature.id, res > 8 ? 8 : res)
-                // 			// console.log(children)
-                //
-                			const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
-                			ch.push(...geo2.features)
-                // 		})
-                //
-                // 		// console.log(ch)
-                		this.map.getSource('children').setData({
-                			type: 'FeatureCollection',
-                			features: Array.from(new Set(ch)),
-                		})
-                		this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
+                if (!this.selectMode) {
+                    const res = parseInt(feature.id[1]) + 1
+                    const children = h3.h3ToChildren(feature.id, res > 8 ? 8 : res)
+                    const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
+                    ch.push(...geo2.features)
+
+                    this.map.getSource('children').setData({
+                        type: 'FeatureCollection',
+                        features: Array.from(new Set(ch)),
+                    })
+                    this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
+                } else {
+                    console.log(feature)
+                    // TODO Allow deselect
+                    this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: !feature.state.selected })
+                }
+
 			})
+
+
+
+
 			this.map.on('click', 'children', (e: any) => {
 				// console.log(e.features[0])
 				const feature = e.features[0]
