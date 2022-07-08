@@ -91,7 +91,7 @@ export default Vue.extend({
 
 		const Draw = new MapboxDraw({
 			displayControlsDefault: false,
-			defaultMode: 'draw_polygon',
+			// defaultMode: 'draw_polygon',
 			controls: {
 				polygon: true,
 				trash: true,
@@ -151,19 +151,19 @@ export default Vue.extend({
 				},
 			}
 
-			this.map.addSource('shp', {
-				type: 'geojson',
-				data: shp,
-			})
-			this.map.addLayer({
-				id: 'shp',
-				source: 'shp',
-				type: 'fill',
-				paint: {
-					'fill-color': 'transparent',
-					'fill-outline-color': 'purple',
-				},
-			})
+			// this.map.addSource('shp', {
+			// 	type: 'geojson',
+			// 	data: shp,
+			// })
+			// this.map.addLayer({
+			// 	id: 'shp',
+			// 	source: 'shp',
+			// 	type: 'fill',
+			// 	paint: {
+			// 		'fill-color': 'transparent',
+			// 		'fill-outline-color': 'purple',
+			// 	},
+			// })
 
 			this.map.addSource('grpchi', {
 				type: 'vector',
@@ -232,64 +232,91 @@ export default Vue.extend({
 			})
 
 
-			this.map.on('draw.create', (e) => {
-				if (!this.selectMode) {
-					const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), {
-						layers: ['usa', 'children'],
-					})
-					// console.log(selected)
+			// this.map.on('draw.create', (e) => {
+			// 	if (!this.selectMode) {
+			// 		const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), {
+			// 			layers: ['usa', 'children'],
+			// 		})
+			// 		// console.log(selected)
+            //
+			// 		// console.log(JSON.stringify(e.features[0]))
+            //
+			// 		// TODO Create different custom buttons for select and deselect?
+			// 		selected.forEach((hex) => {
+			// 			// console.log(hex.id)
+			// 			// TODO filter out base layer and create new deeper hex layer?
+			// 			// this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
+            //
+			// 			//parseInt(hex.id[1]) + 1
+			// 			const res = parseInt(hex.id[1]) + 1
+			// 			const children = h3.h3ToChildren(hex.id, res > 8 ? 8 : res)
+			// 			// console.log(children)
+            //
+			// 			const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
+			// 			ch.push(...geo2.features)
+			// 		})
+            //
+			// 		// console.log(ch)
+			// 		this.map.getSource('children').setData({
+			// 			type: 'FeatureCollection',
+			// 			features: Array.from(new Set(ch)),
+			// 		})
+			// 		this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
+			// 		Draw.delete(e.features[0].id)
+            //
+			// 		setTimeout(() => {
+			// 			Draw.changeMode(Draw.modes.DRAW_POLYGON)
+			// 		}, 10)
+			// 	} else {
+			// 	    // TODO Add button to increase resolution instead of redrawing concentric shapes
+			// 		// console.log('select!')
+			// 		const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), { layers: ['children'] })
+			// 		const sorted = Array.from(new Set(selected.map((x) => x.id).sort()))
+			// 		const res = sorted[sorted.length - 1][1]
+			// 		// console.log(res)
+			// 		selected.forEach((hex) => {
+			// 			// console.log(hex.id)
+			// 			// TODO filter out base layer and create new deeper hex layer?
+			// 			// this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
+            //             if (hex.id[1] === res) {
+            //                 this.ids.push(hex.id)
+            //
+            //                 this.map.setFeatureState({ source: 'children', id: hex.id }, { selected: true })
+            //             }
+			// 		})
+			// 	}
+			// })
 
-					// console.log(JSON.stringify(e.features[0]))
-
-					// TODO Create different custom buttons for select and deselect?
-					selected.forEach((hex) => {
-						// console.log(hex.id)
-						// TODO filter out base layer and create new deeper hex layer?
-						// this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
-
-						//parseInt(hex.id[1]) + 1
-						const res = parseInt(hex.id[1]) + 1
-						const children = h3.h3ToChildren(hex.id, res > 8 ? 8 : res)
-						// console.log(children)
-
-						const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
-						ch.push(...geo2.features)
-					})
-
-					// console.log(ch)
-					this.map.getSource('children').setData({
-						type: 'FeatureCollection',
-						features: Array.from(new Set(ch)),
-					})
-					this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
-					Draw.delete(e.features[0].id)
-
-					setTimeout(() => {
-						Draw.changeMode(Draw.modes.DRAW_POLYGON)
-					}, 10)
-				} else {
-				    // TODO Add button to increase resolution instead of redrawing concentric shapes
-					// console.log('select!')
-					const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), { layers: ['children'] })
-					const sorted = Array.from(new Set(selected.map((x) => x.id).sort()))
-					const res = sorted[sorted.length - 1][1]
-					// console.log(res)
-					selected.forEach((hex) => {
-						// console.log(hex.id)
-						// TODO filter out base layer and create new deeper hex layer?
-						// this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
-                        if (hex.id[1] === res) {
-                            this.ids.push(hex.id)
-
-                            this.map.setFeatureState({ source: 'children', id: hex.id }, { selected: true })
-                        }
-					})
-				}
-			})
-
-			this.map.on('click', 'usa', (e: any) => {
+			this.map.on('click', ['usa', 'children'], (e: any) => {
 				// console.log(e.features[0])
 				const feature = e.features[0]
+                console.log(feature)
+
+                // const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), {
+                //     layers: ['usa'],
+                // })
+                // console.log(selected)
+                //
+                // 		selected.forEach((hex) => {
+                // 			// console.log(hex.id)
+                // 			// TODO filter out base layer and create new deeper hex layer?
+                // 			// this.map.setFeatureState({ source: 'usa', id: hex.id }, { selected: true })
+                //
+                // 			//parseInt(hex.id[1]) + 1
+                			const res = parseInt(feature.id[1]) + 1
+                			const children = h3.h3ToChildren(feature.id, res > 8 ? 8 : res)
+                // 			// console.log(children)
+                //
+                			const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
+                			ch.push(...geo2.features)
+                // 		})
+                //
+                // 		// console.log(ch)
+                		this.map.getSource('children').setData({
+                			type: 'FeatureCollection',
+                			features: Array.from(new Set(ch)),
+                		})
+                		this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
 			})
 			this.map.on('click', 'children', (e: any) => {
 				// console.log(e.features[0])
