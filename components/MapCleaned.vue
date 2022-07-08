@@ -19,7 +19,8 @@ import intersect from '@turf/intersect'
 import bbox from '@turf/bbox'
 import DrawRectangle from 'mapbox-gl-draw-rectangle-mode'
 
-import { USA } from '~/assets/us'
+import { USA, range } from '~/assets/us'
+
 
 export interface HexObject {
 	[key: string]: number
@@ -163,7 +164,24 @@ export default Vue.extend({
 					'fill-outline-color': 'purple',
 				},
 			})
-			const hex = geojson2h3.featureToH3Set(USA, 3)
+
+			this.map.addSource('grpchi', {
+				type: 'vector',
+				tiles: ['https://test.cdn.shorebirdviz.ebird.org/statusviz/v3/grpchi/hi-res/{z}/{x}/{y}.pbf'],
+                maxzoom: 7,
+			})
+			this.map.addLayer({
+				id: 'grpchi',
+				source: 'grpchi',
+                'source-layer': 'grpchi',
+				type: 'fill',
+                filter: ['>', ['get', 'resident'], 0],
+				paint: {
+					// 'fill-color': 'transparent',
+					// 'fill-outline-color': 'purple',
+				},
+			})
+			const hex = geojson2h3.featureToH3Set(range, 3)
 			const geo = geojson2h3.h3SetToFeatureCollection(hex, (hex) => ({ index: hex }))
 
 			this.map.addSource('usa', {
