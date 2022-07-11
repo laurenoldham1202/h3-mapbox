@@ -361,6 +361,10 @@ export default Vue.extend({
 		})
 	},
 	methods: {
+	    // Workflow:
+        // 1. Draw shape, zoom to shape extent
+        // 2. Button click to refine hex resolution (check # of hex first) - compact?
+        // #. Button click to select all, otherwise
 	    adjust() {
 	        const feats = this.map.queryRenderedFeatures({layers: ['usa']})
             // TODO Add restriction on number of ids
