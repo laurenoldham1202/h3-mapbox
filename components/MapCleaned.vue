@@ -3,7 +3,7 @@
 		<div id="map-2"></div>
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly">show new range only {{ rangeOnly }}</button>
-		<button @click="adjust">adjust</button>
+		<!--		<button @click="adjust">adjust</button>-->
 	</span>
 </template>
 
@@ -53,21 +53,23 @@ export default Vue.extend({
 			console.log(Array.from(new Set(selected)))
 		},
 		rangeOnly() {
-		    // TODO Account for no ids selected
-			// if (this.rangeOnly) {
-			    this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
-				console.log(this.ids.length, this.rangeOnly)
-				// this.map.getFeatureState()
-            if (this.ids.length > 0) {
-
-                // this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'visible' : 'none')
-                this.map.setLayoutProperty('children', 'visibility', 'visible')
-
-                this.map.setFilter('children', this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null)
-            } else {
-                this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'none' : 'visible')
-            }
+			// // TODO Account for no ids selected
+			// // if (this.rangeOnly) {
+			// this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
+			// console.log(this.ids.length, this.rangeOnly)
+			// // this.map.getFeatureState()
+			// if (this.ids.length > 0) {
+			// 	// this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'visible' : 'none')
+			// 	this.map.setLayoutProperty('children', 'visibility', 'visible')
+            //
+			// 	this.map.setFilter(
+			// 		'children',
+			// 		this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null
+			// 	)
+			// } else {
+			// 	this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'none' : 'visible')
 			// }
+			// // }
 		},
 	},
 	mounted(): void {
@@ -135,10 +137,10 @@ export default Vue.extend({
 			this.map.addSource('children', {
 				type: 'geojson',
 				data: {},
-				promoteId: 'index',
+				promoteId: 'h3_address',
 			})
 
-			const ch = []
+			const childFeatures = []
 			this.map.addLayer({
 				id: 'children',
 				source: 'children',
@@ -149,156 +151,38 @@ export default Vue.extend({
 					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'black'],
 				},
 				layout: {
-					'fill-sort-key': ['+', ['get', 'index']],
+					'fill-sort-key': ['+', ['get', 'h3_address']],
 				},
 			})
 
-			this.map.addSource('x', {
-				type: 'geojson',
-				data: {},
-				promoteId: 'index',
-			})
+            const filteredParents = []
 
-			this.map.addLayer({
-				id: 'x',
-				source: 'x',
-				type: 'fill',
-				paint: {
-					// 'fill-opacity': 0.3,
-					// 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'blue'],
-					'fill-color': 'transparent',
-					'fill-outline-color': 'blue',
-				},
-			})
-
-			this.map.on('draw.create', (e) => {
-				// 	if (!this.selectMode) {
-				// 		const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), {
-				// 			layers: ['base-hex', 'children'],
-				// 		})
-				// 		// console.log(selected)
-				//
-				console.log(JSON.stringify(e.features[0]))
-				//
-				// 		// TODO Create different custom buttons for select and deselect?
-				// 		selected.forEach((hex) => {
-				// 			// console.log(hex.id)
-				// 			// TODO filter out base layer and create new deeper hex layer?
-				// 			// this.map.setFeatureState({ source: 'base-hex', id: hex.id }, { selected: true })
-				//
-				// 			//parseInt(hex.id[1]) + 1
-				// 			const res = parseInt(hex.id[1]) + 1
-				// 			const children = h3.h3ToChildren(hex.id, res > 8 ? 8 : res)
-				// 			// console.log(children)
-				//
-				// 			const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
-				// 			ch.push(...geo2.features)
-				// 		})
-				//
-				// 		// console.log(ch)
-				// 		this.map.getSource('children').setData({
-				// 			type: 'FeatureCollection',
-				// 			features: Array.from(new Set(ch)),
-				// 		})
-				// 		this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
-				// 		Draw.delete(e.features[0].id)
-				//
-				// 		setTimeout(() => {
-				// 			Draw.changeMode(Draw.modes.DRAW_POLYGON)
-				// 		}, 10)
-				// 	} else {
-				// 	    // TODO Add button to increase resolution instead of redrawing concentric shapes
-				// 		// console.log('select!')
-				// 		const selected = this.map.queryRenderedFeatures(this.bboxToPixel(e.features[0].geometry), { layers: ['children'] })
-				// 		const sorted = Array.from(new Set(selected.map((x) => x.id).sort()))
-				// 		const res = sorted[sorted.length - 1][1]
-				// 		// console.log(res)
-				// 		selected.forEach((hex) => {
-				// 			// console.log(hex.id)
-				// 			// TODO filter out base layer and create new deeper hex layer?
-				// 			// this.map.setFeatureState({ source: 'base-hex', id: hex.id }, { selected: true })
-				//             if (hex.id[1] === res) {
-				//                 this.ids.push(hex.id)
-				//
-				//                 this.map.setFeatureState({ source: 'children', id: hex.id }, { selected: true })
-				//             }
-				// 		})
-				// 	}
-			})
-
-            const filteredChildren = []
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
-				// console.log(e.features[0])
 				const feature = e.features[0]
-				// console.log(feature)
-
-                // TODO Allow selection of base-hex
 				if (!this.selectMode) {
+					// console.log(feature)
 					const res = parseInt(feature.id[1]) + 1
 					const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
 					if (res <= 6) {
-						const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
-						ch.push(...geo2.features)
+                        filteredParents.push(feature.id)
+                        const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
+						// console.log(geojson)
+						childFeatures.push(...geojson.features)
 
 						this.map.getSource('children').setData({
 							type: 'FeatureCollection',
-							features: Array.from(new Set(ch)),
+							features: childFeatures,
 						})
-						this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
 
-                        // TODO Deselect parent if selected but then exploded down
-                        filteredChildren.push(feature.id)
-                        // if (!this.ids.includes(feature.id)) {
-                        //     // console.log('includes')
-                        //
-                        //     filteredChildren.push(feature.id)
-                        // } else {
-                        //     console.log('doesnt', feature.id)
-                        //     console.log(this.ids, this.ids.indexOf(feature.id))
-                        //     this.ids.splice(this.ids.indexOf(feature.id), 1)
-                        //     this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: !feature.state.selected })
-                        //
-                        // }
-
-                        // this.ids.push(feature.id)
-						this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], filteredChildren, false, true])
-
-						this.map.setFilter('children', ['match', ['get', 'index'], filteredChildren, false, true])
-                        // console.log('filtered out:', filteredChildren)
-                        // console.log('selected:', this.ids)
-
-                        if (this.ids.includes(feature.id)) {
-                            // console.log(this.map.getFeatureState({source: 'children', id: feature.id}))
-                            this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
-                            this.ids.splice(this.ids.indexOf(feature.id), 1)
-
-                        }
+                        console.log(filteredParents)
+                        // console.log(childFeatures)
+                        this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.uniqueValues(filteredParents), false, true])
 
 					}
-				} else {
-				    // TODO Update filter if range only mode on and feature deselected
-				    // TODO Remove ids and filter
-					// console.log(feature)
-					// TODO Allow deselect
-					this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: !feature.state.selected })
-                    if (!feature.state.selected) {
-
-                        this.ids.push(feature.id)
-                    } else {
-                        // console.log('remove id')
-                        this.ids.splice(this.ids.indexOf(feature.id), 1)
-                        // this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
-                        // // console.log(this.ids)
-                        // // this.map.getFeatureState()
-                        // this.map.setFilter('children', this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null)
-                    }
-
-
 				}
 			})
 
 			this.map.on('click', 'children', (e: any) => {
-				// console.log(e.features[0])
 				const feature = e.features[0]
 				// console.log(feature)
 			})
@@ -309,18 +193,6 @@ export default Vue.extend({
 		// 1. Draw shape, zoom to shape extent
 		// 2. Button click to refine hex resolution (check # of hex first) - compact?
 		// #. Button click to select all, otherwise
-		adjust() {
-			const feats = this.map.queryRenderedFeatures({ layers: ['base-hex'] })
-			// TODO Add restriction on number of ids
-			const ids = feats.map((x) => x.id)
-			console.log(parseInt(ids[0][1] + 1))
-			const c = Array.from(new Set(this.getChildrenHexIndices(ids, parseInt(ids[0][1]) + 1)))
-			const geo = geojson2h3.h3SetToFeatureCollection(c, (hex) => ({ index: hex }))
-
-			console.log(geo)
-			// TODO This erases any previously plotted adjustments
-			this.map.getSource('x').setData(geo)
-		},
 		// TODO Need to intersect and not use outright bbox
 		bboxToPixel(polygon: any) {
 			// TODO type
@@ -361,6 +233,9 @@ export default Vue.extend({
 				parents.push(h3.h3ToParent(child, res))
 			})
 			return Array.from(new Set(parents))
+		},
+		uniqueValues(array: any[]) {
+			return Array.from(new Set(array))
 		},
 	},
 })
