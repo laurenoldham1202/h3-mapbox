@@ -61,7 +61,7 @@ export default Vue.extend({
 			// if (this.ids.length > 0) {
 			// 	// this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'visible' : 'none')
 			// 	this.map.setLayoutProperty('children', 'visibility', 'visible')
-            //
+			//
 			// 	this.map.setFilter(
 			// 		'children',
 			// 		this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null
@@ -110,7 +110,8 @@ export default Vue.extend({
 				'source-layer': 'hex',
 				type: 'fill',
 				paint: {
-					// 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'blue'],
+                    'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'black'],
+                    // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'blue'],
 					'fill-opacity': 0.3,
 				},
 			})
@@ -140,7 +141,6 @@ export default Vue.extend({
 				promoteId: 'h3_address',
 			})
 
-			const childFeatures = []
 			this.map.addLayer({
 				id: 'children',
 				source: 'children',
@@ -155,17 +155,17 @@ export default Vue.extend({
 				},
 			})
 
-            const filteredParents = []
+			const childFeatures: any[] = []
+			const filteredParents: string[] = []
 
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 				const feature = e.features[0]
 				if (!this.selectMode) {
-					// console.log(feature)
 					const res = parseInt(feature.id[1]) + 1
 					const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
 					if (res <= 6) {
-                        filteredParents.push(feature.id)
-                        const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
+						filteredParents.push(feature.id)
+						const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
 						// console.log(geojson)
 						childFeatures.push(...geojson.features)
 
@@ -174,12 +174,20 @@ export default Vue.extend({
 							features: childFeatures,
 						})
 
-                        console.log(filteredParents)
-                        // console.log(childFeatures)
-                        this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.uniqueValues(filteredParents), false, true])
-
+						console.log(filteredParents)
+						// console.log(childFeatures)
+						this.map.setFilter(feature.source, [
+							'match',
+							['get', 'h3_address'],
+							this.uniqueValues(filteredParents),
+							false,
+							true,
+						])
 					}
-				}
+				} else {
+				    console.log('select ', feature)
+                    this.map.setFeatureState({source: feature.source, ...(feature.sourceLayer === 'hex' && {sourceLayer: 'hex'}), id: feature.id}, {selected: !feature.state.selected})
+                }
 			})
 
 			this.map.on('click', 'children', (e: any) => {
