@@ -46,6 +46,7 @@ export default Vue.extend({
 		selectMode: false,
 		rangeOnly: false,
 		ids: [] as any[],
+        filtered: [] as any[],
 	}),
 	watch: {
 		selected(selected) {
@@ -53,9 +54,27 @@ export default Vue.extend({
 			// console.log(Array.from(new Set(selected)))
 		},
 		rangeOnly() {
-            console.log(this.selected)
+			// console.log(this.selected)
+            const layers = ['base-hex', 'children']
+            if (this.selected.length && this.rangeOnly) {
+                layers.forEach(layer => {
+                    this.map.setFilter(layer, ['match', ['get', 'h3_address'], this.selected, true, false])
+                })
+            } else if (this.selected.length && !this.rangeOnly) {
+                console.log('features selected but range turned off')
+                console.log(this.filtered)
+                layers.forEach(layer => {
+                    this.map.setFilter(layer, ['match', ['get', 'h3_address'], this.filtered, false, true])
+                })
 
-            // // TODO Account for no ids selected
+
+            } else if (!this.selected.length && this.rangeOnly) {
+                console.log('NO features selected and range turned on')
+            } else {
+                console.log('NO features selected and range turned OFF')
+            }
+
+			// // TODO Account for no ids selected
 			// // if (this.rangeOnly) {
 			// this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
 			// console.log(this.ids.length, this.rangeOnly)
@@ -176,32 +195,33 @@ export default Vue.extend({
 							features: childFeatures,
 						})
 
+                        this.filtered = this.uniqueValues(filteredParents)
 						// console.log(filteredParents)
 						// console.log(childFeatures)
+                        // TODO Consider selecting children features on if parent feature is selected and then exploded
 						this.map.setFilter(feature.source, [
 							'match',
 							['get', 'h3_address'],
-							this.uniqueValues(filteredParents),
+							this.filtered,
 							false,
 							true,
 						])
 
-                        if (this.selected.includes(feature.id)) {
-                            this.selected.splice(this.selected.indexOf(feature.id), 1)
-                        }
+						if (this.selected.includes(feature.id)) {
+							this.selected.splice(this.selected.indexOf(feature.id), 1)
+						}
 					}
 				} else {
-				    if (this.selected.includes(feature.id)) {
-				        this.selected.splice(this.selected.indexOf(feature.id), 1)
-                    } else {
-				        this.selected.push(feature.id)
-                    }
+					if (this.selected.includes(feature.id)) {
+						this.selected.splice(this.selected.indexOf(feature.id), 1)
+					} else {
+						this.selected.push(feature.id)
+					}
 					this.map.setFeatureState(
 						{ source: feature.source, ...(feature.sourceLayer === 'hex' && { sourceLayer: 'hex' }), id: feature.id },
 						{ selected: !feature.state.selected }
 					)
 				}
-
 			})
 
 			this.map.on('click', 'children', (e: any) => {
