@@ -53,11 +53,13 @@ export default Vue.extend({
 			console.log(Array.from(new Set(selected)))
 		},
 		rangeOnly() {
-			if (this.rangeOnly) {
+		    // TODO Account for no ids selected
+			// if (this.rangeOnly) {
+			    this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
 				// console.log(this.ids)
 				// this.map.getFeatureState()
-				this.map.setFilter('children', ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false])
-			}
+				this.map.setFilter('children', this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null)
+			// }
 		},
 	},
 	mounted(): void {
@@ -135,8 +137,8 @@ export default Vue.extend({
 				type: 'fill',
 				paint: {
 					'fill-opacity': 0.3,
-					'fill-outline-color': 'blue',
-					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'purple', 'purple'],
+					'fill-outline-color': 'black',
+					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'black'],
 				},
 				layout: {
 					'fill-sort-key': ['+', ['get', 'index']],
@@ -216,27 +218,67 @@ export default Vue.extend({
 				// 	}
 			})
 
+            const filteredChildren = []
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 				// console.log(e.features[0])
 				const feature = e.features[0]
 				// console.log(feature)
 
+                // TODO Allow selection of base-hex
 				if (!this.selectMode) {
 					const res = parseInt(feature.id[1]) + 1
-					const children = h3.h3ToChildren(feature.id, res > 8 ? 8 : res)
-					const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
-					ch.push(...geo2.features)
+					const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
+					if (res <= 6) {
+						const geo2 = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ index: hex }))
+						ch.push(...geo2.features)
 
-					this.map.getSource('children').setData({
-						type: 'FeatureCollection',
-						features: Array.from(new Set(ch)),
-					})
-					this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
+						this.map.getSource('children').setData({
+							type: 'FeatureCollection',
+							features: Array.from(new Set(ch)),
+						})
+						this.map.setLayoutProperty('children', 'fill-sort-key', ['+', ['get', 'index']])
+
+                        // TODO Deselect parent if selected but then exploded down
+                        filteredChildren.push(feature.id)
+                        // if (!this.ids.includes(feature.id)) {
+                        //     // console.log('includes')
+                        //
+                        //     filteredChildren.push(feature.id)
+                        // } else {
+                        //     console.log('doesnt', feature.id)
+                        //     console.log(this.ids, this.ids.indexOf(feature.id))
+                        //     this.ids.splice(this.ids.indexOf(feature.id), 1)
+                        //     this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: !feature.state.selected })
+                        //
+                        // }
+
+                        // this.ids.push(feature.id)
+						this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], filteredChildren, false, true])
+
+						this.map.setFilter('children', ['match', ['get', 'index'], filteredChildren, false, true])
+                        // console.log('filtered out:', filteredChildren)
+                        // console.log('selected:', this.ids)
+
+					}
 				} else {
-					console.log(feature)
+				    // TODO Update filter if range only mode on and feature deselected
+				    // TODO Remove ids and filter
+					// console.log(feature)
 					// TODO Allow deselect
 					this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: !feature.state.selected })
-					this.ids.push(feature.id)
+                    if (!feature.state.selected) {
+
+                        this.ids.push(feature.id)
+                    } else {
+                        // console.log('remove id')
+                        this.ids.splice(this.ids.indexOf(feature.id), 1)
+                        // this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
+                        // // console.log(this.ids)
+                        // // this.map.getFeatureState()
+                        // this.map.setFilter('children', this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null)
+                    }
+
+
 				}
 			})
 
