@@ -56,9 +56,17 @@ export default Vue.extend({
 		    // TODO Account for no ids selected
 			// if (this.rangeOnly) {
 			    this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
-				// console.log(this.ids)
+				console.log(this.ids.length, this.rangeOnly)
 				// this.map.getFeatureState()
-				this.map.setFilter('children', this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null)
+            if (this.ids.length > 0) {
+
+                // this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'visible' : 'none')
+                this.map.setLayoutProperty('children', 'visibility', 'visible')
+
+                this.map.setFilter('children', this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null)
+            } else {
+                this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'none' : 'visible')
+            }
 			// }
 		},
 	},
@@ -258,6 +266,13 @@ export default Vue.extend({
 						this.map.setFilter('children', ['match', ['get', 'index'], filteredChildren, false, true])
                         // console.log('filtered out:', filteredChildren)
                         // console.log('selected:', this.ids)
+
+                        if (this.ids.includes(feature.id)) {
+                            // console.log(this.map.getFeatureState({source: 'children', id: feature.id}))
+                            this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
+                            this.ids.splice(this.ids.indexOf(feature.id), 1)
+
+                        }
 
 					}
 				} else {
