@@ -50,10 +50,12 @@ export default Vue.extend({
 	watch: {
 		selected(selected) {
 			// TODO Only push to array if not already in array?
-			console.log(Array.from(new Set(selected)))
+			// console.log(Array.from(new Set(selected)))
 		},
 		rangeOnly() {
-			// // TODO Account for no ids selected
+            console.log(this.selected)
+
+            // // TODO Account for no ids selected
 			// // if (this.rangeOnly) {
 			// this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
 			// console.log(this.ids.length, this.rangeOnly)
@@ -110,8 +112,8 @@ export default Vue.extend({
 				'source-layer': 'hex',
 				type: 'fill',
 				paint: {
-                    'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'black'],
-                    // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'blue'],
+					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'black'],
+					// 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'blue'],
 					'fill-opacity': 0.3,
 				},
 			})
@@ -174,7 +176,7 @@ export default Vue.extend({
 							features: childFeatures,
 						})
 
-						console.log(filteredParents)
+						// console.log(filteredParents)
 						// console.log(childFeatures)
 						this.map.setFilter(feature.source, [
 							'match',
@@ -183,11 +185,23 @@ export default Vue.extend({
 							false,
 							true,
 						])
+
+                        if (this.selected.includes(feature.id)) {
+                            this.selected.splice(this.selected.indexOf(feature.id), 1)
+                        }
 					}
 				} else {
-				    console.log('select ', feature)
-                    this.map.setFeatureState({source: feature.source, ...(feature.sourceLayer === 'hex' && {sourceLayer: 'hex'}), id: feature.id}, {selected: !feature.state.selected})
-                }
+				    if (this.selected.includes(feature.id)) {
+				        this.selected.splice(this.selected.indexOf(feature.id), 1)
+                    } else {
+				        this.selected.push(feature.id)
+                    }
+					this.map.setFeatureState(
+						{ source: feature.source, ...(feature.sourceLayer === 'hex' && { sourceLayer: 'hex' }), id: feature.id },
+						{ selected: !feature.state.selected }
+					)
+				}
+
 			})
 
 			this.map.on('click', 'children', (e: any) => {
