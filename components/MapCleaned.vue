@@ -68,8 +68,13 @@ export default Vue.extend({
                 })
 
 
+                // TODO Disable this option if features not selected?
+                // TODO HAndle when features selected/deselected in rangeOnly mode
             } else if (!this.selected.length && this.rangeOnly) {
                 console.log('NO features selected and range turned on')
+
+
+
             } else {
                 console.log('NO features selected and range turned OFF')
             }
