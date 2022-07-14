@@ -1,6 +1,7 @@
 <template>
 	<span>
 		<div id="map-2"></div>
+        <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly">show new range only {{ rangeOnly }}</button>
 		<!--		<button @click="adjust">adjust</button>-->
@@ -46,7 +47,7 @@ export default Vue.extend({
 		selectMode: false,
 		rangeOnly: false,
 		ids: [] as any[],
-        filtered: [] as any[],
+		filtered: [] as any[],
 	}),
 	watch: {
 		selected(selected) {
@@ -55,62 +56,40 @@ export default Vue.extend({
 		},
 		rangeOnly() {
 			// console.log(this.selected)
-            const layers = ['base-hex', 'children']
-            if (this.selected.length && this.rangeOnly) {
-                layers.forEach(layer => {
-                    this.map.setLayoutProperty(layer, 'visibility', 'visible')
+			const layers = ['base-hex', 'children']
+			if (this.selected.length && this.rangeOnly) {
+			    console.log('features selected and range only mode active')
+				layers.forEach((layer) => {
+					this.map.setLayoutProperty(layer, 'visibility', 'visible')
 
-                    this.map.setFilter(layer, ['match', ['get', 'h3_address'], this.selected, true, false])
-                })
-            } else if (this.selected.length && !this.rangeOnly) {
-                console.log('features selected but range turned off')
-                // console.log(this.filtered)
-                layers.forEach(layer => {
-                    this.map.setLayoutProperty(layer, 'visibility', 'visible')
-                    this.map.setFilter(layer, this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
-                })
+					this.map.setFilter(layer, ['match', ['get', 'h3_address'], this.selected, true, false])
+				})
+			} else if (this.selected.length && !this.rangeOnly) {
+				console.log('features selected but range turned off')
+				// console.log(this.filtered)
+				layers.forEach((layer) => {
+					this.map.setLayoutProperty(layer, 'visibility', 'visible')
+                    // if no features are filtered out (i.e. no hexes exploded) and range mode turned off, undo filter
+					this.map.setFilter(layer, this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+					// this.map.setFilter(layer, ['match', ['get', 'h3_address'], this.filtered, false, true])
+				})
 
+				// TODO Handle trying to explode polygons in range only view
+				// TODO HAndle when features selected/deselected in rangeOnly mode - should this be allowed?
+			} else if (!this.selected.length && this.rangeOnly) {
+				console.log('NO features selected and range turned on')
+				layers.forEach((layer) => {
+					this.map.setLayoutProperty(layer, 'visibility', 'none')
+					// this.map.setFilter(layer, this.rangeOnly ? ['!', ['has', 'h3_address']] : ['has', 'h3_address'])
+				})
+			} else {
+				layers.forEach((layer) => {
+					this.map.setLayoutProperty(layer, 'visibility', 'visible')
+					// this.map.setFilter(layer, this.rangeOnly ? ['!', ['has', 'h3_address']] : ['has', 'h3_address'])
+				})
 
-                // TODO Handle trying to explode polygons in range only view
-                // TODO Account for there being no children selected when range is toggled
-                // TODO Disable this option if features not selected?
-                // TODO HAndle when features selected/deselected in rangeOnly mode - should this be allowed?
-            } else if (!this.selected.length && this.rangeOnly) {
-                console.log('NO features selected and range turned on')
-                layers.forEach(layer => {
-                    this.map.setLayoutProperty(layer, 'visibility', 'none')
-                    // this.map.setFilter(layer, this.rangeOnly ? ['!', ['has', 'h3_address']] : ['has', 'h3_address'])
-                })
-
-
-
-
-            } else {
-                layers.forEach(layer => {
-                    this.map.setLayoutProperty(layer, 'visibility', 'visible')
-                    // this.map.setFilter(layer, this.rangeOnly ? ['!', ['has', 'h3_address']] : ['has', 'h3_address'])
-                })
-
-                console.log('NO features selected and range turned OFF')
-            }
-
-			// // TODO Account for no ids selected
-			// // if (this.rangeOnly) {
-			// this.map.setLayoutProperty('base-hex', 'visibility', this.rangeOnly ? 'none' : 'visible')
-			// console.log(this.ids.length, this.rangeOnly)
-			// // this.map.getFeatureState()
-			// if (this.ids.length > 0) {
-			// 	// this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'visible' : 'none')
-			// 	this.map.setLayoutProperty('children', 'visibility', 'visible')
-			//
-			// 	this.map.setFilter(
-			// 		'children',
-			// 		this.rangeOnly ? ['match', ['get', 'index'], Array.from(new Set(this.ids)), true, false] : null
-			// 	)
-			// } else {
-			// 	this.map.setLayoutProperty('children', 'visibility', this.rangeOnly ? 'none' : 'visible')
-			// }
-			// // }
+				console.log('NO features selected and range turned OFF')
+			}
 		},
 	},
 	mounted(): void {
@@ -158,8 +137,8 @@ export default Vue.extend({
 			})
 
 			// FIXME this method doesn't allow deselection of original range boundaries
-            // TODO Return json with bounding box to use 'within' exp to filter out base-hex layer?
-            // TODO Return single feature outline?
+			// TODO Return json with bounding box to use 'within' exp to filter out base-hex layer?
+			// TODO Return single feature outline?
 			this.map.addSource('species-range', {
 				type: 'vector',
 				tiles: ['http://localhost:8082/data/range-outline-max-6/{z}/{x}/{y}.pbf'],
@@ -178,8 +157,8 @@ export default Vue.extend({
 				},
 			})
 
-            // console.log(this.map.getSource('species-range'))
-            // this.map.setFilter('base-hex', [])
+			// console.log(this.map.getSource('species-range'))
+			// this.map.setFilter('base-hex', [])
 
 			this.map.addSource('children', {
 				type: 'geojson',
@@ -207,7 +186,7 @@ export default Vue.extend({
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 				const feature = e.features[0]
 				if (!this.selectMode) {
-				    // TODO Replace with getResolution everywhere
+					// TODO Replace with getResolution everywhere
 					const res = parseInt(feature.id[1]) + 1
 					const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
 					if (res <= 6) {
@@ -221,17 +200,11 @@ export default Vue.extend({
 							features: childFeatures,
 						})
 
-                        this.filtered = this.uniqueValues(filteredParents)
+						this.filtered = this.uniqueValues(filteredParents)
 						// console.log(filteredParents)
 						// console.log(childFeatures)
-                        // TODO Consider selecting children features on if parent feature is selected and then exploded
-						this.map.setFilter(feature.source, [
-							'match',
-							['get', 'h3_address'],
-							this.filtered,
-							false,
-							true,
-						])
+						// TODO Consider selecting children features on if parent feature is selected and then exploded
+						this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
 
 						if (this.selected.includes(feature.id)) {
 							this.selected.splice(this.selected.indexOf(feature.id), 1)
