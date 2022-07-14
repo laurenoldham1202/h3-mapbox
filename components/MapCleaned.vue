@@ -58,12 +58,15 @@ export default Vue.extend({
             const layers = ['base-hex', 'children']
             if (this.selected.length && this.rangeOnly) {
                 layers.forEach(layer => {
+                    this.map.setLayoutProperty(layer, 'visibility', 'visible')
+
                     this.map.setFilter(layer, ['match', ['get', 'h3_address'], this.selected, true, false])
                 })
             } else if (this.selected.length && !this.rangeOnly) {
                 console.log('features selected but range turned off')
-                console.log(this.filtered)
+                // console.log(this.filtered)
                 layers.forEach(layer => {
+                    this.map.setLayoutProperty(layer, 'visibility', 'visible')
                     this.map.setFilter(layer, this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
                 })
 
@@ -74,10 +77,20 @@ export default Vue.extend({
                 // TODO HAndle when features selected/deselected in rangeOnly mode - should this be allowed?
             } else if (!this.selected.length && this.rangeOnly) {
                 console.log('NO features selected and range turned on')
+                layers.forEach(layer => {
+                    this.map.setLayoutProperty(layer, 'visibility', 'none')
+                    // this.map.setFilter(layer, this.rangeOnly ? ['!', ['has', 'h3_address']] : ['has', 'h3_address'])
+                })
+
 
 
 
             } else {
+                layers.forEach(layer => {
+                    this.map.setLayoutProperty(layer, 'visibility', 'visible')
+                    // this.map.setFilter(layer, this.rangeOnly ? ['!', ['has', 'h3_address']] : ['has', 'h3_address'])
+                })
+
                 console.log('NO features selected and range turned OFF')
             }
 
