@@ -64,12 +64,14 @@ export default Vue.extend({
                 console.log('features selected but range turned off')
                 console.log(this.filtered)
                 layers.forEach(layer => {
-                    this.map.setFilter(layer, ['match', ['get', 'h3_address'], this.filtered, false, true])
+                    this.map.setFilter(layer, this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
                 })
 
 
+                // TODO Handle trying to explode polygons in range only view
+                // TODO Account for there being no children selected when range is toggled
                 // TODO Disable this option if features not selected?
-                // TODO HAndle when features selected/deselected in rangeOnly mode
+                // TODO HAndle when features selected/deselected in rangeOnly mode - should this be allowed?
             } else if (!this.selected.length && this.rangeOnly) {
                 console.log('NO features selected and range turned on')
 
@@ -136,16 +138,18 @@ export default Vue.extend({
 				'source-layer': 'hex',
 				type: 'fill',
 				paint: {
-					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'black'],
-					// 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'blue'],
+					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+					// 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'blue'],
 					'fill-opacity': 0.3,
 				},
 			})
 
 			// FIXME this method doesn't allow deselection of original range boundaries
+            // TODO Return json with bounding box to use 'within' exp to filter out base-hex layer?
+            // TODO Return single feature outline?
 			this.map.addSource('species-range', {
 				type: 'vector',
-				tiles: ['http://localhost:8082/data/range-outline-2/{z}/{x}/{y}.pbf'],
+				tiles: ['http://localhost:8082/data/range-outline-max-6/{z}/{x}/{y}.pbf'],
 				maxzoom: 7,
 			})
 			this.map.addLayer({
@@ -155,11 +159,14 @@ export default Vue.extend({
 				type: 'fill',
 				// filter: ['>', ['get', 'resident'], 0],
 				paint: {
-					'fill-color': 'green',
+					'fill-color': 'deeppink',
 					'fill-opacity': 0.3,
 					// 'fill-outline-color': 'purple',
 				},
 			})
+
+            // console.log(this.map.getSource('species-range'))
+            // this.map.setFilter('base-hex', [])
 
 			this.map.addSource('children', {
 				type: 'geojson',
@@ -173,8 +180,8 @@ export default Vue.extend({
 				type: 'fill',
 				paint: {
 					'fill-opacity': 0.3,
-					'fill-outline-color': 'black',
-					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'green', 'black'],
+					// 'fill-outline-color': 'black',
+					'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
 				},
 				layout: {
 					'fill-sort-key': ['+', ['get', 'h3_address']],
@@ -187,6 +194,7 @@ export default Vue.extend({
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 				const feature = e.features[0]
 				if (!this.selectMode) {
+				    // TODO Replace with getResolution everywhere
 					const res = parseInt(feature.id[1]) + 1
 					const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
 					if (res <= 6) {
