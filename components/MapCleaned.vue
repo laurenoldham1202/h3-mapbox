@@ -4,6 +4,12 @@
         <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly">show new range only {{ rangeOnly }}</button>
+
+
+		<button @click="resolution++">+</button>
+		<button @click="resolution--">-</button>
+
+
 		<!--		<button @click="adjust">adjust</button>-->
 	</span>
 </template>
@@ -48,11 +54,32 @@ export default Vue.extend({
 		rangeOnly: false,
 		ids: [] as any[],
 		filtered: [] as any[],
+        resolution: 4,
+        draw: undefined as any,
+        childFeatures: [] as any[],
 	}),
 	watch: {
-		selected(selected) {
-			// TODO Only push to array if not already in array?
-			// console.log(Array.from(new Set(selected)))
+		resolution(res) {
+		    const all = this.draw.getAll()
+            const feat = all.features[0]
+
+            // TODO Restrict to res 6, disable button ranges
+		    // console.log(feat)
+		    // console.log(res)
+            if (res <= 6) {
+
+                // TODO If select mode false, automatically drill down res when shape is drawn
+                const hexes = h3.polyfill(feat.geometry.coordinates, res, true)
+                // console.log(hexes)
+                const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
+                console.log(geojson)
+                this.childFeatures.push(...geojson.features)
+                this.map.getSource('children').setData({
+                    type: 'FeatureCollection',
+                    features: this.childFeatures,
+                })
+            }
+
 		},
 		rangeOnly() {
 			// console.log(this.selected)
@@ -102,7 +129,7 @@ export default Vue.extend({
 			doubleClickZoom: false,
 		})
 
-		const Draw = new MapboxDraw({
+		this.draw = new MapboxDraw({
 			displayControlsDefault: false,
 			// defaultMode: 'draw_polygon',
 			controls: {
@@ -114,7 +141,7 @@ export default Vue.extend({
 				// draw_polygon: DrawRectangle,
 			}),
 		})
-		this.map.addControl(Draw, 'top-left')
+		this.map.addControl(this.draw, 'top-left')
 
 		this.map.on('load', () => {
 			this.map.addSource('base-hex', {
@@ -180,7 +207,7 @@ export default Vue.extend({
 				},
 			})
 
-			const childFeatures: any[] = []
+			// const childFeatures: any[] = []
 			const filteredParents: string[] = []
 
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
@@ -193,11 +220,11 @@ export default Vue.extend({
 						filteredParents.push(feature.id)
 						const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
 						// console.log(geojson)
-						childFeatures.push(...geojson.features)
+						this.childFeatures.push(...geojson.features)
 
 						this.map.getSource('children').setData({
 							type: 'FeatureCollection',
-							features: childFeatures,
+							features: this.childFeatures,
 						})
 
 						this.filtered = this.uniqueValues(filteredParents)
@@ -223,7 +250,7 @@ export default Vue.extend({
 				}
 			})
 
-			this.map.on('click', 'children', (e: any) => {
+			this.map.on('draw.create', (e: any) => {
 				const feature = e.features[0]
 				// console.log(feature)
 			})
