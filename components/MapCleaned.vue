@@ -373,19 +373,36 @@ export default Vue.extend({
 		},
         adjustRes(increase: boolean) {
 		    // console.log(this.resolution, increase, this.childFeatures)
-            if (increase) {
+            if (increase && this.resolution <= 5) {
                 this.resolution++
                 // console.log(this.filtered)
                 const hexes = this.getChildrenHexIndices(this.filtered, this.resolution)
                 // console.log(hexes)
                 const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
-                console.log(geojson)
+                // console.log(geojson)
                 this.childFeatures = geojson.features
                 this.map.getSource('children').setData({
                     type: 'FeatureCollection',
                     features: this.childFeatures,
                 })
 
+            } else if (!increase && this.resolution >= 5) {
+                this.resolution--
+                console.log(this.resolution)
+
+                // console.log(this.filtered)
+
+                const hexes = this.getParents(this.childFeatures.map(x => x.id), this.resolution)
+                console.log(this.uniqueValues(hexes))
+                // const hexes = this.getParents(this.filtered, this.resolution)
+                // console.log(hexes)
+                const geojson = geojson2h3.h3SetToFeatureCollection(this.uniqueValues(hexes), (hex) => ({ h3_address: hex }))
+                console.log(geojson)
+                this.childFeatures = geojson.features
+                this.map.getSource('children').setData({
+                    type: 'FeatureCollection',
+                    features: this.childFeatures,
+                })
             }
         }
 	},
