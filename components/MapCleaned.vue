@@ -5,8 +5,8 @@
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly">show new range only {{ rangeOnly }}</button>
 
-		<button @click="adjustRes(true)">+</button>
-		<button @click="adjustRes(false)">-</button>
+		<button @click="adjustRes(true)" :disabled="resolution >= 6">+</button>
+		<button @click="adjustRes(false)" :disabled="resolution <= 4">-</button>
 
 		<!--		<button @click="adjust">adjust</button>-->
 	</span>
@@ -412,4 +412,8 @@ button {
 	border: 1px solid black;
 	padding: 0.5rem;
 }
+    button:disabled {
+        border-color: #7f828b;
+        color: #7f828b;
+    }
 </style>
