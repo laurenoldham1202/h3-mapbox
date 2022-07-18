@@ -20,9 +20,10 @@ import * as h3 from 'h3-js'
 import { GeoJSON } from 'GeoJSON'
 import MapboxDraw from '@mapbox/mapbox-gl-draw'
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
-import FreehandMode from 'mapbox-gl-draw-freehand-mode'
+// import FreehandMode from 'mapbox-gl-draw-freehand-mode'
 import intersect from '@turf/intersect'
 import bbox from '@turf/bbox'
+// @ts-ignore
 import DrawRectangle from 'mapbox-gl-draw-rectangle-mode'
 
 import { USA, range } from '~/assets/us'
@@ -136,6 +137,7 @@ export default Vue.extend({
 				polygon: true,
 				trash: true,
 			},
+            // @ts-ignore
 			modes: Object.assign(MapboxDraw.modes, {
 				// draw_polygon: FreehandMode,
 				draw_polygon: DrawRectangle,
@@ -189,7 +191,10 @@ export default Vue.extend({
 
 			this.map.addSource('children', {
 				type: 'geojson',
-				data: {},
+				data: {
+				    type: 'FeatureCollection',
+                    features: [],
+                },
 				promoteId: 'h3_address',
 			})
 
@@ -265,6 +270,7 @@ export default Vue.extend({
 				const feat = e.features[0]
 
 				this.filtered.push(...this.uniqueValues(h3.polyfill(feat.geometry.coordinates, this.resolution, true)))
+                // console.log(this.filtered)
 
 				this.resolution++
 				const res = this.resolution
@@ -274,7 +280,9 @@ export default Vue.extend({
 				// console.log(res)
 				if (res <= 6) {
 					// TODO If select mode false, automatically drill down res when shape is drawn
-					const hexes = h3.polyfill(feat.geometry.coordinates, res, true)
+					// const h = h3.polyfill(feat.geometry.coordinates, res, true)
+                    // console.log(h)
+                    const hexes = this.getChildrenHexIndices(this.filtered, this.resolution)
 					// console.log(hexes)
 					const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
 					// console.log(geojson)
@@ -284,13 +292,16 @@ export default Vue.extend({
 						features: this.childFeatures,
 					})
 
+
+
+
 					// TODO NEED TO HANDLE FILTERING OUT PARTIAL PARENT FEATURES
 					// TODO Differ between base and children
 					this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.filtered, false, true])
 				}
 			})
 
-			this.map.on('draw.modechange', (e) => {
+			this.map.on('draw.modechange', (e: any) => {
 				// console.log(e)
 				// TODO HAndle this better so that final click doesn't select hex
 				setTimeout(() => {
