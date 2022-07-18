@@ -375,9 +375,14 @@ export default Vue.extend({
 		    // console.log(this.resolution, increase, this.childFeatures)
             if (increase && this.resolution <= 5) {
                 this.resolution++
-                // console.log(this.filtered)
-                const hexes = this.getChildrenHexIndices(this.filtered, this.resolution)
-                // console.log(hexes)
+            } else if (!increase && this.resolution >= 5) {
+                this.resolution--
+            }
+
+
+            // if (this.resolution >= 3 && this.resolution <= 6) {
+            //     console.log('adjust', this.resolution)
+                const hexes = increase ? this.getChildrenHexIndices(this.filtered, this.resolution) : this.uniqueValues(this.getParents(this.childFeatures.map(x => x.id), this.resolution))
                 const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
                 // console.log(geojson)
                 this.childFeatures = geojson.features
@@ -385,25 +390,9 @@ export default Vue.extend({
                     type: 'FeatureCollection',
                     features: this.childFeatures,
                 })
+            // }
 
-            } else if (!increase && this.resolution >= 5) {
-                this.resolution--
-                console.log(this.resolution)
 
-                // console.log(this.filtered)
-
-                const hexes = this.getParents(this.childFeatures.map(x => x.id), this.resolution)
-                console.log(this.uniqueValues(hexes))
-                // const hexes = this.getParents(this.filtered, this.resolution)
-                // console.log(hexes)
-                const geojson = geojson2h3.h3SetToFeatureCollection(this.uniqueValues(hexes), (hex) => ({ h3_address: hex }))
-                console.log(geojson)
-                this.childFeatures = geojson.features
-                this.map.getSource('children').setData({
-                    type: 'FeatureCollection',
-                    features: this.childFeatures,
-                })
-            }
         }
 	},
 })
