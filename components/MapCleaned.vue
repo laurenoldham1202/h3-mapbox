@@ -5,8 +5,8 @@
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly">show new range only {{ rangeOnly }}</button>
 
-		<button @click="resolution++">+</button>
-		<button @click="resolution--">-</button>
+		<button @click="adjustRes(true)">+</button>
+		<button @click="adjustRes(false)">-</button>
 
 		<!--		<button @click="adjust">adjust</button>-->
 	</span>
@@ -60,6 +60,8 @@ export default Vue.extend({
 	}),
 	watch: {
 		resolution(res) {
+		    // console.log(res)
+            // console.log(this.childFeatures)
 			// TODO Adjust for map extent, restricted to # of features and zoom level
 			const layers = ['base-hex', 'children']
 			// const all = this.draw.getAll()
@@ -269,36 +271,46 @@ export default Vue.extend({
 			this.map.on('draw.create', (e: any) => {
 				const feat = e.features[0]
 
-				this.filtered.push(...this.uniqueValues(h3.polyfill(feat.geometry.coordinates, this.resolution, true)))
-                // console.log(this.filtered)
+                if (!this.selectMode) {
 
-				this.resolution++
-				const res = this.resolution
+                    this.filtered.push(...this.uniqueValues(h3.polyfill(feat.geometry.coordinates, this.resolution, true)))
+                    // console.log(this.filtered)
 
-				// TODO disable button ranges
-				// console.log(feat)
-				// console.log(res)
-				if (res <= 6) {
-					// TODO If select mode false, automatically drill down res when shape is drawn
-					// const h = h3.polyfill(feat.geometry.coordinates, res, true)
-                    // console.log(h)
-                    const hexes = this.getChildrenHexIndices(this.filtered, this.resolution)
-					// console.log(hexes)
-					const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
-					// console.log(geojson)
-					this.childFeatures.push(...geojson.features)
-					this.map.getSource('children').setData({
-						type: 'FeatureCollection',
-						features: this.childFeatures,
-					})
+                    // FIXME Drawing second shape shouldn't increase res for both shapes
+                    // TODO Should res always be uniform, or should diff shapes allow diff res?
+                    this.resolution++
+                    const res = this.resolution
+
+                    // TODO disable button ranges
+                    // console.log(feat)
+                    // console.log(res)
+                    if (res <= 6) {
+                        // TODO If select mode false, automatically drill down res when shape is drawn
+                        // const h = h3.polyfill(feat.geometry.coordinates, res, true)
+                        // console.log(h)
+                        const hexes = this.getChildrenHexIndices(this.filtered, this.resolution)
+                        // console.log(hexes)
+                        const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
+                        // console.log(geojson)
+                        this.childFeatures.push(...geojson.features)
+                        this.map.getSource('children').setData({
+                            type: 'FeatureCollection',
+                            features: this.childFeatures,
+                        })
 
 
 
 
-					// TODO NEED TO HANDLE FILTERING OUT PARTIAL PARENT FEATURES
-					// TODO Differ between base and children
-					this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.filtered, false, true])
-				}
+                        // TODO NEED TO HANDLE FILTERING OUT PARTIAL PARENT FEATURES
+                        // TODO Differ between base and children
+                        this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.filtered, false, true])
+                    }
+                } else {
+                    console.log()
+                }
+
+
+
 			})
 
 			this.map.on('draw.modechange', (e: any) => {
@@ -359,6 +371,23 @@ export default Vue.extend({
 		uniqueValues(array: any[]) {
 			return Array.from(new Set(array))
 		},
+        adjustRes(increase: boolean) {
+		    // console.log(this.resolution, increase, this.childFeatures)
+            if (increase) {
+                this.resolution++
+                // console.log(this.filtered)
+                const hexes = this.getChildrenHexIndices(this.filtered, this.resolution)
+                // console.log(hexes)
+                const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
+                console.log(geojson)
+                this.childFeatures = geojson.features
+                this.map.getSource('children').setData({
+                    type: 'FeatureCollection',
+                    features: this.childFeatures,
+                })
+
+            }
+        }
 	},
 })
 </script>
