@@ -3,7 +3,7 @@
 		<div id="map-2"></div>
 		<!-- TODO Add button to reset hexes, add button to 'smooth' range -->
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
-		<button @click="rangeOnly = !rangeOnly">show new range only {{ rangeOnly }}</button>
+		<button @click="rangeOnly = !rangeOnly" :class="{alert: updateRequired}">show new range only: {{ rangeOnly }}</button>
 
 		<button @click="adjustRes(true)" :disabled="resolution >= 6">+</button>
 		<button @click="adjustRes(false)" :disabled="resolution <= 4">-</button>
@@ -49,24 +49,26 @@ export default Vue.extend({
 			[36.3116770845, -104.6527823561],
 		] as any,
 		selected: [] as any[],
-		selectMode: false,
+		selectMode: true,
 		rangeOnly: false,
 		ids: [] as any[],
 		filtered: [] as any[],
 		resolution: 4,
 		draw: undefined as any,
 		childFeatures: [] as any[],
-		drawModeActive: true, // TODO MATCH WITH DEFAULT DRAW SETTING
+		drawModeActive: false, // TODO MATCH WITH DEFAULT DRAW SETTING
+        updateRequired: false,
 	}),
 	watch: {
+	    // TODO Have a separate toggle for selecting while shape is drawn
 	    // TODO Check condition where you have elements selected and then change res
 	    selectMode(selectMode) {
-	        // console.log(selectMode, this.childFeatures)
-            // TODO Handle if parent elements only, handle selections at different resolutions
-
-            this.childFeatures.forEach(feat => {
-                this.map.setFeatureState({source: 'children', id: feat.id}, {selected: selectMode})
-            })
+	        // // console.log(selectMode, this.childFeatures)
+            // // TODO Handle if parent elements only, handle selections at different resolutions
+            //
+            // this.childFeatures.forEach(feat => {
+            //     this.map.setFeatureState({source: 'children', id: feat.id}, {selected: selectMode})
+            // })
         },
 		resolution(res) {
 		    // console.log(res)
@@ -143,7 +145,7 @@ export default Vue.extend({
 
 		this.draw = new MapboxDraw({
 			displayControlsDefault: false,
-			defaultMode: 'draw_polygon',
+			// defaultMode: 'draw_polygon',
 			controls: {
 				polygon: true,
 				trash: true,
@@ -261,10 +263,15 @@ export default Vue.extend({
 						}
 					} else {
 						if (this.selected.includes(feature.id)) {
+						    console.log('doot')
+                            this.updateRequired = true
 							this.selected.splice(this.selected.indexOf(feature.id), 1)
 						} else {
 							this.selected.push(feature.id)
 						}
+
+						console.log(this.selected)
+
 						this.map.setFeatureState(
 							{
 								source: feature.source,
@@ -382,6 +389,7 @@ export default Vue.extend({
 		uniqueValues(array: any[]) {
 			return Array.from(new Set(array))
 		},
+        // TODO Handle drawing over hexes that have already been exploded
         adjustRes(increase: boolean) {
 		    // console.log(this.resolution, increase, this.childFeatures)
             if (increase && this.resolution <= 5) {
@@ -418,5 +426,9 @@ button {
     button:disabled {
         border-color: #7f828b;
         color: #7f828b;
+    }
+
+    .alert {
+        background: red
     }
 </style>
