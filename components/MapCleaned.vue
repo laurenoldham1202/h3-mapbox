@@ -59,6 +59,15 @@ export default Vue.extend({
 		drawModeActive: true, // TODO MATCH WITH DEFAULT DRAW SETTING
 	}),
 	watch: {
+	    // TODO Check condition where you have elements selected and then change res
+	    selectMode(selectMode) {
+	        // console.log(selectMode, this.childFeatures)
+            // TODO Handle if parent elements only, handle selections at different resolutions
+
+            this.childFeatures.forEach(feat => {
+                this.map.setFeatureState({source: 'children', id: feat.id}, {selected: selectMode})
+            })
+        },
 		resolution(res) {
 		    // console.log(res)
             // console.log(this.childFeatures)
@@ -268,6 +277,7 @@ export default Vue.extend({
 				}
 			})
 
+            // TODO Handle drawing multiple shapes
 			this.map.on('draw.create', (e: any) => {
 				const feat = e.features[0]
 
@@ -301,11 +311,12 @@ export default Vue.extend({
 
 
 
-                        // TODO NEED TO HANDLE FILTERING OUT PARTIAL PARENT FEATURES
                         // TODO Differ between base and children
                         this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.filtered, false, true])
                     }
+                    // this.draw.delete(feat.id)
                 } else {
+
                     console.log()
                 }
 
@@ -378,21 +389,13 @@ export default Vue.extend({
             } else if (!increase && this.resolution >= 5) {
                 this.resolution--
             }
-
-
-            // if (this.resolution >= 3 && this.resolution <= 6) {
-            //     console.log('adjust', this.resolution)
-                const hexes = increase ? this.getChildrenHexIndices(this.filtered, this.resolution) : this.uniqueValues(this.getParents(this.childFeatures.map(x => x.id), this.resolution))
-                const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
-                // console.log(geojson)
-                this.childFeatures = geojson.features
-                this.map.getSource('children').setData({
-                    type: 'FeatureCollection',
-                    features: this.childFeatures,
-                })
-            // }
-
-
+            const hexes = increase ? this.getChildrenHexIndices(this.filtered, this.resolution) : this.uniqueValues(this.getParents(this.childFeatures.map(x => x.id), this.resolution))
+            const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
+            this.childFeatures = geojson.features
+            this.map.getSource('children').setData({
+                type: 'FeatureCollection',
+                features: this.childFeatures,
+            })
         }
 	},
 })
