@@ -1,12 +1,18 @@
 <template>
 	<span>
+        Draw Menu:
+
+		<button @click="adjustRes(true)" :disabled="resolution >= 6">+</button>
+		<button @click="adjustRes(false)" :disabled="resolution <= 4">-</button>
+        <!-- TODO Disable until shape is drawn -->
+		<button @click="selectAll">Select all</button>
+		<button>Deselect all</button>
+
 		<div id="map-2"></div>
 		<!-- TODO Add button to reset hexes, add button to 'smooth' range -->
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly" :class="{alert: updateRequired}">show new range only: {{ rangeOnly }}</button>
 
-		<button @click="adjustRes(true)" :disabled="resolution >= 6">+</button>
-		<button @click="adjustRes(false)" :disabled="resolution <= 4">-</button>
 
 		<!--		<button @click="adjust">adjust</button>-->
 	</span>
@@ -49,7 +55,7 @@ export default Vue.extend({
 			[36.3116770845, -104.6527823561],
 		] as any,
 		selected: [] as any[],
-		selectMode: true,
+		selectMode: false,
 		rangeOnly: false,
 		ids: [] as any[],
 		filtered: [] as any[],
@@ -58,6 +64,7 @@ export default Vue.extend({
 		childFeatures: [] as any[],
 		drawModeActive: false, // TODO MATCH WITH DEFAULT DRAW SETTING
         updateRequired: false,
+        selectAllDrawn: false,
 	}),
 	watch: {
 	    // TODO Have a separate toggle for selecting while shape is drawn
@@ -264,7 +271,10 @@ export default Vue.extend({
 					} else {
 						if (this.selected.includes(feature.id)) {
 						    console.log('doot')
-                            this.updateRequired = true
+                            if (this.rangeOnly) {
+                                // TODO Need to turn this off and update
+                                this.updateRequired = true
+                            }
 							this.selected.splice(this.selected.indexOf(feature.id), 1)
 						} else {
 							this.selected.push(feature.id)
@@ -389,6 +399,7 @@ export default Vue.extend({
 		uniqueValues(array: any[]) {
 			return Array.from(new Set(array))
 		},
+        // FIXME When feature states are set for selectAll and then single hex is clicked, weird stuff happens
         // TODO Handle drawing over hexes that have already been exploded
         adjustRes(increase: boolean) {
 		    // console.log(this.resolution, increase, this.childFeatures)
@@ -404,6 +415,15 @@ export default Vue.extend({
                 type: 'FeatureCollection',
                 features: this.childFeatures,
             })
+            if (this.selectAllDrawn) {
+                this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+            }
+        },
+        selectAll() {
+		    this.selectAllDrawn = true
+		    // console.log(this.filtered)
+            console.log(this.childFeatures)
+            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
         }
 	},
 })
