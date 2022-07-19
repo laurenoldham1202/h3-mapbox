@@ -62,46 +62,9 @@ export default Vue.extend({
 		resolution: 4,
 		draw: undefined as any,
 		childFeatures: [] as any[],
-		drawModeActive: false, // TODO MATCH WITH DEFAULT DRAW SETTING
         updateRequired: false,
-        selectAllDrawn: false,
 	}),
 	watch: {
-	    // TODO Have a separate toggle for selecting while shape is drawn
-	    // TODO Check condition where you have elements selected and then change res
-	    selectMode(selectMode) {
-	        // // console.log(selectMode, this.childFeatures)
-            // // TODO Handle if parent elements only, handle selections at different resolutions
-            //
-            // this.childFeatures.forEach(feat => {
-            //     this.map.setFeatureState({source: 'children', id: feat.id}, {selected: selectMode})
-            // })
-        },
-		resolution(res) {
-		    // console.log(res)
-            // console.log(this.childFeatures)
-			// TODO Adjust for map extent, restricted to # of features and zoom level
-			const layers = ['base-hex', 'children']
-			// const all = this.draw.getAll()
-			// const feat = all.features[0]
-			//
-			// // TODO Restrict to res 6, disable button ranges
-			// // console.log(feat)
-			// // console.log(res)
-			// if (res <= 6) {
-			//
-			//     // TODO If select mode false, automatically drill down res when shape is drawn
-			//     const hexes = h3.polyfill(feat.geometry.coordinates, res, true)
-			//     // console.log(hexes)
-			//     const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
-			//     console.log(geojson)
-			//     this.childFeatures.push(...geojson.features)
-			//     this.map.getSource('children').setData({
-			//         type: 'FeatureCollection',
-			//         features: this.childFeatures,
-			//     })
-			// }
-		},
 		rangeOnly() {
 			// console.log(this.selected)
 			const layers = ['base-hex', 'children']
@@ -239,10 +202,11 @@ export default Vue.extend({
             // TODO Propagate seleections for point click and allow to drill out
             // Include res 3, don't focus on shape drawing
             // Shape drawing - default mode as select
+            // FIXME select hex, show range only, explode selected hex causes errors
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 			    // console.log(e)
 
-                if (!this.drawModeActive) {
+                // if (!this.drawModeActive) {
 					// console.log(this.draw.getMode())
 					const feature = e.features[0]
                     // console.log(feature, this.draw.getAll())
@@ -299,62 +263,7 @@ export default Vue.extend({
 							{ selected: !feature.state.selected }
 						)
 					}
-                }
-			})
-
-            // TODO Handle drawing multiple shapes
-			this.map.on('draw.create', (e: any) => {
-				const feat = e.features[0]
-
-                if (!this.selectMode) {
-
-                    this.filtered.push(...this.uniqueValues(h3.polyfill(feat.geometry.coordinates, this.resolution, true)))
-                    // console.log(this.filtered)
-
-                    // FIXME Drawing second shape shouldn't increase res for both shapes
-                    // TODO Should res always be uniform, or should diff shapes allow diff res?
-                    this.resolution++
-                    const res = this.resolution
-
-                    // TODO disable button ranges
-                    // console.log(feat)
-                    // console.log(res)
-                    if (res <= 6) {
-                        // TODO If select mode false, automatically drill down res when shape is drawn
-                        // const h = h3.polyfill(feat.geometry.coordinates, res, true)
-                        // console.log(h)
-                        const hexes = this.getChildrenHexIndices(this.filtered, this.resolution)
-                        // console.log(hexes)
-                        const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
-                        // console.log(geojson)
-                        this.childFeatures.push(...geojson.features)
-                        this.map.getSource('children').setData({
-                            type: 'FeatureCollection',
-                            features: this.childFeatures,
-                        })
-
-
-
-
-                        // TODO Differ between base and children
-                        this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.filtered, false, true])
-                    }
-                    // this.draw.delete(feat.id)
-                } else {
-
-                    console.log()
-                }
-
-
-
-			})
-
-			this.map.on('draw.modechange', (e: any) => {
-				// console.log(e)
-				// TODO HAndle this better so that final click doesn't select hex
-				setTimeout(() => {
-					this.drawModeActive = e.mode === 'draw_polygon'
-				}, 10)
+                // }
 			})
 		})
 	},
@@ -407,47 +316,6 @@ export default Vue.extend({
 		uniqueValues(array: any[]) {
 			return Array.from(new Set(array))
 		},
-        // FIXME When feature states are set for selectAll and then single hex is clicked, weird stuff happens
-        // TODO Handle drawing over hexes that have already been exploded
-        adjustRes(increase: boolean) {
-		    // console.log(this.resolution, increase, this.childFeatures)
-            if (increase && this.resolution <= 5) {
-                this.resolution++
-            } else if (!increase && this.resolution >= 5) {
-                this.resolution--
-            }
-            const hexes = increase ? this.getChildrenHexIndices(this.filtered, this.resolution) : this.uniqueValues(this.getParents(this.childFeatures.map(x => x.id), this.resolution))
-            const geojson = geojson2h3.h3SetToFeatureCollection(hexes, (hex) => ({ h3_address: hex }))
-            this.childFeatures = geojson.features
-            this.map.getSource('children').setData({
-                type: 'FeatureCollection',
-                features: this.childFeatures,
-            })
-            // if (this.selectAllDrawn) {
-
-            // FIXME doesn't show selected children when exploding shapes in rangeonly mode - set timeout and call rangemode filtering again?
-            if (this.selectAllDrawn) {
-
-                this.selected.push(...this.childFeatures.map(x => x.id))
-            } else {
-                this.childFeatures.map(x => this.selected.splice(this.selected.indexOf(x.id), 1))
-            }
-                this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: this.selectAllDrawn }))
-            // }
-        },
-        selectAll(selectAll: boolean) {
-		    this.selectAllDrawn = selectAll
-		    // console.log(this.filtered)
-            // console.log(this.childFeatures)
-            // TODO PUSH ALL FEATURES TO SELECTED ARR - REMOVE ON DESELECT? HANDLE ON ADJUSTMENTS
-            if (selectAll) {
-
-                this.selected.push(...this.childFeatures.map(x => x.id))
-            } else {
-                this.childFeatures.map(x => this.selected.splice(this.selected.indexOf(x.id), 1))
-            }
-            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: selectAll}))
-        },
 
 	},
 })
