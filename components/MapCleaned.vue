@@ -234,12 +234,15 @@ export default Vue.extend({
 
 			// const childFeatures: any[] = []
 			const filteredParents: string[] = []
+            // console.log(this.map.getStyle().layers)
 
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
-			    console.log(e)
-				if (!this.drawModeActive) {
+			    // console.log(e)
+
+                if (!this.drawModeActive) {
 					// console.log(this.draw.getMode())
 					const feature = e.features[0]
+                    // console.log(feature, this.draw.getAll())
 					if (!this.selectMode) {
 						// TODO Replace with getResolution everywhere
 						const res = parseInt(feature.id[1]) + 1
@@ -271,7 +274,7 @@ export default Vue.extend({
 						}
 					} else {
 						if (this.selected.includes(feature.id)) {
-						    // console.log('doot')
+						    console.log('doot')
                             // if (this.rangeOnly) {
                             //     // TODO Need to turn this off and update
                             //     this.updateRequired = true
@@ -292,7 +295,7 @@ export default Vue.extend({
 							{ selected: !feature.state.selected }
 						)
 					}
-				}
+                }
 			})
 
             // TODO Handle drawing multiple shapes
@@ -417,13 +420,28 @@ export default Vue.extend({
                 features: this.childFeatures,
             })
             // if (this.selectAllDrawn) {
+
+            // FIXME doesn't show selected children when exploding shapes in rangeonly mode - set timeout and call rangemode filtering again?
+            if (this.selectAllDrawn) {
+
+                this.selected.push(...this.childFeatures.map(x => x.id))
+            } else {
+                this.childFeatures.map(x => this.selected.splice(this.selected.indexOf(x.id), 1))
+            }
                 this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: this.selectAllDrawn }))
             // }
         },
         selectAll(selectAll: boolean) {
 		    this.selectAllDrawn = selectAll
 		    // console.log(this.filtered)
-            console.log(this.childFeatures)
+            // console.log(this.childFeatures)
+            // TODO PUSH ALL FEATURES TO SELECTED ARR - REMOVE ON DESELECT? HANDLE ON ADJUSTMENTS
+            if (selectAll) {
+
+                this.selected.push(...this.childFeatures.map(x => x.id))
+            } else {
+                this.childFeatures.map(x => this.selected.splice(this.selected.indexOf(x.id), 1))
+            }
             this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: selectAll}))
         },
 
