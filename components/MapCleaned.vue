@@ -5,8 +5,8 @@
 		<button @click="adjustRes(true)" :disabled="resolution >= 6">+</button>
 		<button @click="adjustRes(false)" :disabled="resolution <= 4">-</button>
         <!-- TODO Disable until shape is drawn -->
-		<button @click="selectAll">Select all</button>
-		<button>Deselect all</button>
+		<button @click="selectAll(true)">Select all</button>
+		<button @click="selectAll(false)">Deselect all</button>
 
 		<div id="map-2"></div>
 		<!-- TODO Add button to reset hexes, add button to 'smooth' range -->
@@ -236,6 +236,7 @@ export default Vue.extend({
 			const filteredParents: string[] = []
 
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
+			    console.log(e)
 				if (!this.drawModeActive) {
 					// console.log(this.draw.getMode())
 					const feature = e.features[0]
@@ -258,7 +259,7 @@ export default Vue.extend({
 							this.filtered.push(...filteredParents)
 							this.filtered = this.uniqueValues(this.filtered)
 
-							console.log(this.filtered)
+							// console.log(this.filtered)
 							// console.log(filteredParents)
 							// console.log(childFeatures)
 							// TODO Consider selecting children features on if parent feature is selected and then exploded
@@ -270,17 +271,17 @@ export default Vue.extend({
 						}
 					} else {
 						if (this.selected.includes(feature.id)) {
-						    console.log('doot')
-                            if (this.rangeOnly) {
-                                // TODO Need to turn this off and update
-                                this.updateRequired = true
-                            }
+						    // console.log('doot')
+                            // if (this.rangeOnly) {
+                            //     // TODO Need to turn this off and update
+                            //     this.updateRequired = true
+                            // }
 							this.selected.splice(this.selected.indexOf(feature.id), 1)
 						} else {
 							this.selected.push(feature.id)
 						}
 
-						console.log(this.selected)
+						// console.log(this.selected)
 
 						this.map.setFeatureState(
 							{
@@ -415,16 +416,17 @@ export default Vue.extend({
                 type: 'FeatureCollection',
                 features: this.childFeatures,
             })
-            if (this.selectAllDrawn) {
-                this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
-            }
+            // if (this.selectAllDrawn) {
+                this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: this.selectAllDrawn }))
+            // }
         },
-        selectAll() {
-		    this.selectAllDrawn = true
+        selectAll(selectAll: boolean) {
+		    this.selectAllDrawn = selectAll
 		    // console.log(this.filtered)
             console.log(this.childFeatures)
-            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
-        }
+            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: selectAll}))
+        },
+
 	},
 })
 </script>
