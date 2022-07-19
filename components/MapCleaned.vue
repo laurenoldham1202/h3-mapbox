@@ -236,6 +236,9 @@ export default Vue.extend({
 			const filteredParents: string[] = []
             // console.log(this.map.getStyle().layers)
 
+            // TODO Propagate seleections for point click and allow to drill out
+            // Include res 3, don't focus on shape drawing
+            // Shape drawing - default mode as select
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 			    // console.log(e)
 
@@ -266,6 +269,7 @@ export default Vue.extend({
 							// console.log(filteredParents)
 							// console.log(childFeatures)
 							// TODO Consider selecting children features on if parent feature is selected and then exploded
+                            // TODO Deslect original pink shape
 							this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
 
 							if (this.selected.includes(feature.id)) {
