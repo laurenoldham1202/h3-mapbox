@@ -1,17 +1,18 @@
 <template>
 	<span>
-        Draw Menu:
 
-		<button @click="adjustRes(true)" :disabled="resolution >= 6">+</button>
-		<button @click="adjustRes(false)" :disabled="resolution <= 4">-</button>
-        <!-- TODO Disable until shape is drawn -->
-		<button @click="selectAll(true)">Select all</button>
-		<button @click="selectAll(false)">Deselect all</button>
-
-		<div id="map-2"></div>
-		<!-- TODO Add button to reset hexes, add button to 'smooth' range -->
+        <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly" :class="{alert: updateRequired}">show new range only: {{ rangeOnly }}</button>
+
+<!--		<button @click="adjustRes(true)" :disabled="resolution >= 6">+</button>-->
+<!--		<button @click="adjustRes(false)" :disabled="resolution <= 4">-</button>-->
+<!--        &lt;!&ndash; TODO Disable until shape is drawn &ndash;&gt;-->
+<!--		<button @click="selectAll(true)">Select all</button>-->
+<!--		<button @click="selectAll(false)">Deselect all</button>-->
+
+		<div id="map-2"></div>
+
 
 
 		<!--		<button @click="adjust">adjust</button>-->
@@ -55,7 +56,7 @@ export default Vue.extend({
 			[36.3116770845, -104.6527823561],
 		] as any,
 		selected: [] as any[],
-		selectMode: false,
+		selectMode: true,
 		rangeOnly: false,
 		ids: [] as any[],
 		filtered: [] as any[],
@@ -132,7 +133,7 @@ export default Vue.extend({
 			this.map.addSource('base-hex', {
 				type: 'vector',
 				promoteId: 'h3_address',
-				tiles: ['http://localhost:8081/data/r4/{z}/{x}/{y}.pbf'],
+				tiles: ['http://localhost:8081/data/r3/{z}/{x}/{y}.pbf'],
 				maxzoom: 4,
 			})
 
@@ -206,64 +207,73 @@ export default Vue.extend({
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 			    // console.log(e)
 
-                // if (!this.drawModeActive) {
-					// console.log(this.draw.getMode())
-					const feature = e.features[0]
-                    // console.log(feature, this.draw.getAll())
-					if (!this.selectMode) {
-						// TODO Replace with getResolution everywhere
-						const res = parseInt(feature.id[1]) + 1
-						const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
-						if (res <= 6) {
-							filteredParents.push(feature.id)
-							const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
-							// console.log(geojson)
-							this.childFeatures.push(...geojson.features)
 
-							this.map.getSource('children').setData({
-								type: 'FeatureCollection',
-								features: this.childFeatures,
-							})
+                const feature = e.features[0]
+                console.log(feature)
+                if (!this.selectMode) {
+                    // TODO Replace with getResolution everywhere
+                    const res = parseInt(feature.id[1]) + 1
+                    const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
+                    if (res <= 6) {
+                        filteredParents.push(feature.id)
+                        const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
+                        // console.log(geojson)
+                        this.childFeatures.push(...geojson.features)
 
-							// this.filtered = this.uniqueValues(filteredParents)
-							this.filtered.push(...filteredParents)
-							this.filtered = this.uniqueValues(this.filtered)
+                        this.map.getSource('children').setData({
+                            type: 'FeatureCollection',
+                            features: this.childFeatures,
+                        })
 
-							// console.log(this.filtered)
-							// console.log(filteredParents)
-							// console.log(childFeatures)
-							// TODO Consider selecting children features on if parent feature is selected and then exploded
-                            // TODO Deslect original pink shape
-							this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
+                        // this.filtered = this.uniqueValues(filteredParents)
+                        this.filtered.push(...filteredParents)
+                        this.filtered = this.uniqueValues(this.filtered)
 
-							if (this.selected.includes(feature.id)) {
-								this.selected.splice(this.selected.indexOf(feature.id), 1)
-							}
-						}
-					} else {
-						if (this.selected.includes(feature.id)) {
-						    console.log('doot')
-                            // if (this.rangeOnly) {
-                            //     // TODO Need to turn this off and update
-                            //     this.updateRequired = true
-                            // }
-							this.selected.splice(this.selected.indexOf(feature.id), 1)
-						} else {
-							this.selected.push(feature.id)
-						}
+                        // console.log(this.filtered)
+                        // console.log(filteredParents)
+                        // console.log(childFeatures)
+                        // TODO Consider selecting children features on if parent feature is selected and then exploded
+                        // TODO Deslect original pink shape
+                        this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
 
-						// console.log(this.selected)
 
-						this.map.setFeatureState(
-							{
-								source: feature.source,
-								...(feature.sourceLayer === 'hex' && { sourceLayer: 'hex' }),
-								id: feature.id,
-							},
-							{ selected: !feature.state.selected }
-						)
-					}
-                // }
+                        if (this.selected.includes(feature.id)) {
+                            // console.log('persist')
+                            this.selected.splice(this.selected.indexOf(feature.id), 1)
+                            // console.log(this.selected)
+                        }
+
+                        // TODO Handle overlaps in range mode
+                        if (feature.state.selected) {
+                            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                            this.selected.push(...this.childFeatures.map(feat => feat.id))
+                            this.selected = this.uniqueValues(this.selected)
+                            console.log(this.selected)
+                        }
+                    }
+                } else {
+                    if (this.selected.includes(feature.id)) {
+                        console.log('doot')
+                        // if (this.rangeOnly) {
+                        //     // TODO Need to turn this off and update
+                        //     this.updateRequired = true
+                        // }
+                        this.selected.splice(this.selected.indexOf(feature.id), 1)
+                    } else {
+                        this.selected.push(feature.id)
+                    }
+
+                    // console.log(this.selected)
+
+                    this.map.setFeatureState(
+                        {
+                            source: feature.source,
+                            ...(feature.sourceLayer === 'hex' && { sourceLayer: 'hex' }),
+                            id: feature.id,
+                        },
+                        { selected: !feature.state.selected }
+                    )
+                }
 			})
 		})
 	},
