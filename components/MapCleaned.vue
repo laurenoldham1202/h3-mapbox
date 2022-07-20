@@ -236,15 +236,11 @@ export default Vue.extend({
                 const features = this.map.queryRenderedFeatures(e.point, {layers: ['children']})
                 const feat = features[0]
                 // TODO IF CHILD SELECTED<, SET PARENT TO SELECTED
-                console.log(feat.id, feat)
+                // console.log(feat.id, feat)
                 const res = parseInt(feat.id[1])
                 const parent = h3.h3ToParent(feat.id, res - 1)
                 const children = h3.h3ToChildren(parent, res)
 
-                children.forEach(child => {
-                    this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
-                    this.selected.splice(this.selected.indexOf(child), 1)
-                })
 
                 // console.log(children)
                 // console.log(this.childFeatures)
@@ -254,12 +250,17 @@ export default Vue.extend({
                 if (children.map(child => this.filtered.includes(child)).includes(true)) {
                 // if (children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(false) && children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(true)) {
 
-                    console.log('handle')
-                    console.log(this.childFeatures)
+                    // console.log('handle')
+                    // console.log(this.childFeatures)
                     // console.log(filteredParents)
                     // filteredParents.splice(filteredParents.indexOf(feat.id), 1)
 
                 } else {
+                    children.forEach(child => {
+                        this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
+                        this.selected.splice(this.selected.indexOf(child), 1)
+                    })
+
                     this.map.getSource('children').setData({
                         type: 'FeatureCollection',
                         features: this.childFeatures,
@@ -283,7 +284,6 @@ export default Vue.extend({
                     // console.log('IMPLODE: selected:', this.selected)
                     //
                     // // FIXME Drill down two levels, implode an adjacent hex - then explode a larger adjacent hex
-                    // console.log('IMPLODE: children:', this.childFeatures.map(x => x.id))
 
                     // console.log(this.childFeatures)
                     // console.log(this.childFeatures)
@@ -292,6 +292,9 @@ export default Vue.extend({
                     // match ^ with selected array
                     // get all children of parent, remove from children from childFeatures, set featureState to false
                 }
+                console.log(feat.id, 'IMPLODE: children:', this.childFeatures.map(x => x.id))
+                // console.log(this.childFeatures.map(x => x.id).includes(feat.id))
+
 
             })
 
@@ -331,7 +334,7 @@ export default Vue.extend({
                         const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
                         // console.log(geojson)
                         this.childFeatures.push(...geojson.features)
-                        console.log(this.childFeatures)
+                        console.log(this.childFeatures.map(x => x.id))
 
 
                         this.map.getSource('children').setData({
