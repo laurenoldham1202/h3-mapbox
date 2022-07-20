@@ -1,6 +1,21 @@
 <template>
 	<span>
 
+<!--    <CloInputRadio value="increase" v-model:checked="mode" label="Increase resolution" pill />-->
+<!--    <CloInputRadio value="decrease" v-model:checked="mode"label="Decrease resolution" pill />-->
+<!--    <CloInputRadio value="select" v-model:checked="mode" label="Select" pill />-->
+
+
+<!--        <input type="radio" id="increase" value="increase" v-model="mode" />-->
+<!--        <label for="increase">Increase</label>-->
+
+<!--        <input type="radio" id="decrease" value="decrease" v-model="mode" />-->
+<!--        <label for="decrease">decrease</label>-->
+
+<!--        <input type="radio" id="select" value="select" v-model="mode" />-->
+<!--        <label for="select">select</label>-->
+
+
         <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
 		<button @click="selectMode = !selectMode">select mode: {{ selectMode }}</button>
 		<button @click="rangeOnly = !rangeOnly" :class="{alert: updateRequired}">show new range only: {{ rangeOnly }}</button>
@@ -64,6 +79,7 @@ export default Vue.extend({
 		draw: undefined as any,
 		childFeatures: [] as any[],
         updateRequired: false,
+        mode: 'select'
 	}),
 	watch: {
 		rangeOnly() {
@@ -206,6 +222,15 @@ export default Vue.extend({
 			// const childFeatures: any[] = []
 			const filteredParents: string[] = []
             // console.log(this.map.getStyle().layers)
+
+            this.map.on('contextmenu', (e) => {
+                // console.log(e)
+                // console.log(e.target)
+                // console.log(e.features)
+
+                const feat = this.map.queryRenderedFeatures(e.point, {layers: ['base-hex', 'children']})
+                console.log(feat)
+            })
 
             // TODO Propagate seleections for point click and allow to drill out
             // Include res 3, don't focus on shape drawing
