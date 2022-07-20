@@ -71,6 +71,7 @@ export default Vue.extend({
 			const layers = ['base-hex', 'children']
 			if (this.selected.length && this.rangeOnly) {
 				console.log('features selected and range only mode active')
+                // TODO CHECK THAT BOTH LAYERS ARE PROPERLY FILTERING AND FEATURE STATES ARE CORRECT??
 				layers.forEach((layer) => {
 					this.map.setLayoutProperty(layer, 'visibility', 'visible')
 
@@ -102,6 +103,12 @@ export default Vue.extend({
 
 				console.log('NO features selected and range turned OFF')
 			}
+
+            // console.log('RANGE TOGGLED')
+            // console.log('selected:', this.selected)
+            // console.log('filtered:', this.filtered)
+            // console.log('children:', this.childFeatures)
+            // console.log('-------------------')
 		},
 	},
 	mounted(): void {
@@ -209,7 +216,7 @@ export default Vue.extend({
 
 
                 const feature = e.features[0]
-                console.log(feature)
+                // console.log(feature)
                 if (!this.selectMode) {
                     // TODO Replace with getResolution everywhere
                     const res = parseInt(feature.id[1]) + 1
@@ -224,6 +231,18 @@ export default Vue.extend({
                             type: 'FeatureCollection',
                             features: this.childFeatures,
                         })
+
+
+                        // TODO Handle overlaps in range mode
+                        if (feature.state.selected) {
+                            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                            this.selected.splice(this.selected.indexOf(feature.id), 1)
+
+                            this.selected.push(...this.childFeatures.map(feat => feat.id))
+                            this.selected = this.uniqueValues(this.selected)
+                            // console.log(this.selected)
+                        }
+
 
                         // this.filtered = this.uniqueValues(filteredParents)
                         this.filtered.push(...filteredParents)
@@ -243,17 +262,17 @@ export default Vue.extend({
                             // console.log(this.selected)
                         }
 
-                        // TODO Handle overlaps in range mode
-                        if (feature.state.selected) {
-                            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
-                            this.selected.push(...this.childFeatures.map(feat => feat.id))
-                            this.selected = this.uniqueValues(this.selected)
-                            console.log(this.selected)
-                        }
                     }
+
+                    // console.log('SELECT MODE OFF')
+                    // console.log(feature)
+                    // console.log('selected:', this.selected)
+                    // console.log('filtered:', this.filtered)
+                    // console.log('children:', this.childFeatures)
+                    // console.log('-------------------')
                 } else {
                     if (this.selected.includes(feature.id)) {
-                        console.log('doot')
+                        // console.log('doot')
                         // if (this.rangeOnly) {
                         //     // TODO Need to turn this off and update
                         //     this.updateRequired = true
@@ -273,6 +292,13 @@ export default Vue.extend({
                         },
                         { selected: !feature.state.selected }
                     )
+
+                    // console.log('SELECT MODE ON')
+                    // console.log(feature)
+                    // console.log('selected:', this.selected)
+                    // console.log('filtered:', this.filtered)
+                    // console.log('children:', this.childFeatures)
+                    // console.log('-------------------')
                 }
 			})
 		})
