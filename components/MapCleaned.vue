@@ -71,11 +71,11 @@ export default Vue.extend({
 			[36.3116770845, -104.6527823561],
 		] as any,
 		selected: [] as any[],
-		selectMode: true,
+		selectMode: false,
 		rangeOnly: false,
 		ids: [] as any[],
 		filtered: [] as any[],
-		resolution: 4,
+		resolution: 3,
 		draw: undefined as any,
 		childFeatures: [] as any[],
         updateRequired: false,
@@ -223,14 +223,39 @@ export default Vue.extend({
 			const filteredParents: string[] = []
             // console.log(this.map.getStyle().layers)
 
+            // TODO Can't right click from res 3
             this.map.on('contextmenu', (e) => {
                 // console.log(e)
                 // console.log(e.target)
                 // console.log(e.features)
 
-                const feat = this.map.queryRenderedFeatures(e.point, {layers: ['base-hex', 'children']})
-                console.log(feat)
+                const features = this.map.queryRenderedFeatures(e.point, {layers: ['children']})
+                const feat = features[0]
+                console.log(feat.id, feat)
+                const res = parseInt(feat.id[1])
+                const parent = h3.h3ToParent(feat.id, res - 1)
+                console.log(parent)
+                const children = h3.h3ToChildren(parent, res)
+                console.log(children)
+                children.forEach(child => {
+                    this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
+                })
+
+                this.map.getSource('children').setData({
+                    type: 'FeatureCollection',
+                    features: this.childFeatures,
+                })
+
+
+                console.log(this.childFeatures)
+                // console.log(this.childFeatures)
+                // get parent of selected id
+                // match selected id feature state
+                // match ^ with selected array
+                // get all children of parent, remove from children from childFeatures, set featureState to false
             })
+
+
 
             // TODO Propagate seleections for point click and allow to drill out
             // Include res 3, don't focus on shape drawing
@@ -280,6 +305,7 @@ export default Vue.extend({
                         // TODO Deslect original pink shape
                         this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
 
+                        // TODO Set selected filter again to avoid overlapping features in range only?
 
                         if (this.selected.includes(feature.id)) {
                             // console.log('persist')
