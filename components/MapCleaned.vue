@@ -235,49 +235,72 @@ export default Vue.extend({
 
                 const features = this.map.queryRenderedFeatures(e.point, {layers: ['children']})
                 const feat = features[0]
-                // console.log(feat.id, feat)
+                // TODO IF CHILD SELECTED<, SET PARENT TO SELECTED
+                console.log(feat.id, feat)
                 const res = parseInt(feat.id[1])
                 const parent = h3.h3ToParent(feat.id, res - 1)
                 const children = h3.h3ToChildren(parent, res)
-                // console.log(children)
+
                 children.forEach(child => {
                     this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
                     this.selected.splice(this.selected.indexOf(child), 1)
-                    // TODO REMOVE FROM SELECTED
                 })
 
+                // console.log(children)
+                // console.log(this.childFeatures)
+                // console.log(children.map(child => this.childFeatures.map(x => x.id).includes(child)))
+                // console.log(children.map(child => this.filtered.includes(child)))
 
-                this.map.getSource('children').setData({
-                    type: 'FeatureCollection',
-                    features: this.childFeatures,
-                })
+                if (children.map(child => this.filtered.includes(child)).includes(true)) {
+                // if (children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(false) && children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(true)) {
 
-                const layer = res === 4 ? 'base-hex' : feat.source
-                console.log(layer)
-                console.log(parent, this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}))
+                    console.log('handle')
+                    console.log(this.childFeatures)
+                    // console.log(filteredParents)
+                    // filteredParents.splice(filteredParents.indexOf(feat.id), 1)
 
-                // FIXME explode a hex, turn on select mode and select second hex, explode second hex - this selects all of the first hexes
+                } else {
+                    this.map.getSource('children').setData({
+                        type: 'FeatureCollection',
+                        features: this.childFeatures,
+                    })
 
-                this.filtered.splice(this.filtered.indexOf(parent), 1)
-                filteredParents.splice(filteredParents.indexOf(parent), 1)
-                this.map.setFilter(layer, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+                    const layer = res === 4 ? 'base-hex' : feat.source
+                    // console.log(layer)
+                    // console.log(parent, this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}))
+
+                    // FIXME explode a hex, turn on select mode and select second hex, explode second hex - this selects all of the first hexes
+
+                    this.filtered.splice(this.filtered.indexOf(parent), 1)
+                    filteredParents.splice(filteredParents.indexOf(parent), 1)
+                    this.map.setFilter(layer, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
 
 
-                if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}).selected) {
-                    this.selected.push(parent)
+                    if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}).selected) {
+                        this.selected.push(parent)
+                    }
+                    // console.log('IMPLODE: filtered: ', this.filtered)
+                    // console.log('IMPLODE: selected:', this.selected)
+                    //
+                    // // FIXME Drill down two levels, implode an adjacent hex - then explode a larger adjacent hex
+                    // console.log('IMPLODE: children:', this.childFeatures.map(x => x.id))
+
+                    // console.log(this.childFeatures)
+                    // console.log(this.childFeatures)
+                    // get parent of selected id
+                    // match selected id feature state
+                    // match ^ with selected array
+                    // get all children of parent, remove from children from childFeatures, set featureState to false
                 }
-                // console.log('IMPLODE: ',this.filtered)
-                console.log('IMPLODE: ',this.selected)
 
-                // console.log(this.childFeatures)
-                // console.log(this.childFeatures)
-                // get parent of selected id
-                // match selected id feature state
-                // match ^ with selected array
-                // get all children of parent, remove from children from childFeatures, set featureState to false
             })
 
 
+            const popup = new M.Popup({closeButton: false})
+            this.map.on('mousemove', ['base-hex', 'children'], (e) => {
+                popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
+
+            })
 
             // TODO Propagate seleections for point click and allow to drill out
             // Include res 3, don't focus on shape drawing
@@ -285,21 +308,31 @@ export default Vue.extend({
             // FIXME select hex, show range only, explode selected hex causes errors
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 			    // console.log(e)
-                // console.log(filteredParents)
 
 
                 const feature = e.features[0]
                 // console.log(feature)
                 if (!this.selectMode) {
+
                     // TODO Replace with getResolution everywhere
                     const res = parseInt(feature.id[1]) + 1
                     const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
+                    // console.log(children)
                     if (res <= 6) {
-                        console.log(feature.id)
+                        // console.log(feature.id)
+                        // this.childFeatures.splice(this.childFeatures.indexOf())
+                        // this.childFeatures.forEach(child => {
+                        //     if (child.id === feature.id) {
+                        //         // console.log('DELETE!!!!', child)
+                        //         this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
+                        //     }
+                        // })
                         filteredParents.push(feature.id)
                         const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
                         // console.log(geojson)
                         this.childFeatures.push(...geojson.features)
+                        console.log(this.childFeatures)
+
 
                         this.map.getSource('children').setData({
                             type: 'FeatureCollection',
@@ -309,7 +342,8 @@ export default Vue.extend({
 
                         // TODO Handle overlaps in range mode
                         if (feature.state.selected) {
-                            this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                            // this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                            geojson.features.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
                             this.selected.splice(this.selected.indexOf(feature.id), 1)
 
                             this.selected.push(...this.childFeatures.map(feat => feat.id))
@@ -323,7 +357,7 @@ export default Vue.extend({
                         this.filtered = this.uniqueValues(this.filtered)
 
                         // console.log('EXPLODE:', this.filtered)
-                        console.log('EXPLODE:', this.selected)
+                        // console.log('EXPLODE:', this.selected)
                         // console.log(filteredParents)
                         // console.log(childFeatures)
                         // TODO Consider selecting children features on if parent feature is selected and then exploded
@@ -339,6 +373,13 @@ export default Vue.extend({
                         }
 
                     }
+
+                    // console.log('EXPLODE:', this.childFeatures)
+                    //
+                    // console.log('EXPLODE: filtered: ', this.filtered)
+                    // console.log('EXPLODE: selected:', this.selected)
+                    // console.log('EXPLODE: children:', this.childFeatures.map(x => x.id))
+
 
                     // console.log('SELECT MODE OFF')
                     // console.log(feature)
