@@ -234,11 +234,13 @@ export default Vue.extend({
                 console.log(feat.id, feat)
                 const res = parseInt(feat.id[1])
                 const parent = h3.h3ToParent(feat.id, res - 1)
-                console.log(parent)
+                // console.log(parent)
                 const children = h3.h3ToChildren(parent, res)
-                console.log(children)
+                // console.log(children)
                 children.forEach(child => {
                     this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
+                    this.selected.splice(this.selected.indexOf(child), 1)
+                    // TODO REMOVE FROM SELECTED
                 })
 
                 this.map.getSource('children').setData({
@@ -247,7 +249,8 @@ export default Vue.extend({
                 })
 
 
-                console.log(this.childFeatures)
+                console.log(this.selected)
+                // console.log(this.childFeatures)
                 // console.log(this.childFeatures)
                 // get parent of selected id
                 // match selected id feature state
