@@ -220,10 +220,14 @@ export default Vue.extend({
 			})
 
 			// const childFeatures: any[] = []
-			const filteredParents: string[] = []
+
             // console.log(this.map.getStyle().layers)
 
-            // TODO Can't right click from res 3
+            // TODO REPLACE WITH JIST FILTERED ARR?
+            const filteredParents: string[] = []
+
+
+
             this.map.on('contextmenu', (e) => {
                 // console.log(e)
                 // console.log(e.target)
@@ -231,7 +235,7 @@ export default Vue.extend({
 
                 const features = this.map.queryRenderedFeatures(e.point, {layers: ['children']})
                 const feat = features[0]
-                console.log(feat.id, feat)
+                // console.log(feat.id, feat)
                 const res = parseInt(feat.id[1])
                 const parent = h3.h3ToParent(feat.id, res - 1)
                 // console.log(parent)
@@ -243,13 +247,20 @@ export default Vue.extend({
                     // TODO REMOVE FROM SELECTED
                 })
 
+
                 this.map.getSource('children').setData({
                     type: 'FeatureCollection',
                     features: this.childFeatures,
                 })
 
 
-                console.log(this.selected)
+                this.filtered.splice(this.filtered.indexOf(parent), 1)
+                filteredParents.splice(filteredParents.indexOf(parent), 1)
+                this.map.setFilter(res === 4 ? 'base-hex' : feat.source, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+
+
+                console.log('IMPLODE: ',this.filtered)
+
                 // console.log(this.childFeatures)
                 // console.log(this.childFeatures)
                 // get parent of selected id
@@ -266,6 +277,7 @@ export default Vue.extend({
             // FIXME select hex, show range only, explode selected hex causes errors
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 			    // console.log(e)
+                console.log(filteredParents)
 
 
                 const feature = e.features[0]
@@ -275,6 +287,7 @@ export default Vue.extend({
                     const res = parseInt(feature.id[1]) + 1
                     const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
                     if (res <= 6) {
+                        console.log(feature.id)
                         filteredParents.push(feature.id)
                         const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
                         // console.log(geojson)
@@ -301,7 +314,7 @@ export default Vue.extend({
                         this.filtered.push(...filteredParents)
                         this.filtered = this.uniqueValues(this.filtered)
 
-                        // console.log(this.filtered)
+                        console.log('EXPLODE:', this.filtered)
                         // console.log(filteredParents)
                         // console.log(childFeatures)
                         // TODO Consider selecting children features on if parent feature is selected and then exploded
