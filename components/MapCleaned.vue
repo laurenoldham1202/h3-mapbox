@@ -238,7 +238,6 @@ export default Vue.extend({
                 // console.log(feat.id, feat)
                 const res = parseInt(feat.id[1])
                 const parent = h3.h3ToParent(feat.id, res - 1)
-                // console.log(parent)
                 const children = h3.h3ToChildren(parent, res)
                 // console.log(children)
                 children.forEach(child => {
@@ -253,13 +252,22 @@ export default Vue.extend({
                     features: this.childFeatures,
                 })
 
+                const layer = res === 4 ? 'base-hex' : feat.source
+                console.log(layer)
+                console.log(parent, this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}))
+
+                // FIXME explode a hex, turn on select mode and select second hex, explode second hex - this selects all of the first hexes
 
                 this.filtered.splice(this.filtered.indexOf(parent), 1)
                 filteredParents.splice(filteredParents.indexOf(parent), 1)
-                this.map.setFilter(res === 4 ? 'base-hex' : feat.source, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+                this.map.setFilter(layer, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
 
 
-                console.log('IMPLODE: ',this.filtered)
+                if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}).selected) {
+                    this.selected.push(parent)
+                }
+                // console.log('IMPLODE: ',this.filtered)
+                console.log('IMPLODE: ',this.selected)
 
                 // console.log(this.childFeatures)
                 // console.log(this.childFeatures)
@@ -277,7 +285,7 @@ export default Vue.extend({
             // FIXME select hex, show range only, explode selected hex causes errors
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 			    // console.log(e)
-                console.log(filteredParents)
+                // console.log(filteredParents)
 
 
                 const feature = e.features[0]
@@ -314,7 +322,8 @@ export default Vue.extend({
                         this.filtered.push(...filteredParents)
                         this.filtered = this.uniqueValues(this.filtered)
 
-                        console.log('EXPLODE:', this.filtered)
+                        // console.log('EXPLODE:', this.filtered)
+                        console.log('EXPLODE:', this.selected)
                         // console.log(filteredParents)
                         // console.log(childFeatures)
                         // TODO Consider selecting children features on if parent feature is selected and then exploded
