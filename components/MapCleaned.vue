@@ -160,29 +160,32 @@ export default Vue.extend({
 
                     // if select mode is off, i.e. if user is expanding or collapsing shapes
                     if (!this.selectMode) {
+                        // TODO Combine res restriction and selectMode conditions?
+                        if (res <= 6) {
+                            // console.log('filter out', feature.id)
+                            this.filtered.push(feature.id)
+                            this.filterOutParentHexes(feature.source)
 
-                        // console.log('filter out', feature.id)
-                        this.filtered.push(feature.id)
+                            const children = h3.h3ToChildren(feature.id, res + 1)
+                            this.children.push(...children)
+                            this.setChildFeatures()
+                            // const childrenPoly = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({h3_address: hex}))
+                            // console.log(childrenPoly)
 
-                        const children = h3.h3ToChildren(feature.id, res + 1)
-                        this.children.push(...children)
-                        this.setChildFeatures()
-                        // const childrenPoly = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({h3_address: hex}))
-                        // console.log(childrenPoly)
-
-                        // console.log('SELECT MODE OFF')
-                        // console.log('filtered:', this.filtered)
-                        // console.log('children:', this.children)
+                            // console.log('SELECT MODE OFF')
+                            // console.log('filtered:', this.filtered)
+                            // console.log('children:', this.children)
 
 
-                        // console.log('find poly for ', childrenPoly)
-                        // if user clicked outside of the species range, i.e. a base-hex or child
-                        // console.log('outside range clicked')
+                            // console.log('find poly for ', childrenPoly)
+                            // if user clicked outside of the species range, i.e. a base-hex or child
+                            // console.log('outside range clicked')
 
-                        // if select mode off...
-                        // 1. filter out the selected feature (preserve in array and update map)
-                        // 2. get hex children of feature
-                        // 3. convert hex to geojson, set 'children' layer data
+                            // if select mode off...
+                            // 1. filter out the selected feature (preserve in array and update map)
+                            // 2. get hex children of feature
+                            // 3. convert hex to geojson, set 'children' layer data
+                        }
                     } else {  // if selection mode is on
 
                         // console.log('SELECT MODE ON')
@@ -208,7 +211,9 @@ export default Vue.extend({
         setChildFeatures() {
             const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
             this.map.getSource('children').setData(childrenPoly)
-            // console.log(childrenPoly)
+        },
+        filterOutParentHexes(featureSource: string) {
+            this.map.setFilter(featureSource, ['match', ['get', 'h3_address'], this.filtered, false, true])
         }
 
 	},
