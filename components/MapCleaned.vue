@@ -45,6 +45,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 // import FreehandMode from 'mapbox-gl-draw-freehand-mode'
 import intersect from '@turf/intersect'
 import bbox from '@turf/bbox'
+import area from '@turf/area'
 // @ts-ignore
 import DrawRectangle from 'mapbox-gl-draw-rectangle-mode'
 
@@ -151,6 +152,7 @@ export default Vue.extend({
 			}),
 		})
 		this.map.addControl(this.draw, 'top-left')
+        this.map.addControl(new M.ScaleControl({maxWidth: 900}))
 
 		this.map.on('load', () => {
 			this.map.addSource('base-hex', {
@@ -239,10 +241,12 @@ export default Vue.extend({
                 // console.log(e.target)
                 // console.log(e.features)
 
+                // console.log('IMPLODE:', filteredParents)
+
                 const features = this.map.queryRenderedFeatures(e.point, {layers: ['children']})
                 const feat = features[0]
                 // TODO IF CHILD SELECTED<, SET PARENT TO SELECTED
-                console.log(feat.id, feat)
+                console.log('IMPLODE:', feat.id)
                 const res = parseInt(feat.id[1])
                 const parent = h3.h3ToParent(feat.id, res - 1)
                 const children = h3.h3ToChildren(parent, res)
@@ -262,7 +266,7 @@ export default Vue.extend({
 
                 if (children.map(child => this.filtered.includes(child)).includes(true)) {
                 // if (children.includes(feat.id)) {
-                    console.log('bloop')
+                //     console.log('bloop')
                 // if (children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(false) && children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(true)) {
 
                     // console.log('handle')
@@ -272,19 +276,48 @@ export default Vue.extend({
 
                 } else {
                     children.forEach(child => {
+                        // FIXME I don't think this is actually removing child features!
                         this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
                         this.selected.splice(this.selected.indexOf(child), 1)
                     })
 
                     if (this.childFeatures.map(x => x.id).includes(feat.id)) {
-                        console.log('handle')
+                        console.log('didnt')
+
+                        // remove parent from filtered, reset layer filter
+                        const layer = res === 4 ? 'base-hex' : feat.source
+                        // console.log(layer)
+                        // console.log(parent, this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}))
+
+                        // FIXME explode a hex, turn on select mode and select second hex, explode second hex - this selects all of the first hexes
+
+                        this.filtered.splice(this.filtered.indexOf(parent), 1)
+                        filteredParents.splice(filteredParents.indexOf(parent), 1)
+                        this.map.setFilter(layer, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+                        // remove children  of parent  from childFeatures
+
+
+                        console.log(children)
+                        console.log(this.childFeatures.map(x => x.id))
+                        this.childFeatures.forEach(child => {
+                            if (children.includes(child.id)) {
+                                console.log(child)
+                                this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
+                            }
+                        })
+                        // console.log(this.childFeatures)
+                        // this.map.getSource('children').setData({
+                        //     type: 'FeatureCollection',
+                        //     features: this.childFeatures,
+                        // })
+                        // handle selected?
                     } else {
 
                     this.map.getSource('children').setData({
                         type: 'FeatureCollection',
                         features: this.childFeatures,
                     })
-                    console.log(feat.id, 'IMPLODE: children:', this.childFeatures.map(x => x.id))
+                    // console.log(feat.id, 'IMPLODE: children:', this.childFeatures.map(x => x.id))
                     // console.log(this.childFeatures.map(x => x.id).includes(feat.id))
 
 
@@ -303,10 +336,14 @@ export default Vue.extend({
                         if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}).selected) {
                             this.selected.push(parent)
                         }
+
+                        console.log('did stuff')
                     }
 
                     // console.log('IMPLODE: filtered: ', this.filtered)
                     // console.log('IMPLODE: selected:', this.selected)
+                    // console.log('IMPLODE:', this.childFeatures.map(x => x.id))
+
                     //
                     // // FIXME Drill down two levels, implode an adjacent hex - then explode a larger adjacent hex
 
@@ -327,7 +364,11 @@ export default Vue.extend({
 
 
                 this.map.on('click', ['base-hex', 'children', 'species-range'], (e: any) => {
-                    // console.log(e.features)
+                    // 1m = 1e-6 .000001km
+                    // 370000 = xkm
+
+                    console.log(area(e.features[0]))
+                    console.log(area(e.features[0]) * 1e-6)
                     // console.log(e.features.map(feats => feats.layer.id))
                     const clickedLayers = e.features.map(feats => feats.layer.id)
 
@@ -346,9 +387,11 @@ export default Vue.extend({
                     } else {
 
 
+                        // console.log('EXPLODE: (before) ', filteredParents)
+                        // console.log('EXPLODE: (before) ', this.childFeatures.map(x => x.id))
 
                         const feature = e.features[0]
-                        // console.log('CLICKED:', feature.id)
+                        // console.log('EXPLODE:', feature.id)
                         if (!this.selectMode) {
 
                             // TODO Replace with getResolution everywhere
@@ -458,6 +501,9 @@ export default Vue.extend({
 
 
                     }
+
+                    // console.log('EXPLODE: (after) ', filteredParents)
+
                     // if (e.features.map(feats => feats.id))
                 })
 

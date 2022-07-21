@@ -21,6 +21,7 @@
     "@nuxtjs/gtm": "^2.4.0",
     "@nuxtjs/i18n": "^7.2.1",
     "@nuxtjs/style-resources": "^1.0.0",
+    "@turf/area": "^6.5.0",
     "@turf/bbox": "^6.5.0",
     "@turf/intersect": "^6.5.0",
     "@types/mapbox__mapbox-gl-draw": "^1.2.4",
