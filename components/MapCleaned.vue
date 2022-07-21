@@ -172,26 +172,7 @@ export default Vue.extend({
 				},
 			})
 
-			// FIXME this method doesn't allow deselection of original range boundaries
-			// TODO Return json with bounding box to use 'within' exp to filter out base-hex layer?
-			// TODO Return single feature outline?
-			this.map.addSource('species-range', {
-				type: 'vector',
-				tiles: ['http://localhost:8082/data/range-outline-max-6/{z}/{x}/{y}.pbf'],
-				maxzoom: 7,
-			})
-			this.map.addLayer({
-				id: 'species-range',
-				source: 'species-range',
-				'source-layer': 'hex',
-				type: 'fill',
-				// filter: ['>', ['get', 'resident'], 0],
-				paint: {
-					'fill-color': 'deeppink',
-					'fill-opacity': 0.3,
-					// 'fill-outline-color': 'purple',
-				},
-			})
+
 
 			// console.log(this.map.getSource('species-range'))
 			// this.map.setFilter('base-hex', [])
@@ -218,6 +199,31 @@ export default Vue.extend({
 					'fill-sort-key': ['+', ['get', 'h3_address']],
 				},
 			})
+
+
+            // FIXME this method doesn't allow deselection of original range boundaries
+            // TODO Return json with bounding box to use 'within' exp to filter out base-hex layer?
+            // TODO Return single feature outline?
+            this.map.addSource('species-range', {
+                type: 'vector',
+                tiles: ['http://localhost:8082/data/range-outline-max-6/{z}/{x}/{y}.pbf'],
+                maxzoom: 7,
+                promoteId: 'h3_address'
+            })
+            this.map.addLayer({
+                id: 'species-range',
+                source: 'species-range',
+                'source-layer': 'hex',
+                type: 'fill',
+                // filter: ['>', ['get', 'resident'], 0],
+                paint: {
+                    // 'fill-color': 'deeppink',
+                    'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
+                    'fill-opacity': 0.3,
+                    // 'fill-outline-color': 'purple',
+                },
+            })
+
 
 			// const childFeatures: any[] = []
 
@@ -320,6 +326,142 @@ export default Vue.extend({
             })
 
 
+                this.map.on('click', ['base-hex', 'children', 'species-range'], (e: any) => {
+                    // console.log(e.features)
+                    // console.log(e.features.map(feats => feats.layer.id))
+                    const clickedLayers = e.features.map(feats => feats.layer.id)
+
+                    if (clickedLayers.includes('species-range')) {
+                        const feat = e.features.filter(feats => feats.layer.id === 'species-range')[0]
+                        // console.log(feat, feat.state.selected)
+                        if (feat.state.selected === undefined) {
+
+                            this.map.setFeatureState({source: feat.source, sourceLayer: feat.sourceLayer, id: feat.id}, {selected: false})
+                        } else {
+                            console.log(feat, feat.state.selected)
+
+                            this.map.setFeatureState({source: feat.source, sourceLayer: feat.sourceLayer, id: feat.id}, {selected: !feat.state.selected})
+
+                        }
+                    } else {
+
+
+
+                        const feature = e.features[0]
+                        // console.log('CLICKED:', feature.id)
+                        if (!this.selectMode) {
+
+                            // TODO Replace with getResolution everywhere
+                            const res = parseInt(feature.id[1]) + 1
+                            const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
+                            // console.log(children)
+                            if (res <= 6) {
+                                // console.log(feature.id)
+                                // this.childFeatures.splice(this.childFeatures.indexOf())
+                                // this.childFeatures.forEach(child => {
+                                //     if (child.id === feature.id) {
+                                //         // console.log('DELETE!!!!', child)
+                                //         this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
+                                //     }
+                                // })
+                                filteredParents.push(feature.id)
+                                const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
+                                // console.log(geojson)
+                                this.childFeatures.push(...geojson.features)
+                                // console.log(this.childFeatures.map(x => x.id))
+
+
+                                this.map.getSource('children').setData({
+                                    type: 'FeatureCollection',
+                                    features: this.childFeatures,
+                                })
+
+
+                                // TODO Handle overlaps in range mode
+                                if (feature.state.selected) {
+                                    // this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                                    geojson.features.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                                    this.selected.splice(this.selected.indexOf(feature.id), 1)
+
+                                    this.selected.push(...this.childFeatures.map(feat => feat.id))
+                                    this.selected = this.uniqueValues(this.selected)
+                                    // console.log(this.selected)
+                                }
+
+
+                                // this.filtered = this.uniqueValues(filteredParents)
+                                this.filtered.push(...filteredParents)
+                                this.filtered = this.uniqueValues(this.filtered)
+
+                                // console.log('EXPLODE:', this.filtered)
+                                // console.log('EXPLODE:', this.selected)
+                                // console.log(filteredParents)
+                                // console.log(childFeatures)
+                                // TODO Consider selecting children features on if parent feature is selected and then exploded
+                                // TODO Deslect original pink shape
+                                this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
+
+                                // TODO Set selected filter again to avoid overlapping features in range only?
+
+                                if (this.selected.includes(feature.id)) {
+                                    // console.log('persist')
+                                    this.selected.splice(this.selected.indexOf(feature.id), 1)
+                                    // console.log(this.selected)
+                                }
+
+                            }
+
+                            // console.log('EXPLODE:', this.childFeatures)
+                            //
+                            // console.log('EXPLODE: filtered: ', this.filtered)
+                            // console.log('EXPLODE: selected:', this.selected)
+                            // console.log('EXPLODE: children:', this.childFeatures.map(x => x.id))
+
+
+                            // console.log('SELECT MODE OFF')
+                            // console.log(feature)
+                            // console.log('selected:', this.selected)
+                            // console.log('filtered:', this.filtered)
+                            // console.log('children:', this.childFeatures)
+                            // console.log('-------------------')
+                        } else {
+                            if (this.selected.includes(feature.id)) {
+                                // console.log('doot')
+                                // if (this.rangeOnly) {
+                                //     // TODO Need to turn this off and update
+                                //     this.updateRequired = true
+                                // }
+                                this.selected.splice(this.selected.indexOf(feature.id), 1)
+                            } else {
+                                this.selected.push(feature.id)
+                            }
+
+                            // console.log(this.selected)
+
+                            this.map.setFeatureState(
+                                {
+                                    source: feature.source,
+                                    ...(feature.sourceLayer === 'hex' && { sourceLayer: 'hex' }),
+                                    id: feature.id,
+                                },
+                                { selected: !feature.state.selected }
+                            )
+
+                            // console.log('SELECT MODE ON')
+                            // console.log(feature)
+                            // console.log('selected:', this.selected)
+                            // console.log('filtered:', this.filtered)
+                            // console.log('children:', this.childFeatures)
+                            // console.log('-------------------')
+                        }
+
+
+
+                    }
+                    // if (e.features.map(feats => feats.id))
+                })
+
+
             const popup = new M.Popup({closeButton: false})
             this.map.on('mousemove', ['base-hex', 'children'], (e) => {
                 popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
@@ -333,114 +475,114 @@ export default Vue.extend({
 			this.map.on('click', ['base-hex', 'children'], (e: any) => {
 			    // console.log(e)
 
-
-                const feature = e.features[0]
-                console.log('CLICKED:', feature.id)
-                if (!this.selectMode) {
-
-                    // TODO Replace with getResolution everywhere
-                    const res = parseInt(feature.id[1]) + 1
-                    const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
-                    // console.log(children)
-                    if (res <= 6) {
-                        // console.log(feature.id)
-                        // this.childFeatures.splice(this.childFeatures.indexOf())
-                        // this.childFeatures.forEach(child => {
-                        //     if (child.id === feature.id) {
-                        //         // console.log('DELETE!!!!', child)
-                        //         this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
-                        //     }
-                        // })
-                        filteredParents.push(feature.id)
-                        const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
-                        // console.log(geojson)
-                        this.childFeatures.push(...geojson.features)
-                        // console.log(this.childFeatures.map(x => x.id))
-
-
-                        this.map.getSource('children').setData({
-                            type: 'FeatureCollection',
-                            features: this.childFeatures,
-                        })
-
-
-                        // TODO Handle overlaps in range mode
-                        if (feature.state.selected) {
-                            // this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
-                            geojson.features.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
-                            this.selected.splice(this.selected.indexOf(feature.id), 1)
-
-                            this.selected.push(...this.childFeatures.map(feat => feat.id))
-                            this.selected = this.uniqueValues(this.selected)
-                            // console.log(this.selected)
-                        }
-
-
-                        // this.filtered = this.uniqueValues(filteredParents)
-                        this.filtered.push(...filteredParents)
-                        this.filtered = this.uniqueValues(this.filtered)
-
-                        // console.log('EXPLODE:', this.filtered)
-                        // console.log('EXPLODE:', this.selected)
-                        // console.log(filteredParents)
-                        // console.log(childFeatures)
-                        // TODO Consider selecting children features on if parent feature is selected and then exploded
-                        // TODO Deslect original pink shape
-                        this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
-
-                        // TODO Set selected filter again to avoid overlapping features in range only?
-
-                        if (this.selected.includes(feature.id)) {
-                            // console.log('persist')
-                            this.selected.splice(this.selected.indexOf(feature.id), 1)
-                            // console.log(this.selected)
-                        }
-
-                    }
-
-                    // console.log('EXPLODE:', this.childFeatures)
-                    //
-                    // console.log('EXPLODE: filtered: ', this.filtered)
-                    // console.log('EXPLODE: selected:', this.selected)
-                    // console.log('EXPLODE: children:', this.childFeatures.map(x => x.id))
-
-
-                    // console.log('SELECT MODE OFF')
-                    // console.log(feature)
-                    // console.log('selected:', this.selected)
-                    // console.log('filtered:', this.filtered)
-                    // console.log('children:', this.childFeatures)
-                    // console.log('-------------------')
-                } else {
-                    if (this.selected.includes(feature.id)) {
-                        // console.log('doot')
-                        // if (this.rangeOnly) {
-                        //     // TODO Need to turn this off and update
-                        //     this.updateRequired = true
-                        // }
-                        this.selected.splice(this.selected.indexOf(feature.id), 1)
-                    } else {
-                        this.selected.push(feature.id)
-                    }
-
-                    // console.log(this.selected)
-
-                    this.map.setFeatureState(
-                        {
-                            source: feature.source,
-                            ...(feature.sourceLayer === 'hex' && { sourceLayer: 'hex' }),
-                            id: feature.id,
-                        },
-                        { selected: !feature.state.selected }
-                    )
-
-                    // console.log('SELECT MODE ON')
-                    // console.log(feature)
-                    // console.log('selected:', this.selected)
-                    // console.log('filtered:', this.filtered)
-                    // console.log('children:', this.childFeatures)
-                    // console.log('-------------------')
-                }
+                //
+                // const feature = e.features[0]
+                // // console.log('CLICKED:', feature.id)
+                // if (!this.selectMode) {
+                //
+                //     // TODO Replace with getResolution everywhere
+                //     const res = parseInt(feature.id[1]) + 1
+                //     const children = h3.h3ToChildren(feature.id, res > 6 ? 6 : res)
+                //     // console.log(children)
+                //     if (res <= 6) {
+                //         // console.log(feature.id)
+                //         // this.childFeatures.splice(this.childFeatures.indexOf())
+                //         // this.childFeatures.forEach(child => {
+                //         //     if (child.id === feature.id) {
+                //         //         // console.log('DELETE!!!!', child)
+                //         //         this.childFeatures.splice(this.childFeatures.indexOf(child), 1)
+                //         //     }
+                //         // })
+                //         filteredParents.push(feature.id)
+                //         const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
+                //         // console.log(geojson)
+                //         this.childFeatures.push(...geojson.features)
+                //         // console.log(this.childFeatures.map(x => x.id))
+                //
+                //
+                //         this.map.getSource('children').setData({
+                //             type: 'FeatureCollection',
+                //             features: this.childFeatures,
+                //         })
+                //
+                //
+                //         // TODO Handle overlaps in range mode
+                //         if (feature.state.selected) {
+                //             // this.childFeatures.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                //             geojson.features.map(feat => this.map.setFeatureState({source: 'children', id: feat.id}, {selected: true}))
+                //             this.selected.splice(this.selected.indexOf(feature.id), 1)
+                //
+                //             this.selected.push(...this.childFeatures.map(feat => feat.id))
+                //             this.selected = this.uniqueValues(this.selected)
+                //             // console.log(this.selected)
+                //         }
+                //
+                //
+                //         // this.filtered = this.uniqueValues(filteredParents)
+                //         this.filtered.push(...filteredParents)
+                //         this.filtered = this.uniqueValues(this.filtered)
+                //
+                //         // console.log('EXPLODE:', this.filtered)
+                //         // console.log('EXPLODE:', this.selected)
+                //         // console.log(filteredParents)
+                //         // console.log(childFeatures)
+                //         // TODO Consider selecting children features on if parent feature is selected and then exploded
+                //         // TODO Deslect original pink shape
+                //         this.map.setFilter(feature.source, ['match', ['get', 'h3_address'], this.filtered, false, true])
+                //
+                //         // TODO Set selected filter again to avoid overlapping features in range only?
+                //
+                //         if (this.selected.includes(feature.id)) {
+                //             // console.log('persist')
+                //             this.selected.splice(this.selected.indexOf(feature.id), 1)
+                //             // console.log(this.selected)
+                //         }
+                //
+                //     }
+                //
+                //     // console.log('EXPLODE:', this.childFeatures)
+                //     //
+                //     // console.log('EXPLODE: filtered: ', this.filtered)
+                //     // console.log('EXPLODE: selected:', this.selected)
+                //     // console.log('EXPLODE: children:', this.childFeatures.map(x => x.id))
+                //
+                //
+                //     // console.log('SELECT MODE OFF')
+                //     // console.log(feature)
+                //     // console.log('selected:', this.selected)
+                //     // console.log('filtered:', this.filtered)
+                //     // console.log('children:', this.childFeatures)
+                //     // console.log('-------------------')
+                // } else {
+                //     if (this.selected.includes(feature.id)) {
+                //         // console.log('doot')
+                //         // if (this.rangeOnly) {
+                //         //     // TODO Need to turn this off and update
+                //         //     this.updateRequired = true
+                //         // }
+                //         this.selected.splice(this.selected.indexOf(feature.id), 1)
+                //     } else {
+                //         this.selected.push(feature.id)
+                //     }
+                //
+                //     // console.log(this.selected)
+                //
+                //     this.map.setFeatureState(
+                //         {
+                //             source: feature.source,
+                //             ...(feature.sourceLayer === 'hex' && { sourceLayer: 'hex' }),
+                //             id: feature.id,
+                //         },
+                //         { selected: !feature.state.selected }
+                //     )
+                //
+                //     // console.log('SELECT MODE ON')
+                //     // console.log(feature)
+                //     // console.log('selected:', this.selected)
+                //     // console.log('filtered:', this.filtered)
+                //     // console.log('children:', this.childFeatures)
+                //     // console.log('-------------------')
+                // }
 			})
 		})
 	},
