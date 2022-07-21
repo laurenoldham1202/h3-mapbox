@@ -133,7 +133,7 @@ export default Vue.extend({
 			container: 'map-2',
 			style: 'mapbox://styles/mapbox/streets-v11', // style URL
 			center: this.coords,
-			zoom: 3,
+			zoom: 6,
 			doubleClickZoom: false,
 		})
 
@@ -236,18 +236,27 @@ export default Vue.extend({
                 const features = this.map.queryRenderedFeatures(e.point, {layers: ['children']})
                 const feat = features[0]
                 // TODO IF CHILD SELECTED<, SET PARENT TO SELECTED
-                // console.log(feat.id, feat)
+                console.log(feat.id, feat)
                 const res = parseInt(feat.id[1])
                 const parent = h3.h3ToParent(feat.id, res - 1)
                 const children = h3.h3ToChildren(parent, res)
 
 
-                // console.log(children)
-                // console.log(this.childFeatures)
+                // console.log(parent)
+                // console.log(this.filtered)
+                // console.log('child features:', this.childFeatures)
+                // console.log('children of selected:', children)
+                // console.log(children.includes(feat.id))
+                // // console.log(this.childFeatures)
                 // console.log(children.map(child => this.childFeatures.map(x => x.id).includes(child)))
+                // console.log('filtered:', this.filtered)
+
+                // console.log(this.childFeatures.map(x => x.id).includes(feat.id))
                 // console.log(children.map(child => this.filtered.includes(child)))
 
                 if (children.map(child => this.filtered.includes(child)).includes(true)) {
+                // if (children.includes(feat.id)) {
+                    console.log('bloop')
                 // if (children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(false) && children.map(child => this.childFeatures.map(x => x.id).includes(child)).includes(true)) {
 
                     // console.log('handle')
@@ -261,25 +270,35 @@ export default Vue.extend({
                         this.selected.splice(this.selected.indexOf(child), 1)
                     })
 
+                    if (this.childFeatures.map(x => x.id).includes(feat.id)) {
+                        console.log('handle')
+                    } else {
+
                     this.map.getSource('children').setData({
                         type: 'FeatureCollection',
                         features: this.childFeatures,
                     })
-
-                    const layer = res === 4 ? 'base-hex' : feat.source
-                    // console.log(layer)
-                    // console.log(parent, this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}))
-
-                    // FIXME explode a hex, turn on select mode and select second hex, explode second hex - this selects all of the first hexes
-
-                    this.filtered.splice(this.filtered.indexOf(parent), 1)
-                    filteredParents.splice(filteredParents.indexOf(parent), 1)
-                    this.map.setFilter(layer, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+                    console.log(feat.id, 'IMPLODE: children:', this.childFeatures.map(x => x.id))
+                    // console.log(this.childFeatures.map(x => x.id).includes(feat.id))
 
 
-                    if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}).selected) {
-                        this.selected.push(parent)
+
+                        const layer = res === 4 ? 'base-hex' : feat.source
+                        // console.log(layer)
+                        // console.log(parent, this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}))
+
+                        // FIXME explode a hex, turn on select mode and select second hex, explode second hex - this selects all of the first hexes
+
+                        this.filtered.splice(this.filtered.indexOf(parent), 1)
+                        filteredParents.splice(filteredParents.indexOf(parent), 1)
+                        this.map.setFilter(layer, this.filtered.length ?  ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+
+
+                        if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}).selected) {
+                            this.selected.push(parent)
+                        }
                     }
+
                     // console.log('IMPLODE: filtered: ', this.filtered)
                     // console.log('IMPLODE: selected:', this.selected)
                     //
@@ -292,7 +311,9 @@ export default Vue.extend({
                     // match ^ with selected array
                     // get all children of parent, remove from children from childFeatures, set featureState to false
                 }
-                console.log(feat.id, 'IMPLODE: children:', this.childFeatures.map(x => x.id))
+
+                 // FIXME Explode selected, explode unselected, then implode selected - also happens without selected
+                // console.log(feat.id, 'IMPLODE: children:', this.childFeatures.map(x => x.id))
                 // console.log(this.childFeatures.map(x => x.id).includes(feat.id))
 
 
@@ -314,7 +335,7 @@ export default Vue.extend({
 
 
                 const feature = e.features[0]
-                // console.log(feature)
+                console.log('CLICKED:', feature.id)
                 if (!this.selectMode) {
 
                     // TODO Replace with getResolution everywhere
@@ -334,7 +355,7 @@ export default Vue.extend({
                         const geojson = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({ h3_address: hex }))
                         // console.log(geojson)
                         this.childFeatures.push(...geojson.features)
-                        console.log(this.childFeatures.map(x => x.id))
+                        // console.log(this.childFeatures.map(x => x.id))
 
 
                         this.map.getSource('children').setData({
