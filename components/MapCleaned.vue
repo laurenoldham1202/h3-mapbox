@@ -166,7 +166,9 @@ export default Vue.extend({
 
                         const children = h3.h3ToChildren(feature.id, res + 1)
                         this.children.push(...children)
-                        const childrenPoly = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({h3_address: hex}))
+                        this.setChildFeatures()
+                        // const childrenPoly = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({h3_address: hex}))
+                        // console.log(childrenPoly)
 
                         // console.log('SELECT MODE OFF')
                         // console.log('filtered:', this.filtered)
@@ -185,7 +187,7 @@ export default Vue.extend({
 
                         // console.log('SELECT MODE ON')
                         // console.log('filtered:', this.filtered)
-                        // console.log('children:', this.children)
+                        console.log('children:', this.children)
                     }
 
                 }
@@ -203,6 +205,11 @@ export default Vue.extend({
 		uniqueValues(array: any[]) {
 			return Array.from(new Set(array))
 		},
+        setChildFeatures() {
+            const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
+            this.map.getSource('children').setData(childrenPoly)
+            // console.log(childrenPoly)
+        }
 
 	},
 })
