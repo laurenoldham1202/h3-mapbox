@@ -154,36 +154,22 @@ export default Vue.extend({
                     this.filterOutParentHexes(layer)
 
                     // TODO handle when collapsing while a fellow child of parent is extrapolated
-                    const children = h3.h3ToChildren(parent, res + 1)
-                    children.map(child => this.removeItemFromArray(this.children, child))
-                    // console.log(children, this.children)
-                    // console.log('children feats:', this.children)
-
-
-
-
+                    // const children = h3.h3ToChildren(parent, res + 1)
+                    // children.map(child => this.removeItemFromArray(this.children, child))
 
                     const allChildren: any[] = []
                     const resolutions = [3, 4, 5, 6]
                     resolutions.forEach(reso => {
-                        if (reso >= (res + 2)) {
-                            // console.log(reso)
+                        if (reso >= (res + 1)) {
                             allChildren.push(...h3.h3ToChildren(parent, reso))
                         }
                     })
-                    // const children2 = h3.h3ToChildren(parent, res + 2)
-                    // children2.map(child => this.removeItemFromArray(this.children, child))
-                    // console.log(children2)
-                    // console.log()
 
-                    // FIXME reselecting deselected features is weird
                     allChildren.forEach(ch => {
                         if (this.children.includes(ch)) {
-                            // console.log(ch)
                             this.removeItemFromArray(this.children, ch)
                         }
                     })
-
 
                     this.setChildFeatures()
 
