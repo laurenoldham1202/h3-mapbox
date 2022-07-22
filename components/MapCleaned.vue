@@ -179,7 +179,7 @@ export default Vue.extend({
                     // FIXME reselecting deselected features is weird
                     allChildren.forEach(ch => {
                         if (this.children.includes(ch)) {
-                            console.log(ch)
+                            // console.log(ch)
                             this.removeItemFromArray(this.children, ch)
                         }
                     })
@@ -233,6 +233,7 @@ export default Vue.extend({
                         // only allow user to drill down to h3 res 6
                         if (res <= 6) {
                             this.filtered.push(feature.id)
+
                             this.filterOutParentHexes(feature.source)
 
                             // TODO Remove filtered/clicked values from children array?
@@ -243,6 +244,20 @@ export default Vue.extend({
                             // TODO Make sure that resetting all child features scales with thousands of children
                             // set child geojson features in layer
                             this.setChildFeatures()
+
+
+
+
+
+                            this.filtered.forEach(f => {
+                                if (children.includes(f)) {
+                                    this.removeItemFromArray(this.filtered, f)
+                                    // console.log(f)
+                                }
+                            })
+
+                            this.filterOutParentHexes('children')
+
 
                             // // if the clicked hex is in the children array, remove it from array when hex is filtered out
                             // if (this.arrayIncludesItem(this.children, feature.id)) {
