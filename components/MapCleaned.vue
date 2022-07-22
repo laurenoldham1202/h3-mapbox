@@ -156,8 +156,21 @@ export default Vue.extend({
                     // TODO handle when collapsing while a fellow child of parent is extrapolated
                     const children = h3.h3ToChildren(parent, res + 1)
                     children.map(child => this.removeItemFromArray(this.children, child))
-                    // console.log(children)
-                    // const childrenOfChildren
+                    // console.log(children, this.children)
+                    // console.log('children feats:', this.children)
+
+                    const children2 = h3.h3ToChildren(parent, res + 2)
+                    // children2.map(child => this.removeItemFromArray(this.children, child))
+                    // console.log(children2)
+                    // console.log()
+                    children2.forEach(ch => {
+                        if (this.children.includes(ch)) {
+                            console.log(ch)
+                            this.removeItemFromArray(this.children, ch)
+                        }
+                    })
+
+
                     this.setChildFeatures()
 
 
@@ -211,6 +224,7 @@ export default Vue.extend({
                             // TODO Remove filtered/clicked values from children array?
                             const children = h3.h3ToChildren(feature.id, res)
                             this.children.push(...children)
+                            // console.log(this.children)
 
                             // TODO Make sure that resetting all child features scales with thousands of children
                             // set child geojson features in layer
