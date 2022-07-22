@@ -232,44 +232,29 @@ export default Vue.extend({
                         // TODO Combine res restriction and selectMode conditions?
                         // only allow user to drill down to h3 res 6
                         if (res <= 6) {
-
-
-                            // TODO Remove filtered/clicked values from children array?
+                            // find children of clicked feature, push to array for app-wide usage
                             const children = h3.h3ToChildren(feature.id, res)
                             this.children.push(...children)
-                            // console.log(this.children)
 
                             // TODO Make sure that resetting all child features scales with thousands of children
                             // set child geojson features in layer
                             this.setChildFeatures()
 
-
-
-
-
-                            // drill down, click two, right click third, reclick parent - filter error
-
+                            // filter out the clicked feature so that parent and children are not layered on top of each other
                             this.filtered.push(feature.id)
 
-                            // this.filterOutParentHexes(feature.source)
-                            // console.log('children:', children)
-                            // console.log(this.filtered)
-                            children.forEach(f => {
-                                if (this.filtered.includes(f)) {
-                                    this.removeItemFromArray(this.filtered, f)
-                                    // console.log(f)
+                            // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
+                            children.forEach((child: string) => {
+                                if (this.filtered.includes(child)) {
+                                    this.removeItemFromArray(this.filtered, child)
                                 }
                             })
 
+                            // update all layers' filters
                             const layers = ['base-hex', 'children']
                             layers.forEach(layer => {
                                 this.filterOutParentHexes(layer)
-
                             })
-                            // this.filterOutParentHexes(feature.source)
-                            // this.filterOutParentHexes('children')
-
-
 
 
                             // // if the clicked hex is in the children array, remove it from array when hex is filtered out
