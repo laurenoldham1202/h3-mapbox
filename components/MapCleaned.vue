@@ -232,9 +232,7 @@ export default Vue.extend({
                         // TODO Combine res restriction and selectMode conditions?
                         // only allow user to drill down to h3 res 6
                         if (res <= 6) {
-                            this.filtered.push(feature.id)
 
-                            this.filterOutParentHexes(feature.source)
 
                             // TODO Remove filtered/clicked values from children array?
                             const children = h3.h3ToChildren(feature.id, res)
@@ -251,8 +249,11 @@ export default Vue.extend({
 
                             // drill down, click two, right click third, reclick parent - filter error
 
-                            console.log('children:', children)
-                            console.log(this.filtered)
+                            this.filtered.push(feature.id)
+
+                            // this.filterOutParentHexes(feature.source)
+                            // console.log('children:', children)
+                            // console.log(this.filtered)
                             children.forEach(f => {
                                 if (this.filtered.includes(f)) {
                                     this.removeItemFromArray(this.filtered, f)
@@ -260,7 +261,13 @@ export default Vue.extend({
                                 }
                             })
 
-                            this.filterOutParentHexes('children')
+                            const layers = ['base-hex', 'children']
+                            layers.forEach(layer => {
+                                this.filterOutParentHexes(layer)
+
+                            })
+                            // this.filterOutParentHexes(feature.source)
+                            // this.filterOutParentHexes('children')
 
 
 
