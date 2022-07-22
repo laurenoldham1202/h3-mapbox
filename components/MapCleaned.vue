@@ -156,9 +156,26 @@ export default Vue.extend({
                     // TODO handle when collapsing while a fellow child of parent is extrapolated
                     const children = h3.h3ToChildren(parent, res + 1)
                     children.map(child => this.removeItemFromArray(this.children, child))
-                    // console.log(this.children)
+                    // console.log(children)
+                    // const childrenOfChildren
                     this.setChildFeatures()
 
+
+                    // const allChildren: any[] = []
+                    // const resolutions = [3, 4, 5, 6]
+                    // resolutions.forEach(reso => {
+                    //     if (reso >= (res + 1)) {
+                    //         // console.log(reso)
+                    //         allChildren.push(...h3.h3ToChildren(parent, reso))
+                    //     }
+                    // })
+                    // console.log(allChildren)
+                    // allChildren.map(child => this.removeItemFromArray(this.children, child))
+                    // // console.log(children)
+                    // // const childrenOfChildren
+                    // this.setChildFeatures()
+
+                    // console.log(res + 1)
                     // console.log('RIGHT CLICK')
                     // console.log('filtered:', this.filtered)
                     // console.log(this.arrayIncludesItem(this.filtered, parent))
