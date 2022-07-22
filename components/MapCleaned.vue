@@ -159,11 +159,25 @@ export default Vue.extend({
                     // console.log(children, this.children)
                     // console.log('children feats:', this.children)
 
-                    const children2 = h3.h3ToChildren(parent, res + 2)
+
+
+
+
+                    const allChildren: any[] = []
+                    const resolutions = [3, 4, 5, 6]
+                    resolutions.forEach(reso => {
+                        if (reso >= (res + 2)) {
+                            // console.log(reso)
+                            allChildren.push(...h3.h3ToChildren(parent, reso))
+                        }
+                    })
+                    // const children2 = h3.h3ToChildren(parent, res + 2)
                     // children2.map(child => this.removeItemFromArray(this.children, child))
                     // console.log(children2)
                     // console.log()
-                    children2.forEach(ch => {
+
+                    // FIXME reselecting deselected features is weird
+                    allChildren.forEach(ch => {
                         if (this.children.includes(ch)) {
                             console.log(ch)
                             this.removeItemFromArray(this.children, ch)
