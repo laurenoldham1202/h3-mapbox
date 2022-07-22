@@ -138,11 +138,48 @@ export default Vue.extend({
 
             // RIGHT CLICK - collapse features
             this.map.on('contextmenu', (e: any) => {
-                console.log(e)
+                // console.log(e)
+                const layers = ['base-hex', 'children']
+                // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
+                const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
+                if (feature) {
+                    // console.log(feature.id)
+                    const res = parseInt(feature.id[1]) - 1
 
-                // console.log('RIGHT CLICK')
-                console.log('filtered:', this.filtered)
-                console.log('children:', this.children)
+                    const parent = h3.h3ToParent(feature.id, res)
+                    // console.log(parent)
+
+
+                    if (this.arrayIncludesItem(this.filtered, parent)) {
+                        console.log(this.filtered, parent)
+                        this.removeItemFromArray(this.filtered, parent)
+                        console.log('after:', this.filtered)
+                    }
+
+                const adjFiltered = this.filtered.filter(item => parseInt(item[1]) !== 3)
+                    console.log(adjFiltered)
+                    this.map.setFilter('children', adjFiltered.length ? ['match', ['get', 'h3_address'], adjFiltered, false, true] : null)
+
+                    // const layer = res === 3 ? 'base-hex' : feature.source
+                    // console.log('filtered:', this.filtered)
+                    // console.log(res, layer)
+                    //
+                    // // FIXME when extrapolating 2 levels, filtered arr is NOT empty, so children layer filter is not being reset even though filtered item is in base-hex layer
+                    // this.filterOutParentHexes(layer)
+                    console.log(this.map.getFilter('children'))
+
+                    // this.map.setFilter('base-hex', this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+
+
+                    // console.log('RIGHT CLICK')
+                    // console.log('filtered:', this.filtered)
+                    // console.log(this.arrayIncludesItem(this.filtered, parent))
+                    // console.log('children:', this.children)
+                    // get parent, remove from filtered array, reset map filter
+                    // get children of parent, remove all from children array, reset children elements
+                    // handle when collapsing while a fellow child of parent is extrapolated
+                }
+
             })
 
 
@@ -175,6 +212,8 @@ export default Vue.extend({
                             if (this.arrayIncludesItem(this.children, feature.id)) {
                                 this.removeItemFromArray(this.children, feature.id)
                             }
+
+                        // TODO Make sure that resettting all child features scales with thousands of children
                             // set child geojson features in layer
                             this.setChildFeatures()
 
@@ -217,7 +256,8 @@ export default Vue.extend({
             this.map.getSource('children').setData(childrenPoly)
         },
         filterOutParentHexes(featureSource: string) {
-            this.map.setFilter(featureSource, ['match', ['get', 'h3_address'], this.filtered, false, true])
+		    // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
+            this.map.setFilter(featureSource, this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
         },
         removeItemFromArray(array: any[], item: any) {
             array.splice(array.indexOf(item), 1)
