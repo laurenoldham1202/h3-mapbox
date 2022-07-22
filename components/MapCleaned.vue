@@ -136,17 +136,17 @@ export default Vue.extend({
 
 
 
-            // RIGHT CLICK
-            this.map.on('contextmenu', (e) => {
-                // console.log(e)
+            // RIGHT CLICK - collapse features
+            this.map.on('contextmenu', (e: any) => {
+                console.log(e)
 
                 // console.log('RIGHT CLICK')
-                // console.log('filtered:', this.filtered)
-                // console.log('children:', this.children)
+                console.log('filtered:', this.filtered)
+                console.log('children:', this.children)
             })
 
 
-            // LEFT CLICK
+            // LEFT CLICK - select, deselect, or extrapolate features
             this.map.on('click', ['base-hex', 'children', 'species-range'], (e: any) => {
                 // all layers for a clicked point
                 const clickedLayers = e.features.map((feats: any) => feats.layer.id)
@@ -154,37 +154,37 @@ export default Vue.extend({
                 // if user clicked within the species range...
                 if (clickedLayers.includes('species-range')) {
                     // console.log('original range clicked')
-                } else {
+                } else {  // if user clicked outside of the species range, i.e. a base-hex or child
                     const feature = e.features[0]
-                    const res = parseInt(feature.id[1])
+                    const res = parseInt(feature.id[1]) + 1
 
                     // if select mode is off, i.e. if user is expanding or collapsing shapes
                     if (!this.selectMode) {
                         // TODO Combine res restriction and selectMode conditions?
+                        // only allow user to drill down to h3 res 6
                         if (res <= 6) {
-                            // console.log('filter out', feature.id)
                             this.filtered.push(feature.id)
                             this.filterOutParentHexes(feature.source)
 
-                            const children = h3.h3ToChildren(feature.id, res + 1)
+                            // TODO Remove filtered/clicked values from children array?
+                            const children = h3.h3ToChildren(feature.id, res)
                             this.children.push(...children)
+
+
+                            // if the clicked parent hex is in the children array, remove it from array when hex is filtered out
+                            if (this.arrayIncludesItem(this.children, feature.id)) {
+                                this.removeItemFromArray(this.children, feature.id)
+                            }
+                            // set child geojson features in layer
                             this.setChildFeatures()
-                            // const childrenPoly = geojson2h3.h3SetToFeatureCollection(children, (hex) => ({h3_address: hex}))
-                            // console.log(childrenPoly)
 
                             // console.log('SELECT MODE OFF')
                             // console.log('filtered:', this.filtered)
+                            // console.log(feature)
                             // console.log('children:', this.children)
 
 
-                            // console.log('find poly for ', childrenPoly)
-                            // if user clicked outside of the species range, i.e. a base-hex or child
-                            // console.log('outside range clicked')
 
-                            // if select mode off...
-                            // 1. filter out the selected feature (preserve in array and update map)
-                            // 2. get hex children of feature
-                            // 3. convert hex to geojson, set 'children' layer data
                         }
                     } else {  // if selection mode is on
 
@@ -209,11 +209,21 @@ export default Vue.extend({
 			return Array.from(new Set(array))
 		},
         setChildFeatures() {
+		    // ensure that there are no duplicate children
+		    this.children = this.uniqueValues(this.children)
+            // convert hex ids into geojson, preserving the indices
             const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
+            // apply geojson to map layer
             this.map.getSource('children').setData(childrenPoly)
         },
         filterOutParentHexes(featureSource: string) {
             this.map.setFilter(featureSource, ['match', ['get', 'h3_address'], this.filtered, false, true])
+        },
+        removeItemFromArray(array: any[], item: any) {
+            array.splice(array.indexOf(item), 1)
+        },
+        arrayIncludesItem(array: any[], item: any) {
+		    return array.includes(item)
         }
 
 	},
