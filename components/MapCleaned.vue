@@ -138,38 +138,17 @@ export default Vue.extend({
 
             // RIGHT CLICK - collapse features
             this.map.on('contextmenu', (e: any) => {
-                // console.log(e)
-                const layers = ['base-hex', 'children']
                 // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
                 const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
                 if (feature) {
-                    // console.log(feature.id)
                     const res = parseInt(feature.id[1]) - 1
-
                     const parent = h3.h3ToParent(feature.id, res)
-                    // console.log(parent)
-
 
                     if (this.arrayIncludesItem(this.filtered, parent)) {
-                        console.log(this.filtered, parent)
                         this.removeItemFromArray(this.filtered, parent)
-                        console.log('after:', this.filtered)
                     }
-
-                const adjFiltered = this.filtered.filter(item => parseInt(item[1]) !== 3)
-                    console.log(adjFiltered)
-                    this.map.setFilter('children', adjFiltered.length ? ['match', ['get', 'h3_address'], adjFiltered, false, true] : null)
-
-                    // const layer = res === 3 ? 'base-hex' : feature.source
-                    // console.log('filtered:', this.filtered)
-                    // console.log(res, layer)
-                    //
-                    // // FIXME when extrapolating 2 levels, filtered arr is NOT empty, so children layer filter is not being reset even though filtered item is in base-hex layer
-                    // this.filterOutParentHexes(layer)
-                    console.log(this.map.getFilter('children'))
-
-                    // this.map.setFilter('base-hex', this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
-
+                    const layer = res === 3 ? 'base-hex' : feature.source
+                    this.filterOutParentHexes(layer)
 
                     // console.log('RIGHT CLICK')
                     // console.log('filtered:', this.filtered)
@@ -208,28 +187,27 @@ export default Vue.extend({
                             this.children.push(...children)
 
 
-                            // if the clicked parent hex is in the children array, remove it from array when hex is filtered out
-                            if (this.arrayIncludesItem(this.children, feature.id)) {
-                                this.removeItemFromArray(this.children, feature.id)
-                            }
 
-                        // TODO Make sure that resettting all child features scales with thousands of children
+                            // TODO Make sure that resetting all child features scales with thousands of children
                             // set child geojson features in layer
                             this.setChildFeatures()
+
+                            // // if the clicked hex is in the children array, remove it from array when hex is filtered out
+                            // if (this.arrayIncludesItem(this.children, feature.id)) {
+                            //     this.removeItemFromArray(this.children, feature.id)
+                            // }
 
                             // console.log('SELECT MODE OFF')
                             // console.log('filtered:', this.filtered)
                             // console.log(feature)
                             // console.log('children:', this.children)
 
-
-
                         }
                     } else {  // if selection mode is on
 
                         // console.log('SELECT MODE ON')
                         // console.log('filtered:', this.filtered)
-                        console.log('children:', this.children)
+                        // console.log('children:', this.children)
                     }
 
                 }
