@@ -141,8 +141,11 @@ export default Vue.extend({
                 // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
                 const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
                 if (feature) {
+                    // console.log(feature.id)
                     const res = parseInt(feature.id[1]) - 1
                     const parent = h3.h3ToParent(feature.id, res)
+                    // console.log('children:', this.children)
+                    // console.log(parent, this.children.includes(parent))
 
                     if (this.arrayIncludesItem(this.filtered, parent)) {
                         this.removeItemFromArray(this.filtered, parent)
@@ -150,13 +153,19 @@ export default Vue.extend({
                     const layer = res === 3 ? 'base-hex' : feature.source
                     this.filterOutParentHexes(layer)
 
+                    // TODO handle when collapsing while a fellow child of parent is extrapolated
+                    const children = h3.h3ToChildren(parent, res + 1)
+                    children.map(child => this.removeItemFromArray(this.children, child))
+                    // console.log(this.children)
+                    this.setChildFeatures()
+
                     // console.log('RIGHT CLICK')
                     // console.log('filtered:', this.filtered)
                     // console.log(this.arrayIncludesItem(this.filtered, parent))
                     // console.log('children:', this.children)
                     // get parent, remove from filtered array, reset map filter
                     // get children of parent, remove all from children array, reset children elements
-                    // handle when collapsing while a fellow child of parent is extrapolated
+                    //
                 }
 
             })
@@ -186,8 +195,6 @@ export default Vue.extend({
                             const children = h3.h3ToChildren(feature.id, res)
                             this.children.push(...children)
 
-
-
                             // TODO Make sure that resetting all child features scales with thousands of children
                             // set child geojson features in layer
                             this.setChildFeatures()
@@ -196,6 +203,7 @@ export default Vue.extend({
                             // if (this.arrayIncludesItem(this.children, feature.id)) {
                             //     this.removeItemFromArray(this.children, feature.id)
                             // }
+
 
                             // console.log('SELECT MODE OFF')
                             // console.log('filtered:', this.filtered)
@@ -215,7 +223,7 @@ export default Vue.extend({
             })
 
             const popup = new M.Popup({closeButton: false})
-            this.map.on('mousemove', ['base-hex', 'children'], (e) => {
+            this.map.on('mousemove', ['base-hex', 'children'], (e: any) => {
                 popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
             })
 
