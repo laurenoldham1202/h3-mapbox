@@ -249,14 +249,20 @@ export default Vue.extend({
 
 
 
-                            this.filtered.forEach(f => {
-                                if (children.includes(f)) {
+                            // drill down, click two, right click third, reclick parent - filter error
+
+                            console.log('children:', children)
+                            console.log(this.filtered)
+                            children.forEach(f => {
+                                if (this.filtered.includes(f)) {
                                     this.removeItemFromArray(this.filtered, f)
                                     // console.log(f)
                                 }
                             })
 
                             this.filterOutParentHexes('children')
+
+
 
 
                             // // if the clicked hex is in the children array, remove it from array when hex is filtered out
