@@ -39,6 +39,7 @@
       draw: undefined as any,
       filtered: [] as any[],
       children: [] as any[],
+      selected: [] as any[],
     }),
     watch: {
       rangeOnly() {
@@ -240,8 +241,12 @@
             } else {  // if selection mode is on
 
               const layer = res === 4 ? 'base-hex' : feature.source
-              console.log(feature)
+              // console.log(feature)
               this.map.setFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}, {selected: !feature.state.selected})
+              this.updateSelected(feature)
+
+
+            console.log(this.selected)
               // console.log('SELECT MODE ON')
               // console.log('filtered:', this.filtered)
               // console.log('children:', this.children)
@@ -279,6 +284,13 @@
       },
       arrayIncludesItem(array: any[], item: any) {
         return array.includes(item)
+      },
+      updateSelected(feature: any) {
+        if (!feature.state.selected) {
+          this.selected.push(feature.id)
+        } else {
+          this.removeItemFromArray(this.selected, feature.id)
+        }
       }
 
     },
