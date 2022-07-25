@@ -49,6 +49,9 @@
         // console.log('filtered:', this.filtered)
         // console.log('children:', this.children)
       },
+      selected(x) {
+        console.log(x)
+      }
     },
     mounted(): void {
       ;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
@@ -210,11 +213,12 @@
                 // set child geojson features in layer
                 this.setChildFeatures()
 
-
-
-
                 // filter out the clicked feature so that parent and children are not layered on top of each other
                 this.filtered.push(feature.id)
+
+                // is parent hex selected on the map
+                // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
+                const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
 
                 // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
                 children.forEach((child: string) => {
@@ -222,17 +226,21 @@
                     this.removeItemFromArray(this.filtered, child)
                   }
 
-
                   // set all children features as selected, push to selected array
                   // set parent hex to NOT selected, remove from selected array
-
-                  // console.log(this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}))
-                  if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected) {
+                  // if parent hex is selected on the map, set ALL child features as selected too, push to array
+                  if (parentSelected) {
                     this.map.setFeatureState({source: 'children', id: child}, {selected: true})
+                    this.selected.push(child)
                   }
-
-
                 })
+
+                // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
+                // happens outside of children loop to not duplicate unnecessarily
+                if (parentSelected) {
+                  this.map.setFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}, {selected: false})
+                  this.removeItemFromArray(this.selected, feature.id)
+                }
 
                 // update all layers' filters
                 const layers = ['base-hex', 'children']
