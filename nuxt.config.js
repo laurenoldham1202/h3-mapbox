@@ -32,7 +32,7 @@ export default {
     target: 'static',
     router: {
         base: '/h3-mapbox/'
-    }
+    },
 	// router: {
 	// 	// comment out the gateway middleware to disable auto-login
 	// 	middleware: 'gateway',
