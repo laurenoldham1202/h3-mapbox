@@ -1,0 +1,2 @@
+/*! For license information please see LICENSES */
+(window.webpackJsonp=window.webpackJsonp||[]).push([[63],{736:function(t,e,n){"use strict";n.r(e);var r={name:"CloLogosGridItem",props:{href:{type:String,default:"#"}},data:function(){return{}}},o=n(2),component=Object(o.a)(r,(function(){var t=this,e=t.$createElement;return(t._self._c||e)("a",{staticClass:"LogosGrid-item",attrs:{href:t.href}},[t._t("default")],2)}),[],!1,null,null,null);e.default=component.exports}}]);

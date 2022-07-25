@@ -29,12 +29,15 @@ export default {
 		{ path: '/login', handler: '~/auth/login.js' },
 		{ path: '/logout', handler: '~/auth/logout.js' },
 	],
-
-	router: {
-		// comment out the gateway middleware to disable auto-login
-		middleware: 'gateway',
-		prefetchLinks: false,
-	},
+    target: 'static',
+    router: {
+        base: '/h3-mapbox/'
+    }
+	// router: {
+	// 	// comment out the gateway middleware to disable auto-login
+	// 	middleware: 'gateway',
+	// 	prefetchLinks: false,
+	// },
 
 	// Global page headers: https://go.nuxtjs.dev/config-head
 	head() {
