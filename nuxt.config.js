@@ -34,7 +34,7 @@ export default {
 		// comment out the gateway middleware to disable auto-login
 		middleware: 'gateway',
 		prefetchLinks: false,
-        base: '/h3-mapbox/'
+        base: '/h3-mapbox/en/fixed/'
 	},
 
 	// Global page headers: https://go.nuxtjs.dev/config-head
