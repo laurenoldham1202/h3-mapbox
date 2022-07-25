@@ -10,7 +10,14 @@
     "deploy": "push-dir --dir=dist --branch=nuxt --cleanup"
   },
   "dependencies": {
+    "@turf/area": "^6.5.0",
+    "@turf/bbox": "^6.5.0",
+    "@turf/intersect": "^6.5.0",
+    "@types/mapbox-gl": "^2.7.3",
     "core-js": "^3.19.3",
+    "geojson2h3": "^1.2.0",
+    "h3-js": "^3.7.2",
+    "mapbox-gl": "^2.9.2",
     "nuxt": "^2.15.8",
     "vue": "^2.6.14",
     "vue-server-renderer": "^2.6.14",
