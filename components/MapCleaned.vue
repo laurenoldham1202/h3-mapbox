@@ -141,61 +141,40 @@ export default Vue.extend({
                 // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
                 const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
                 if (feature) {
-                    // console.log(feature.id)
+                    // desired resolution, one level up from selected res
                     const res = parseInt(feature.id[1]) - 1
+                    // parent of clicked feature
                     const parent = h3.h3ToParent(feature.id, res)
-                    // console.log('children:', this.children)
-                    // console.log(parent, this.children.includes(parent))
 
+                    // if the selected parent feature is currently filtered out of map, remove it from the filtered list so it will display
                     if (this.arrayIncludesItem(this.filtered, parent)) {
                         this.removeItemFromArray(this.filtered, parent)
                     }
+                    // if clicking on res 4, use base-hex layer instead of children layer
                     const layer = res === 3 ? 'base-hex' : feature.source
+                    // update proper map layer with unfiltered parents
                     this.filterOutParentHexes(layer)
 
-                    // TODO handle when collapsing while a fellow child of parent is extrapolated
-                    // const children = h3.h3ToChildren(parent, res + 1)
-                    // children.map(child => this.removeItemFromArray(this.children, child))
-
+                    // empty array for all children through res 6 for the selected parent hex
                     const allChildren: any[] = []
+                    // all possible resolutions on the map
                     const resolutions = [3, 4, 5, 6]
-                    resolutions.forEach(reso => {
-                        if (reso >= (res + 1)) {
-                            allChildren.push(...h3.h3ToChildren(parent, reso))
+                    resolutions.forEach((resolution: number) => {
+                        if (resolution >= (res + 1)) {
+                            // for each res, find children and push to array
+                            allChildren.push(...h3.h3ToChildren(parent, resolution))
                         }
                     })
 
-                    allChildren.forEach(ch => {
-                        if (this.children.includes(ch)) {
-                            this.removeItemFromArray(this.children, ch)
+                    allChildren.forEach((child: string) => {
+                        // if a child hex is already plotted on the map, remove it from the array
+                        if (this.children.includes(child)) {
+                            this.removeItemFromArray(this.children, child)
                         }
                     })
 
+                    // update map with removed children hexes
                     this.setChildFeatures()
-
-
-                    // const allChildren: any[] = []
-                    // const resolutions = [3, 4, 5, 6]
-                    // resolutions.forEach(reso => {
-                    //     if (reso >= (res + 1)) {
-                    //         // console.log(reso)
-                    //         allChildren.push(...h3.h3ToChildren(parent, reso))
-                    //     }
-                    // })
-                    // console.log(allChildren)
-                    // allChildren.map(child => this.removeItemFromArray(this.children, child))
-                    // // console.log(children)
-                    // // const childrenOfChildren
-                    // this.setChildFeatures()
-
-                    // console.log(res + 1)
-                    // console.log('RIGHT CLICK')
-                    // console.log('filtered:', this.filtered)
-                    // console.log(this.arrayIncludesItem(this.filtered, parent))
-                    // console.log('children:', this.children)
-                    // get parent, remove from filtered array, reset map filter
-                    // get children of parent, remove all from children array, reset children elements
-                    //
                 }
 
             })
