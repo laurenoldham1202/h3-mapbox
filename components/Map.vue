@@ -195,6 +195,7 @@
           } else {  // if user clicked outside of the species range, i.e. a base-hex or child
             const feature = e.features[0]
             const res = parseInt(feature.id[1]) + 1
+            const layer = res === 4 ? 'base-hex' : feature.source
 
             // if select mode is off, i.e. if user is expanding or collapsing shapes
             if (!this.selectMode) {
@@ -209,6 +210,9 @@
                 // set child geojson features in layer
                 this.setChildFeatures()
 
+
+
+
                 // filter out the clicked feature so that parent and children are not layered on top of each other
                 this.filtered.push(feature.id)
 
@@ -217,6 +221,17 @@
                   if (this.filtered.includes(child)) {
                     this.removeItemFromArray(this.filtered, child)
                   }
+
+
+                  // set all children features as selected, push to selected array
+                  // set parent hex to NOT selected, remove from selected array
+
+                  // console.log(this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}))
+                  if (this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected) {
+                    this.map.setFeatureState({source: 'children', id: child}, {selected: true})
+                  }
+
+
                 })
 
                 // update all layers' filters
@@ -240,13 +255,12 @@
               }
             } else {  // if selection mode is on
 
-              const layer = res === 4 ? 'base-hex' : feature.source
               // console.log(feature)
               this.map.setFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}, {selected: !feature.state.selected})
               this.updateSelected(feature)
 
 
-            console.log(this.selected)
+              // console.log(this.selected)
               // console.log('SELECT MODE ON')
               // console.log('filtered:', this.filtered)
               // console.log('children:', this.children)
