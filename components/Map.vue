@@ -33,7 +33,7 @@
     data: () => ({
       map: undefined as any,
       coords: { lng: -96.35, lat: 37 } as M.LngLat,
-      selectMode: false,
+      selectMode: true,
       rangeOnly: false,
       resolution: 3,
       draw: undefined as any,
@@ -239,6 +239,9 @@
               }
             } else {  // if selection mode is on
 
+              const layer = res === 4 ? 'base-hex' : feature.source
+              console.log(feature)
+              this.map.setFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}, {selected: !feature.state.selected})
               // console.log('SELECT MODE ON')
               // console.log('filtered:', this.filtered)
               // console.log('children:', this.children)
@@ -303,5 +306,9 @@
 
   .alert {
     background: red
+  }
+
+  button {
+    cursor: pointer;
   }
 </style>
