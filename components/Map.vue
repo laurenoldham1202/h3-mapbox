@@ -50,7 +50,7 @@
         // console.log('children:', this.children)
       },
       selected(x) {
-        console.log(x)
+        console.log('selected:', x)
       }
     },
     mounted(): void {
@@ -148,10 +148,17 @@
           // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
           const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
           if (feature) {
+            // console.log(feature.state)
+
+            // if feature is selected, set parent to selected and add to array
+            // set ALL children to deselected, remove from array
+
             // desired resolution, one level up from selected res
             const res = parseInt(feature.id[1]) - 1
             // parent of clicked feature
             const parent = h3.h3ToParent(feature.id, res)
+
+
 
             // if the selected parent feature is currently filtered out of map, remove it from the filtered list so it will display
             if (this.arrayIncludesItem(this.filtered, parent)) {
@@ -161,6 +168,21 @@
             const layer = res === 3 ? 'base-hex' : feature.source
             // update proper map layer with unfiltered parents
             this.filterOutParentHexes(layer)
+
+
+
+            // console.log(layer, this.arrayIncludesItem(this.selected, feature.id))
+            // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
+            // match parent selected state to clicked hex selected state
+            this.map.setFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: parent}, {selected: this.arrayIncludesItem(this.selected, feature.id)})
+
+            if (this.arrayIncludesItem(this.selected, feature.id)) {
+              this.selected.push(parent)
+            }
+
+
+
+
 
             // empty array for all children through res 6 for the selected parent hex
             const allChildren: any[] = []
@@ -176,8 +198,23 @@
             allChildren.forEach((child: string) => {
               // if a child hex is already plotted on the map, remove it from the array
               if (this.children.includes(child)) {
+                // this.removeItemFromArray(this.selected, child)
                 this.removeItemFromArray(this.children, child)
+
+                // this.map.setFeatureState({source: 'children', id: child}, {selected: false})
+                // console.log(child)
+                // this.selected.splice(this.selected.indexOf(child), 1)
+                // console.log(this.selected)
               }
+
+              if (this.selected.includes(child)) {
+                this.removeItemFromArray(this.selected, child)
+                this.map.setFeatureState({source: 'children', id: child}, {selected: false})
+                console.log(child)
+                console.log(this.selected)
+
+              }
+
             })
 
             // update map with removed children hexes
@@ -222,16 +259,14 @@
 
                 // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
                 children.forEach((child: string) => {
-                  if (this.filtered.includes(child)) {
-                    this.removeItemFromArray(this.filtered, child)
-                  }
-
-                  // set all children features as selected, push to selected array
-                  // set parent hex to NOT selected, remove from selected array
                   // if parent hex is selected on the map, set ALL child features as selected too, push to array
                   if (parentSelected) {
                     this.map.setFeatureState({source: 'children', id: child}, {selected: true})
                     this.selected.push(child)
+                  }
+
+                  if (this.filtered.includes(child)) {
+                    this.removeItemFromArray(this.filtered, child)
                   }
                 })
 
