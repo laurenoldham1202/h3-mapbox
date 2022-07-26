@@ -186,11 +186,26 @@
 
         const line = T.polygonToLine(T.polygon(rangeLine.geometry.coordinates))
         console.log(line)
+        const points = []
+        const border = []
         setTimeout(() => {
           // TODO Intersect these
           const f = this.map.queryRenderedFeatures(this.bboxToPixel(rangeLine.geometry), { layers: ['base-hex'] })
           // console.log(f)
           f.forEach(x => {
+
+            const p = T.lineIntersect(x, line)
+            if (p.features.length) {
+
+              p.features.forEach(r => {
+                const coords = r.geometry.coordinates
+                const hex = h3.geoToH3(coords[1], coords[0], 3)
+                // console.log(hex)
+                border.push(hex)
+              })
+              // console.log(p)
+              points.push(...p.features)
+            }
 
             // const poly = T.polygon(x.geometry.coordinates)
             // poly.properties = x.properties
@@ -202,15 +217,37 @@
               y.push(int)
             }
           })
+
+          console.log(this.uniqueValues(border))
+          this.uniqueValues(border).forEach((hex) => {
+            // console.log(hex)
+
+            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: hex}, {selected: true})
+          })
+          // console.log(points)
+
+          this.map.addSource('pts', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: points
+            }
+          })
+
+          this.map.addLayer({
+            id: 'pts',
+            source: 'pts',
+            type: 'circle'
+          })
           // const hexes = f.map(x => x.id)
           // console.log(hexes)
           // const compact = h3.compact(hexes)
           // console.log(compact)
           const hexes = y.map(x => x.properties.h3_address)
           hexes.forEach((hex) => {
-            console.log(hex)
+            // console.log(hex)
 
-            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: hex}, {selected: true})
+            // this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: hex}, {selected: true})
           })
         }, 100)
 
