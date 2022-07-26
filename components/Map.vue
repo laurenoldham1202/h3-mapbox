@@ -50,7 +50,7 @@
         // console.log('children:', this.children)
       },
       selected(x) {
-        console.log('selected:', x)
+        // console.log('selected:', x)
       }
     },
     mounted(): void {
@@ -210,7 +210,26 @@
 
           // if user clicked within the species range...
           if (clickedLayers.includes('species-range')) {
+            // console.log(e)
             // console.log('original range clicked')
+
+            // TODO keep outline? Push to deselected arr?
+            const feature = e.features.filter((features: any) => features.layer.id === 'species-range')[0]
+
+            if (!this.selectMode) {
+              console.log('explode')
+            } else {
+              // console.log(feat, feat.state.selected)
+              if (feature.state.selected === undefined) {
+                this.map.setFeatureState({source: feature.source, sourceLayer: feature.sourceLayer, id: feature.id}, {selected: false})
+              } else {
+                // console.log(feat, feat.state.selected)
+                this.map.setFeatureState({source: feature.source, sourceLayer: feature.sourceLayer, id: feature.id}, {selected: !feature.state.selected})
+              }
+            }
+
+
+
           } else {  // if user clicked outside of the species range, i.e. a base-hex or child
             const feature = e.features[0]
             const res = parseInt(feature.id[1]) + 1
