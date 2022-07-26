@@ -87,13 +87,25 @@
           maxzoom: 4,
         })
 
+        const rangeLine = {"id":"8eb25ba70d452d97e1ddfcce5dd3c509","type":"Feature","properties":{},"geometry":{"coordinates":[[[-99.33506625318147,45.13314712628562],[-101.00487955708923,45.13314712628562],[-101.56148399172514,42.683079866666105],[-102.36546817508791,41.62863803346093],[-103.66421185590485,40.9782147291387],[-103.91159160463224,39.65795874143228],[-103.23129729563291,39.1322398894163],[-101.49963905454342,38.84381654664111],[-100.57196499681673,38.3119933246779],[-97.17049345181951,37.971513567475],[-97.04680357745609,36.84165053422949],[-96.6757339543653,36.49440699140514],[-94.6348510273673,36.792140282626605],[-93.58348709527718,38.36050350728348],[-95.68621495945743,38.55421925672027],[-95.50068014791177,39.61032990250396],[-96.98495864027439,40.791188855481806],[-96.73757889154703,41.44346493969201],[-96.18097445691163,41.90540315049239],[-96.49019914282017,43.000506465552206],[-96.79942382872926,43.3612818895958],[-98.28370232109134,43.496022931319146],[-98.84030675572728,44.29816727163572],[-98.77846181854555,45.00210923171318],[-99.08768650445464,45.08950120560945],[-99.33506625318147,45.13314712628562],[-99.33506625318147,45.13314712628562]]],"type":"Polygon"}}
+
+        const range = ['832633fffffffff', '832652fffffffff', '8326f6fffffffff', '8326e2fffffffff',
+          '832602fffffffff', '8326e4fffffffff', '832618fffffffff', '8326a8fffffffff',
+          '8326e6fffffffff', '83261afffffffff', '832611fffffffff', '83261cfffffffff',
+          '832613fffffffff', '8326f5fffffffff', '83261efffffffff', '8326e1fffffffff',
+          '8326ecfffffffff', '832615fffffffff', '8326eefffffffff', '832603fffffffff',
+          '8326e5fffffffff', '83260efffffffff', '832619fffffffff', '8326a9fffffffff',
+          '83261bfffffffff', '8326abfffffffff', '8326f4fffffffff', '83261dfffffffff',
+          '8326e0fffffffff', '8326adfffffffff']
+
         this.map.addLayer({
           id: 'base-hex',
           source: 'base-hex',
           'source-layer': 'hex',
           type: 'fill',
           paint: {
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['match', ['get', 'h3_address'], range, true, false]], 'deeppink', 'black'],
             'fill-opacity': 0.3,
           },
         })
@@ -121,48 +133,21 @@
           },
         })
 
-
-
-        const rangeLine = {"id":"8eb25ba70d452d97e1ddfcce5dd3c509","type":"Feature","properties":{},"geometry":{"coordinates":[[[-99.33506625318147,45.13314712628562],[-101.00487955708923,45.13314712628562],[-101.56148399172514,42.683079866666105],[-102.36546817508791,41.62863803346093],[-103.66421185590485,40.9782147291387],[-103.91159160463224,39.65795874143228],[-103.23129729563291,39.1322398894163],[-101.49963905454342,38.84381654664111],[-100.57196499681673,38.3119933246779],[-97.17049345181951,37.971513567475],[-97.04680357745609,36.84165053422949],[-96.6757339543653,36.49440699140514],[-94.6348510273673,36.792140282626605],[-93.58348709527718,38.36050350728348],[-95.68621495945743,38.55421925672027],[-95.50068014791177,39.61032990250396],[-96.98495864027439,40.791188855481806],[-96.73757889154703,41.44346493969201],[-96.18097445691163,41.90540315049239],[-96.49019914282017,43.000506465552206],[-96.79942382872926,43.3612818895958],[-98.28370232109134,43.496022931319146],[-98.84030675572728,44.29816727163572],[-98.77846181854555,45.00210923171318],[-99.08768650445464,45.08950120560945],[-99.33506625318147,45.13314712628562],[-99.33506625318147,45.13314712628562]]],"type":"Polygon"}}
-
-
-        const range = ['832633fffffffff', '832652fffffffff', '8326f6fffffffff', '8326e2fffffffff',
-         '832602fffffffff', '8326e4fffffffff', '832618fffffffff', '8326a8fffffffff',
-         '8326e6fffffffff', '83261afffffffff', '832611fffffffff', '83261cfffffffff',
-         '832613fffffffff', '8326f5fffffffff', '83261efffffffff', '8326e1fffffffff',
-         '8326ecfffffffff', '832615fffffffff', '8326eefffffffff', '832603fffffffff',
-         '8326e5fffffffff', '83260efffffffff', '832619fffffffff', '8326a9fffffffff',
-         '83261bfffffffff', '8326abfffffffff', '8326f4fffffffff', '83261dfffffffff',
-         '8326e0fffffffff', '8326adfffffffff']
-
-        range.forEach(hex => {
-          this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: hex}, {selected: true})
+        this.map.addSource('species-range', {
+          type: 'geojson',
+          data: rangeLine
 
         })
-        console.log(range)
-
-        // // TODO Return json with bounding box to use 'within' exp to filter out base-hex layer?
-        // // TODO Return single feature outline?
-        // this.map.addSource('species-range', {
-        //   type: 'vector',
-        //   tiles: ['http://localhost:8082/data/range-outline-max-6/{z}/{x}/{y}.pbf'],
-        //   maxzoom: 7,
-        //   promoteId: 'h3_address'
-        // })
-        // this.map.addLayer({
-        //   id: 'species-range',
-        //   source: 'species-range',
-        //   'source-layer': 'hex',
-        //   type: 'fill',
-        //   paint: {
-        //     'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
-        //     'fill-opacity': 0.3,
-        //     'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'black'],
-        //   },
-        // })
-
-
-
+        this.map.addLayer({
+          id: 'species-range',
+          source: 'species-range',
+          type: 'line',
+          paint: {
+            'line-color': 'deeppink',
+            'line-dasharray': [4, 2],
+            'line-width': 2,
+          }
+        })
 
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
