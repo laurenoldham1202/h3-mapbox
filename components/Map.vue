@@ -17,6 +17,8 @@
   import * as h3 from 'h3-js'
   import 'mapbox-gl/dist/mapbox-gl.css'
 
+  import * as T from '@turf/turf'
+
 
   // import { GeoJSON } from 'GeoJSON'
   // import MapboxDraw from '@mapbox/mapbox-gl-draw'
@@ -59,7 +61,7 @@
         container: 'map-2',
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 6,
+        zoom: 2,
         doubleClickZoom: false,
       })
 
@@ -98,18 +100,27 @@
           '83261bfffffffff', '8326abfffffffff', '8326f4fffffffff', '83261dfffffffff',
           '8326e0fffffffff', '8326adfffffffff']
 
+
+        // const all = this.getChildrenHexes(range, 6)
+        // console.log(all)
+        // const compact = h3.compact(all)
+        // console.log(compact)
+
         this.map.addLayer({
           id: 'base-hex',
           source: 'base-hex',
           'source-layer': 'hex',
           type: 'fill',
           paint: {
-            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['match', ['get', 'h3_address'], range, true, false]], 'deeppink', 'black'],
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['match', ['get', 'h3_address'], range, true, false]], 'deeppink', 'black'],
             'fill-opacity': 0.3,
           },
         })
 
+
+        // TODO TRY COMPACT IN CODE AROUND FULL SHAPE
+        // TODO try different resolutions for all hexes?
 
         this.map.addSource('children', {
           type: 'geojson',
@@ -133,27 +144,83 @@
           },
         })
 
-        this.map.addSource('species-range', {
-          type: 'geojson',
-          data: rangeLine
+        // this.map.addSource('species-range', {
+        //   type: 'geojson',
+        //   data: rangeLine
+        //
+        // })
+        // this.map.addLayer({
+        //   id: 'species-range',
+        //   source: 'species-range',
+        //   type: 'line',
+        //   paint: {
+        //     'line-color': 'deeppink',
+        //     'line-dasharray': [4, 2],
+        //     'line-width': 2,
+        //   }
+        // })
 
+
+        // TODO Return json with bounding box to use 'within' exp to filter out base-hex layer?
+        // TODO Return single feature outline?
+        this.map.addSource('species-range', {
+          type: 'vector',
+          tiles: ['http://localhost:8082/data/range-outline-max-6/{z}/{x}/{y}.pbf'],
+          maxzoom: 7,
+          promoteId: 'h3_address'
         })
         this.map.addLayer({
           id: 'species-range',
           source: 'species-range',
-          type: 'line',
+          'source-layer': 'hex',
+          type: 'fill',
           paint: {
-            'line-color': 'deeppink',
-            'line-dasharray': [4, 2],
-            'line-width': 2,
-          }
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
+            'fill-opacity': 0.3,
+            'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'black'],
+          },
         })
+
+
+        const y = []
+
+        const line = T.polygonToLine(T.polygon(rangeLine.geometry.coordinates))
+        console.log(line)
+        setTimeout(() => {
+          // TODO Intersect these
+          const f = this.map.queryRenderedFeatures(this.bboxToPixel(rangeLine.geometry), { layers: ['base-hex'] })
+          // console.log(f)
+          f.forEach(x => {
+
+            // const poly = T.polygon(x.geometry.coordinates)
+            // poly.properties = x.properties
+            // console.log(poly)
+
+            const int = T.intersect(x, T.polygon(rangeLine.geometry.coordinates), {properties: x.properties})
+            // console.log(int)
+            if (int) {
+              y.push(int)
+            }
+          })
+          // const hexes = f.map(x => x.id)
+          // console.log(hexes)
+          // const compact = h3.compact(hexes)
+          // console.log(compact)
+          const hexes = y.map(x => x.properties.h3_address)
+          hexes.forEach((hex) => {
+            console.log(hex)
+
+            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: hex}, {selected: true})
+          })
+        }, 100)
+
 
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
           // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
           const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
           if (feature) {
+            // TODO Replace all w h3GetResolution
             // desired resolution, one level up from selected res
             const res = parseInt(feature.id[1]) - 1
             // parent of clicked feature
@@ -352,7 +419,25 @@
         } else {
           this.removeItemFromArray(this.selected, feature.id)
         }
-      }
+      },
+      getChildrenHexes(parentHexArray: string[], res: number): string[] {
+        const children: string[] = []
+        parentHexArray.forEach((parent) => {
+          children.push(...h3.h3ToChildren(parent, res))
+        })
+        return children
+      },
+      bboxToPixel(polygon: any) {
+        // TODO type
+        // generate bounding box from polygon the user drew
+        const box = bbox(polygon)
+        // convert geographic coordinates to pixel coordinates on the map for `queryRenderedFeatures` formatting
+        // https://docs.mapbox.com/mapbox-gl-js/api/map/#map#project
+        const nePixel = this.map.project([box[2], box[3]])
+        const swPixel = this.map.project([box[0], box[1]])
+        // formatted as [{x: 10, y: 10}, {x: 20, y: 20}]
+        return [swPixel, nePixel]
+      },
 
     },
   })
