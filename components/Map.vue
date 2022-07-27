@@ -61,7 +61,7 @@
         container: 'map-2',
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 2,
+        zoom: 6,
         doubleClickZoom: false,
       })
 
@@ -100,6 +100,16 @@
           '83261bfffffffff', '8326abfffffffff', '8326f4fffffffff', '83261dfffffffff',
           '8326e0fffffffff', '8326adfffffffff']
 
+        const range2 = ["83261dfffffffff", "8326e3fffffffff", "832650fffffffff", "832631fffffffff", "832653fffffffff",
+          "832601fffffffff", "8326a8fffffffff", "832656fffffffff", "8326ecfffffffff", "8326abfffffffff",
+          "83268cfffffffff", "8326aefffffffff", "83260afffffffff", "8326e4fffffffff", "8326f5fffffffff",
+          "832610fffffffff", "8326c5fffffffff", "832632fffffffff", "832602fffffffff", "832613fffffffff",
+          "832605fffffffff", "8326acfffffffff", "83268dfffffffff", "8326f0fffffffff", "83260bfffffffff",
+          "8326e2fffffffff", "83260efffffffff", "832630fffffffff", "8326e5fffffffff", "8326f6fffffffff",
+          "832652fffffffff", "832600fffffffff", "832633fffffffff", "8326e8fffffffff", "832614fffffffff",
+          "8326aafffffffff", "832606fffffffff", "8326eefffffffff", "8326adfffffffff", "8326e0fffffffff",
+          "8326f1fffffffff", "83260cfffffffff"]
+
 
         // const all = this.getChildrenHexes(range, 6)
         // console.log(all)
@@ -111,6 +121,7 @@
           source: 'base-hex',
           'source-layer': 'hex',
           type: 'fill',
+          filter: ['match', ['get', 'h3_address'], range2, false, true],
           paint: {
             'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
             // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['match', ['get', 'h3_address'], range, true, false]], 'deeppink', 'black'],
@@ -178,6 +189,24 @@
             'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
             'fill-opacity': 0.3,
             'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'black'],
+          },
+        })
+
+        this.map.addSource('buffer', {
+          type: 'vector',
+          tiles: ['http://localhost:8083/data/buffer/{z}/{x}/{y}.pbf'],
+          maxzoom: 7,
+          promoteId: 'h3_address'
+        })
+        this.map.addLayer({
+          id: 'buffer',
+          source: 'buffer',
+          'source-layer': 'hex',
+          type: 'fill',
+          paint: {
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
+            'fill-opacity': 0.3,
+            // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'black'],
           },
         })
 
@@ -280,8 +309,11 @@
 
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
+          // TODO HAndle edges where you can explode/collapse children and it interferes with handling range features directly
           // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
           const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
+          const rangeFeature = this.map.queryRenderedFeatures(e.point, {layers: ['species-range']})[0]
+          console.log(rangeFeature)
           if (feature) {
             // TODO Replace all w h3GetResolution
             // desired resolution, one level up from selected res
