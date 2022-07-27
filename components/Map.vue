@@ -175,7 +175,7 @@
           'source-layer': 'hex',
           type: 'fill',
           paint: {
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'yellow', 'transparent'],
             'fill-opacity': 0.3,
             'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'black'],
           },
@@ -185,7 +185,10 @@
         const y = []
 
         const line = T.polygonToLine(T.polygon(rangeLine.geometry.coordinates))
-        console.log(line)
+
+        const ex = T.explode(line)
+        // console.log(ex)
+        // console.log(line)
         const points = []
         const border = []
         setTimeout(() => {
@@ -193,18 +196,31 @@
           const f = this.map.queryRenderedFeatures(this.bboxToPixel(rangeLine.geometry), { layers: ['base-hex'] })
           // console.log(f)
           f.forEach(x => {
+            // const e = T.explode(x.geometry.coordinates)
+            // console.log(e)
 
-            const p = T.lineIntersect(x, line)
+
+            const p = T.lineIntersect(x, T.polygon(rangeLine.geometry.coordinates))
             if (p.features.length) {
 
-              p.features.forEach(r => {
-                const coords = r.geometry.coordinates
+              const mid = T.midpoint(p.features[0].geometry.coordinates, p.features[1].geometry.coordinates)
+              // console.log(mid)
+              const coords = mid.geometry.coordinates
                 const hex = h3.geoToH3(coords[1], coords[0], 3)
                 // console.log(hex)
-                border.push(hex)
-              })
+                // border.push(hex)
+
+
+              // p.features.forEach(r => {
+              //   const coords = r.geometry.coordinates
+              //   const hex = h3.geoToH3(coords[1], coords[0], 3)
+              //   // console.log(hex)
+              //   border.push(hex)
+              // })
               // console.log(p)
-              points.push(...p.features)
+
+
+              // points.push(...p.features)
             }
 
             // const poly = T.polygon(x.geometry.coordinates)
@@ -218,7 +234,7 @@
             }
           })
 
-          console.log(this.uniqueValues(border))
+          // console.log(this.uniqueValues(border))
           this.uniqueValues(border).forEach((hex) => {
             // console.log(hex)
 
@@ -228,6 +244,7 @@
 
           this.map.addSource('pts', {
             type: 'geojson',
+            // data: ex
             data: {
               type: 'FeatureCollection',
               features: points
@@ -243,11 +260,20 @@
           // console.log(hexes)
           // const compact = h3.compact(hexes)
           // console.log(compact)
-          const hexes = y.map(x => x.properties.h3_address)
+          // const hexes = y.map(x => x.properties.h3_address)
+          const hexes = ["8326e3fffffffff", "832650fffffffff", "832631fffffffff", "832653fffffffff",
+            "832601fffffffff", "8326a8fffffffff", "8326ecfffffffff", "8326abfffffffff",
+            "83260afffffffff", "832610fffffffff", "8326c5fffffffff", "832632fffffffff",
+            "832602fffffffff", "832613fffffffff", "8326acfffffffff", "83268dfffffffff",
+            "8326f0fffffffff", "83260bfffffffff", "8326e2fffffffff", "83260efffffffff",
+            "8326e5fffffffff", "8326f6fffffffff", "832652fffffffff", "832600fffffffff",
+            "832633fffffffff", "832614fffffffff", "8326aafffffffff", "832606fffffffff",
+            "8326eefffffffff", "8326e0fffffffff", "8326f1fffffffff"]
+
           hexes.forEach((hex) => {
             // console.log(hex)
 
-            // this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: hex}, {selected: true})
+            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: hex}, {selected: true})
           })
         }, 100)
 
