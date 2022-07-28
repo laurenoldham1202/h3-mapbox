@@ -121,7 +121,7 @@
           source: 'base-hex',
           'source-layer': 'hex',
           type: 'fill',
-          filter: ['match', ['get', 'h3_address'], range2, false, true],
+          // filter: ['match', ['get', 'h3_address'], range2, false, true],
           paint: {
             'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
             // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['match', ['get', 'h3_address'], range, true, false]], 'deeppink', 'black'],
@@ -192,23 +192,23 @@
           },
         })
 
-        this.map.addSource('buffer', {
-          type: 'vector',
-          tiles: ['http://localhost:8083/data/buffer/{z}/{x}/{y}.pbf'],
-          maxzoom: 7,
-          promoteId: 'h3_address'
-        })
-        this.map.addLayer({
-          id: 'buffer',
-          source: 'buffer',
-          'source-layer': 'hex',
-          type: 'fill',
-          paint: {
-            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
-            'fill-opacity': 0.3,
-            // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'black'],
-          },
-        })
+        // this.map.addSource('buffer', {
+        //   type: 'vector',
+        //   tiles: ['http://localhost:8083/data/buffer/{z}/{x}/{y}.pbf'],
+        //   maxzoom: 7,
+        //   promoteId: 'h3_address'
+        // })
+        // this.map.addLayer({
+        //   id: 'buffer',
+        //   source: 'buffer',
+        //   'source-layer': 'hex',
+        //   type: 'fill',
+        //   paint: {
+        //     // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'transparent'],
+        //     'fill-opacity': 0.3,
+        //     // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], true], 'deeppink', 'black'],
+        //   },
+        // })
 
 
         // const y = []
