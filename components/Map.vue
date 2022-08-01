@@ -201,6 +201,7 @@
           const res = parseInt(feature.id[1]) + 1
           const layer = res === 4 ? 'base-hex' : feature.source
 
+
           // if select mode is off, i.e. if user is expanding or collapsing shapes
           if (!this.selectMode) {
             // TODO Combine res restriction and selectMode conditions?
@@ -262,18 +263,22 @@
             }
           } else {  // if selection mode is on
 
-            // console.log(feature)
-            this.map.setFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}, {selected: !feature.state.selected})
+            // FIXME Sel mode false, click range erroneously deselects features
+
+            // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
+            // boolean feature property for range - set during tile generation
+            const isRange =  feature.properties.isRange
+            // if feature is part of the default range on initial map load before feature state is set
+            const defaultRange = !Object.keys(feature.state).length && isRange
+
+            // update map feature state
+            this.map.setFeatureState(
+              {source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id},
+              {selected: defaultRange ? !isRange : !feature.state.selected}
+            )
+
             this.updateSelected(feature)
-
-
-            // console.log(this.selected)
-            // console.log('SELECT MODE ON')
-            // console.log('filtered:', this.filtered)
-            // console.log('children:', this.children)
           }
-
-
         })
 
         const popup = new M.Popup({closeButton: false})
