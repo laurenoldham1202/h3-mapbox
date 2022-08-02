@@ -127,8 +127,8 @@
           type: 'fill',
           paint: {
             'fill-opacity': 0.3,
-            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-            'fill-color': 'yellow',
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+            // 'fill-color': 'yellow',
             // 'fill-outline-color': 'green',
           },
           layout: {
@@ -153,7 +153,7 @@
             const res = parseInt(feature.id[1]) - 1
 
             if (res >= 3) {
-              // console.log(res)
+              console.log(res)
               //
               // // if (res > 2) {
               //
@@ -161,10 +161,12 @@
               // parent of clicked feature
               const parent = h3.h3ToParent(feature.id, res)
               //
-              //   // if the selected parent feature is currently filtered out of map, remove it from the filtered list so it will display
-              //   if (this.arrayIncludesItem(this.filtered, parent)) {
-              //     this.removeItemFromArray(this.filtered, parent)
-              //   }
+                // if the selected parent feature is currently filtered out of map, remove it from the filtered list so it will display
+                if (this.arrayIncludesItem(this.filtered, parent)) {
+                  this.removeItemFromArray(this.filtered, parent)
+                } else {
+                  this.children.push(parent)
+                }
               //   // if clicking on res 4, use base-hex layer instead of children layer
               //   const layer = res <= 3 ? 'base-hex' : feature.source
               // console.log(layer)
@@ -200,18 +202,18 @@
 
               // TODO TEST WHEN COLLAPSING OVERLAPS CHILDREN HEXES
               // TODO Test re-exploding a  collapsed hex
-              if (feature.source === 'base-hex') {
-                // console.log('filter from base-hex ', allChildren)
-                // console.log('add to children', parent)
-
-                this.filtered.push(...allChildren)
-                this.filterOutParentHexes('base-hex')
-
-                this.children.push(parent)
-                this.setChildFeatures()
-              } else {
-                console.log('handle collapsing children!')
-                console.log('', allChildren)
+              // if (feature.source === 'base-hex') {
+              //   // console.log('filter from base-hex ', allChildren)
+              //   // console.log('add to children', parent)
+              //
+              //   this.filtered.push(...allChildren)
+              //   this.filterOutParentHexes('base-hex')
+              //
+              //   this.children.push(parent)
+              //   this.setChildFeatures()
+              // } else {
+              //   console.log('handle collapsing children!')
+              //   console.log('', allChildren)
                 console.log('', parent)
 
                 this.filtered.push(...allChildren)
@@ -219,10 +221,14 @@
                 this.filterOutParentHexes('base-hex')
                 this.filterOutParentHexes('children')
 
-                this.children.push(parent)
-                this.children = this.uniqueValues(this.children)
+              // console.log(this.filtered)
+
+                // this.children.push(parent)
+                // this.children = this.uniqueValues(this.children)
                 this.setChildFeatures()
-              }
+              // }
+
+              console.log(this.children)
 
               allChildren.forEach((child: string) => {
 
@@ -244,6 +250,8 @@
               //   // update map with removed children hexes
               //   this.setChildFeatures()
               // }
+            } else {
+              // console.log(res, feature)
             }
           }
 
@@ -353,6 +361,7 @@
         this.children = this.uniqueValues(this.children)
         // convert hex ids into geojson, preserving the indices
         const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
+        console.log(childrenPoly)
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
