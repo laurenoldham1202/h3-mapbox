@@ -136,6 +136,7 @@
           },
         })
 
+        // TODO ADD UNDO BUTTON?
         this.map.on('zoom', () => {
           // console.log(this.map.getZoom())
         })
@@ -154,7 +155,7 @@
             const res = parseInt(feature.id[1]) - 1
 
             if (res >= 3) {
-              console.log(res)
+              // console.log(res)
               //
               // // if (res > 2) {
               //
@@ -230,7 +231,7 @@
               // } else {
               //   console.log('handle collapsing children!')
               //   console.log('', allChildren)
-                console.log('', parent)
+              //   console.log('', parent)
 
                 this.filtered.push(...allChildren)
                 this.filtered = this.uniqueValues(this.filtered)
@@ -241,34 +242,34 @@
 
                 // this.children.push(parent)
                 // this.children = this.uniqueValues(this.children)
-                this.setChildFeatures()
+                // this.setChildFeatures()
               // }
 
-              console.log(this.children)
+              // console.log(this.children)
 
-              allChildren.forEach((child: string) => {
-                    // if a child hex is selected (pink), turn off its selected map state and remove from selected array
-                    if (this.selected.includes(child)) {
-                      this.removeItemFromArray(this.selected, child)
-                      this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
-                    }
-              })
+              // allChildren.forEach((child: string) => {
+              //       // if a child hex is selected (pink), turn off its selected map state and remove from selected array
+              //       if (this.selected.includes(child)) {
+              //         this.removeItemFromArray(this.selected, child)
+              //         this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
+              //       }
+              // })
               //
-              //   allChildren.forEach((child: string) => {
-              //     // if a child hex is already plotted on the map, remove it from the array
-              //     if (this.children.includes(child)) {
-              //       this.removeItemFromArray(this.children, child)
-              //     }
-              //
-              //     // if a child hex is selected (pink), turn off its selected map state and remove from selected array
-              //     if (this.selected.includes(child)) {
-              //       this.removeItemFromArray(this.selected, child)
-              //       this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
-              //     }
-              //   })
+                allChildren.forEach((child: string) => {
+                  // if a child hex is already plotted on the map, remove it from the array
+                  if (this.children.includes(child)) {
+                    this.removeItemFromArray(this.children, child)
+                  }
+
+                  // if a child hex is selected (pink), turn off its selected map state and remove from selected array
+                  if (this.selected.includes(child)) {
+                    this.removeItemFromArray(this.selected, child)
+                    this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
+                  }
+                })
               //
               //   // update map with removed children hexes
-              //   this.setChildFeatures()
+                this.setChildFeatures()
               // }
             } else {
               // console.log(res, feature)
@@ -381,7 +382,7 @@
         this.children = this.uniqueValues(this.children)
         // convert hex ids into geojson, preserving the indices
         const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
-        console.log(childrenPoly)
+        // console.log(childrenPoly)
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
