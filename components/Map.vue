@@ -151,37 +151,39 @@
             // // TODO Replace all w h3GetResolution
             // // desired resolution, one level up from selected res
             const res = parseInt(feature.id[1]) - 1
-            // console.log(res)
-            //
-            // // if (res > 2) {
-            //
-            //
+
+            if (res >= 3) {
+              // console.log(res)
+              //
+              // // if (res > 2) {
+              //
+              //
               // parent of clicked feature
               const parent = h3.h3ToParent(feature.id, res)
-            //
-            //   // if the selected parent feature is currently filtered out of map, remove it from the filtered list so it will display
-            //   if (this.arrayIncludesItem(this.filtered, parent)) {
-            //     this.removeItemFromArray(this.filtered, parent)
-            //   }
-            //   // if clicking on res 4, use base-hex layer instead of children layer
-            //   const layer = res <= 3 ? 'base-hex' : feature.source
-            // console.log(layer)
-            //   // update proper map layer with unfiltered parents
-            //   // this.filterOutParentHexes(layer)
-            //   this.filterOutParentHexes('base-hex')
-            //   this.filterOutParentHexes('children')
-            //
-            //   // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
-            //   // match parent selected state to clicked hex selected state, push to array if selected
-            //   this.map.setFeatureState({
-            //     source: layer,
-            //     ...(layer === 'base-hex' && { sourceLayer: 'hex' }),
-            //     id: parent
-            //   }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
-            //   if (this.arrayIncludesItem(this.selected, feature.id)) {
-            //     this.selected.push(parent)
-            //   }
-            //
+              //
+              //   // if the selected parent feature is currently filtered out of map, remove it from the filtered list so it will display
+              //   if (this.arrayIncludesItem(this.filtered, parent)) {
+              //     this.removeItemFromArray(this.filtered, parent)
+              //   }
+              //   // if clicking on res 4, use base-hex layer instead of children layer
+              //   const layer = res <= 3 ? 'base-hex' : feature.source
+              // console.log(layer)
+              //   // update proper map layer with unfiltered parents
+              //   // this.filterOutParentHexes(layer)
+              //   this.filterOutParentHexes('base-hex')
+              //   this.filterOutParentHexes('children')
+              //
+              //   // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
+              //   // match parent selected state to clicked hex selected state, push to array if selected
+              //   this.map.setFeatureState({
+              //     source: layer,
+              //     ...(layer === 'base-hex' && { sourceLayer: 'hex' }),
+              //     id: parent
+              //   }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
+              //   if (this.arrayIncludesItem(this.selected, feature.id)) {
+              //     this.selected.push(parent)
+              //   }
+              //
 
               // empty array for all children through res 6 for the selected parent hex
               const allChildren: any[] = []
@@ -194,54 +196,55 @@
                 }
               })
 
-            // console.log(parent, allChildren)
+              // console.log(parent, allChildren)
 
-            // TODO TEST WHEN COLLAPSING OVERLAPS CHILDREN HEXES
-            // TODO Test re-exploding a  collapsed hex
-            if (feature.source === 'base-hex') {
-              // console.log('filter from base-hex ', allChildren)
-              // console.log('add to children', parent)
+              // TODO TEST WHEN COLLAPSING OVERLAPS CHILDREN HEXES
+              // TODO Test re-exploding a  collapsed hex
+              if (feature.source === 'base-hex') {
+                // console.log('filter from base-hex ', allChildren)
+                // console.log('add to children', parent)
 
-              this.filtered.push(...allChildren)
-              this.filterOutParentHexes('base-hex')
+                this.filtered.push(...allChildren)
+                this.filterOutParentHexes('base-hex')
 
-              this.children.push(parent)
-              this.setChildFeatures()
-            } else {
-              console.log('handle collapsing children!')
-              console.log('', allChildren)
-              console.log('', parent)
+                this.children.push(parent)
+                this.setChildFeatures()
+              } else {
+                console.log('handle collapsing children!')
+                console.log('', allChildren)
+                console.log('', parent)
 
-              this.filtered.push(...allChildren)
-              this.filtered = this.uniqueValues(this.filtered)
-              this.filterOutParentHexes('base-hex')
-              this.filterOutParentHexes('children')
+                this.filtered.push(...allChildren)
+                this.filtered = this.uniqueValues(this.filtered)
+                this.filterOutParentHexes('base-hex')
+                this.filterOutParentHexes('children')
 
-              this.children.push(parent)
-              this.children = this.uniqueValues(this.children)
-              this.setChildFeatures()
+                this.children.push(parent)
+                this.children = this.uniqueValues(this.children)
+                this.setChildFeatures()
+              }
+
+              allChildren.forEach((child: string) => {
+
+              })
+              //
+              //   allChildren.forEach((child: string) => {
+              //     // if a child hex is already plotted on the map, remove it from the array
+              //     if (this.children.includes(child)) {
+              //       this.removeItemFromArray(this.children, child)
+              //     }
+              //
+              //     // if a child hex is selected (pink), turn off its selected map state and remove from selected array
+              //     if (this.selected.includes(child)) {
+              //       this.removeItemFromArray(this.selected, child)
+              //       this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
+              //     }
+              //   })
+              //
+              //   // update map with removed children hexes
+              //   this.setChildFeatures()
+              // }
             }
-
-            allChildren.forEach((child: string) => {
-
-            })
-            //
-            //   allChildren.forEach((child: string) => {
-            //     // if a child hex is already plotted on the map, remove it from the array
-            //     if (this.children.includes(child)) {
-            //       this.removeItemFromArray(this.children, child)
-            //     }
-            //
-            //     // if a child hex is selected (pink), turn off its selected map state and remove from selected array
-            //     if (this.selected.includes(child)) {
-            //       this.removeItemFromArray(this.selected, child)
-            //       this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
-            //     }
-            //   })
-            //
-            //   // update map with removed children hexes
-            //   this.setChildFeatures()
-            // }
           }
 
         })
