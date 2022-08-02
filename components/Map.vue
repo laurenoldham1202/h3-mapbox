@@ -90,7 +90,7 @@
           promoteId: 'h3_address',
           // tiles: ['http://localhost:8083/data/all_clipped/{z}/{x}/{y}.pbf'],
           tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/test-2/{z}/{x}/{y}.pbf'],
-          maxzoom: 4,
+          maxzoom: 8, // TODO Fix hex distortion? higher tile max?
         })
 
         // TODO Get children of any hexes < 3 in tiles
@@ -128,13 +128,17 @@
           paint: {
             'fill-opacity': 0.3,
             // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-            'fill-color': 'blue',
+            'fill-color': 'yellow',
+            // 'fill-outline-color': 'green',
           },
           layout: {
             'fill-sort-key': ['+', ['get', 'h3_address']],
           },
         })
 
+        this.map.on('zoom', () => {
+          // console.log(this.map.getZoom())
+        })
         // TODO NEED TO REWRITE RIGHT CLICK TO ACCOUNT FOR BASE-HEX NO LONGER BEING JUST 3 RES
 
         // RIGHT CLICK - collapse features
@@ -143,7 +147,7 @@
           // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
           const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children', 'base-hex']})[0]
           if (feature) {
-            console.log(feature)
+            // console.log(feature)
             // // TODO Replace all w h3GetResolution
             // // desired resolution, one level up from selected res
             const res = parseInt(feature.id[1]) - 1
@@ -195,17 +199,31 @@
             // TODO TEST WHEN COLLAPSING OVERLAPS CHILDREN HEXES
             // TODO Test re-exploding a  collapsed hex
             if (feature.source === 'base-hex') {
-              console.log('filter from base-hex ', allChildren)
-              console.log('add to children', parent)
+              // console.log('filter from base-hex ', allChildren)
+              // console.log('add to children', parent)
 
               this.filtered.push(...allChildren)
               this.filterOutParentHexes('base-hex')
 
               this.children.push(parent)
               this.setChildFeatures()
+            } else {
+              console.log('handle collapsing children!')
+              console.log('', allChildren)
+              console.log('', parent)
+
+              this.filtered.push(...allChildren)
+              this.filtered = this.uniqueValues(this.filtered)
+              this.filterOutParentHexes('base-hex')
+              this.filterOutParentHexes('children')
+
+              this.children.push(parent)
+              this.children = this.uniqueValues(this.children)
+              this.setChildFeatures()
             }
 
             allChildren.forEach((child: string) => {
+
             })
             //
             //   allChildren.forEach((child: string) => {
