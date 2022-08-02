@@ -141,11 +141,12 @@
         })
         // TODO NEED TO REWRITE RIGHT CLICK TO ACCOUNT FOR BASE-HEX NO LONGER BEING JUST 3 RES
 
+        const layers = ['children', 'base-hex']
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
           // TODO HAndle edges where you can explode/collapse children and it interferes with handling range features directly
           // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
-          const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children', 'base-hex']})[0]
+          const feature = this.map.queryRenderedFeatures(e.point, {layers: layers})[0]
           if (feature) {
             // console.log(feature)
             // // TODO Replace all w h3GetResolution
@@ -175,17 +176,32 @@
               //   this.filterOutParentHexes('base-hex')
               //   this.filterOutParentHexes('children')
               //
-              //   // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
-              //   // match parent selected state to clicked hex selected state, push to array if selected
-              //   this.map.setFeatureState({
-              //     source: layer,
-              //     ...(layer === 'base-hex' && { sourceLayer: 'hex' }),
-              //     id: parent
-              //   }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
-              //   if (this.arrayIncludesItem(this.selected, feature.id)) {
-              //     this.selected.push(parent)
-              //   }
-              //
+
+              layers.forEach(layer => {
+                // match parent selected state to clicked hex selected state, push to array if selected
+                this.map.setFeatureState({
+                  source: layer,
+                  ...(layer === 'base-hex' && { sourceLayer: 'hex' }),
+                  // source: 'children',
+                  id: parent
+                }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
+
+              })
+
+                // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
+                // match parent selected state to clicked hex selected state, push to array if selected
+                // this.map.setFeatureState({
+                //   source: layer,
+                //   ...(layer === 'base-hex' && { sourceLayer: 'hex' }),
+                //   // source: 'children',
+                //   id: parent
+                // }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
+
+
+                if (this.arrayIncludesItem(this.selected, feature.id)) {
+                  this.selected.push(parent)
+                }
+
 
               // empty array for all children through res 6 for the selected parent hex
               const allChildren: any[] = []
@@ -231,7 +247,11 @@
               console.log(this.children)
 
               allChildren.forEach((child: string) => {
-
+                    // if a child hex is selected (pink), turn off its selected map state and remove from selected array
+                    if (this.selected.includes(child)) {
+                      this.removeItemFromArray(this.selected, child)
+                      this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
+                    }
               })
               //
               //   allChildren.forEach((child: string) => {
