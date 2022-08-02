@@ -127,9 +127,9 @@
           type: 'fill',
           paint: {
             'fill-opacity': 0.3,
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-            // 'fill-color': 'yellow',
-            // 'fill-outline-color': 'green',
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+            'fill-color': 'transparent',
+            'fill-outline-color': 'fuchsia',
           },
           layout: {
             'fill-sort-key': ['+', ['get', 'h3_address']],
@@ -140,7 +140,12 @@
         this.map.on('zoom', () => {
           // console.log(this.map.getZoom())
         })
-        // TODO NEED TO REWRITE RIGHT CLICK TO ACCOUNT FOR BASE-HEX NO LONGER BEING JUST 3 RES
+
+
+
+
+        //TODO Once base-hex is filtered out, keep it fitlered out and only use children!
+
 
         const layers = ['children', 'base-hex']
         // RIGHT CLICK - collapse features
@@ -169,7 +174,11 @@
                 } else {
                   this.children.push(parent)
                 }
+
+
+            // console.log(this.children.includes(parent))
               //   // if clicking on res 4, use base-hex layer instead of children layer
+                const layer = !this.children.includes(parent) ? 'base-hex' : feature.source
               //   const layer = res <= 3 ? 'base-hex' : feature.source
               // console.log(layer)
               //   // update proper map layer with unfiltered parents
@@ -233,10 +242,29 @@
               //   console.log('', allChildren)
               //   console.log('', parent)
 
+
+
+
+
+              this.children.forEach(child => {
+                if (this.filtered.includes(child)) {
+                  // console.log(child)
+                }
+
+              })
+
+              // console.log(this.children)
+
                 this.filtered.push(...allChildren)
                 this.filtered = this.uniqueValues(this.filtered)
-                this.filterOutParentHexes('base-hex')
-                this.filterOutParentHexes('children')
+                this.filterOutParentHexes(layer)
+                // this.filterOutParentHexes('base-hex')
+                // this.filterOutParentHexes('children')
+
+
+
+
+
 
               // console.log(this.filtered)
 
@@ -258,7 +286,12 @@
                 allChildren.forEach((child: string) => {
                   // if a child hex is already plotted on the map, remove it from the array
                   if (this.children.includes(child)) {
+                    // console.log(child)
                     this.removeItemFromArray(this.children, child)
+                  }
+
+                  if (this.filtered.includes(child)) {
+                    // console.log(child)
                   }
 
                   // if a child hex is selected (pink), turn off its selected map state and remove from selected array
@@ -276,6 +309,9 @@
             }
           }
 
+          // console.log('filter:', this.filtered)
+          // console.log('children:', this.children)
+          // console.log('after collapse:', this.filtered)
         })
 
 
@@ -284,6 +320,8 @@
 
           const feature = e.features[0]
           const res = parseInt(feature.id[1]) + 1
+
+          //TODO CHECK THIS
           const layer = res === 4 ? 'base-hex' : feature.source
 
 
@@ -295,6 +333,9 @@
               // find children of clicked feature, push to array for app-wide usage
               const children = h3.h3ToChildren(feature.id, res)
               this.children.push(...children)
+
+              // console.log(children)
+              // console.log(this.filtered)
 
               // TODO Make sure that resetting all child features scales with thousands of children
               // set child geojson features in layer
@@ -309,6 +350,9 @@
 
               // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
               children.forEach((child: string) => {
+
+                // console.log(this.children.includes(child), child)
+
                 // if parent hex is selected on the map, set ALL child features as selected too, push to array
                 if (parentSelected) {
                   this.map.setFeatureState({source: 'children', id: child}, {selected: true})
@@ -327,11 +371,32 @@
                 this.removeItemFromArray(this.selected, feature.id)
               }
 
+              console.log(this.children.includes(feature.id))
+              const tmp = !this.children.includes(feature.id) ? 'base-hex' : feature.source
+
+
               // update all layers' filters
               const layers = ['base-hex', 'children']
               layers.forEach(layer => {
                 this.filterOutParentHexes(layer)
               })
+
+
+              // this.filtered.forEach(child => {
+              //   if (this.children.includes(child)) {
+              //     console.log(child)
+              //   }
+              // })
+              // this.filterOutParentHexes('base-hex')
+              // this.filterOutParentHexes('children')
+              // console.log('filter:', this.filtered)
+              // console.log('children:', this.children)
+
+
+
+              // this.filterOutParentHexes(feature.source)
+              // this.filterOutParentHexes(tmp)
+
 
 
               // // if the clicked hex is in the children array, remove it from array when hex is filtered out
@@ -344,6 +409,9 @@
               // console.log('filtered:', this.filtered)
               // console.log(feature)
               // console.log('children:', this.children)
+
+              // console.log('after click:', this.filtered)
+
 
             }
           } else {  // if selection mode is on
@@ -368,7 +436,7 @@
 
         const popup = new M.Popup({closeButton: false})
         this.map.on('mousemove', ['base-hex', 'children'], (e: any) => {
-          popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
+          popup.setHTML(e.features[0].id + e.features[0].source).setLngLat(e.lngLat).addTo(this.map)
         })
 
       })
