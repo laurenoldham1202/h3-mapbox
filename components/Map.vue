@@ -128,7 +128,7 @@
             'fill-color': 'blue',
           },
           layout: {
-            'fill-sort-key': ['+', ['get', 'h3_address']],
+            // 'fill-sort-key': ['+', ['get', 'h3_address']],
           },
         })
 
@@ -153,6 +153,7 @@
 
 
           const feature = this.map.queryRenderedFeatures(e.point, {layers: allLayers})[0]
+          const source = feature.source
           if (feature) {
             // console.log(feature.id)
             const clickedRes = h3.h3GetResolution(feature.id)
@@ -161,7 +162,40 @@
             if (clickedRes >= 4) {
               // parent of clicked feature
               const parent = h3.h3ToParent(feature.id, clickedRes - 1)
-              console.log(parent)
+              // console.log(parent)
+              // add parent to children layer to keep totally separate from filtered based-hex values
+              this.children.push(parent)
+
+              // TODO Try separate base-hex and children filters for clarity
+              // if parent has been filtered out, remove it from filtered array
+              if (this.filtered.includes(parent)) {
+                this.removeItemFromArray(this.filtered, parent)
+              }
+              // set child layer with new parent, which is no longer filtered out
+              this.setChildFeatures()
+              // push parent BACK to filtered so that base-hex parent stays off map when selected new hex to explode
+              this.filtered.push(parent)
+
+              // if (source === 'base-hex') {
+              //   this.setChildFeatures()
+              // } else {
+              //   // console.log(parent)
+              //
+              //   if (this.filtered.includes(parent)) {
+              //     this.removeItemFromArray(this.filtered, parent)
+              //   }
+              //   // this.filterOutParentHexes('children')
+              //   this.setChildFeatures()
+              //   console.log('collapse filtered:', this.filtered)
+              //   this.filtered.push(parent)
+              //
+              // }
+
+
+
+
+            } else {
+              console.log('CANNOT COLLAPSE FOR RES', clickedRes)
             }
           }
 
@@ -279,9 +313,10 @@
               // update all layers' filters
               const layers = ['base-hex', 'children']
               layers.forEach(layer => {
-                this.filterOutParentHexes(layer)
+                // this.filterOutParentHexes(layer)
               })
 
+              this.filterOutParentHexes(feature.source)
 
               // // if the clicked hex is in the children array, remove it from array when hex is filtered out
               // if (this.arrayIncludesItem(this.children, feature.id)) {
@@ -290,7 +325,7 @@
 
 
               // console.log('SELECT MODE OFF')
-              // console.log('filtered:', this.filtered)
+              console.log('filtered:', this.filtered)
               // console.log(feature)
               // console.log('children:', this.children)
 
@@ -331,6 +366,7 @@
         this.children = this.uniqueValues(this.children)
         // convert hex ids into geojson, preserving the indices
         const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
+        // console.log(childrenPoly)
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
