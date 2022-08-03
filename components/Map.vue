@@ -151,6 +151,8 @@
               // parent of clicked feature
               const parent = h3.h3ToParent(feature.id, clickedRes - 1)
               // console.log(parent)
+
+              // console.log(this.children.includes(parent), parent)
               // add parent to children layer to keep totally separate from filtered based-hex values
               this.children.push(parent)
               // this.setChildFeatures()
@@ -187,25 +189,55 @@
               })
               // this.setChildFeatures()
 
-              // FIXME expand 2 levels, collapse highest level, expand again, collapse again - hex is missing
+
               if (source === 'base-hex') {
+                // console.log('BASE:', this.filteredChildren)
                 // console.log('filter all children from base-hex layer AND children from children layer?')
                 this.filteredBase.push(...allChildren)
                 // TODO STreamline the array within the func, tied to which layer is passed in
                 this.filterOutParentHexes('base-hex', this.filteredBase)
+
               } else {
-                // console.log('handle children')
-                // this.removeItemFromArray(this.filteredChildren, parent)
-                console.log('parent:', parent)
-                console.log('filtered children:', this.filteredChildren)
-                console.log('filtered base:', this.filteredBase)
-                console.log('children:', this.children)
+
+                // console.log('CHILDREN BEFORE:', this.filteredChildren)
+
+
+                // FIXME base hex res 3, drill down to res 6 in middle, then collapse back up until hex disappears
+                // FIXME res 3 drill, drill - base hex 6 collapse, collapse neighbor, collapse first collapse, then click first drilled child
+
+                console.log('filtered children BEFORE:', this.filteredChildren)
+                // console.log('filtered base:', this.filteredBase)
+                console.log('children BEFORE:', this.children)
+
+                this.filteredChildren.forEach(child => {
+                  if (this.children.includes(child)) {
+                    // console.log('PROBLEM CHILD!!!!!!!!!', child)
+                    this.removeItemFromArray(this.children, child)
+                    // this.children.push(child)
+                  }
+                })
+
                 this.removeItemFromArray(this.filteredChildren, parent)
                 this.filterOutParentHexes('children', this.filteredChildren)
+
+                this.filteredBase.push(...allChildren)
+                // TODO STreamline the array within the func, tied to which layer is passed in
+                this.filterOutParentHexes('base-hex', this.filteredBase)
+
+
+                // console.log('CHILDREN AFTER:', this.filteredChildren)
+
 
 
               }
 
+              // console.log('handle children')
+              console.log('parent:', parent)
+              console.log('filtered children:', this.filteredChildren)
+              console.log('filtered base:', this.filteredBase)
+              console.log('children:', this.children)
+
+              // this.filterOutParentHexes('children', this.filteredChildren)
               this.setChildFeatures()
 
 
@@ -349,6 +381,7 @@
               if (feature.source === 'base-hex') {
                 this.filterOutParentHexes('base-hex', this.filteredBase)
               } else {
+                // console.log('updated filtered children...', this.filteredChildren)
                 this.filterOutParentHexes('children', this.filteredChildren)
               }
 
@@ -405,6 +438,9 @@
         this.map.getSource('children').setData(childrenPoly)
       },
       filterOutParentHexes(featureSource: string, array: string[]) {
+        array = this.uniqueValues(array)
+        // console.log(array.length)
+        // console.log(array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
         // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
         this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
       },
