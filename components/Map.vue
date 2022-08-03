@@ -42,6 +42,8 @@
       filtered: [] as any[],
       children: [] as any[],
       selected: [] as any[],
+      filteredBase: [] as any[],
+      filteredChildren: [] as any[],
     }),
     watch: {
       rangeOnly() {
@@ -200,7 +202,7 @@
 
           const feature = e.features[0]
           const res = parseInt(feature.id[1]) + 1
-          const layer = res === 4 ? 'base-hex' : feature.source
+          const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
 
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
@@ -217,7 +219,13 @@
               this.setChildFeatures()
 
               // filter out the clicked feature so that parent and children are not layered on top of each other
-              this.filtered.push(feature.id)
+              // this.filtered.push(feature.id)
+              console.log(feature.source)
+              if (feature.source === 'base-hex') {
+                this.filteredBase.push(feature.id)
+              } else {
+                this.filteredChildren.push(feature.id)
+              }
 
               // is parent hex selected on the map
               // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
@@ -231,9 +239,10 @@
                   this.selected.push(child)
                 }
 
-                if (this.filtered.includes(child)) {
-                  this.removeItemFromArray(this.filtered, child)
-                }
+                // TODO TEST AFTER COLLAPSE
+                // if (this.filtered.includes(child)) {
+                //   this.removeItemFromArray(this.filtered, child)
+                // }
               })
 
               // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
@@ -243,11 +252,18 @@
                 this.removeItemFromArray(this.selected, feature.id)
               }
 
-              // update all layers' filters
-              const layers = ['base-hex', 'children']
-              layers.forEach(layer => {
-                this.filterOutParentHexes(layer)
-              })
+              // // update all layers' filters
+              // const layers = ['base-hex', 'children']
+              // layers.forEach(layer => {
+              //   this.filterOutParentHexes(layer)
+              // })
+
+              if (feature.source === 'base-hex') {
+                this.filterOutParentHexes('base-hex', this.filteredBase)
+              } else {
+                this.filterOutParentHexes('children', this.filteredChildren)
+
+              }
 
 
               // // if the clicked hex is in the children array, remove it from array when hex is filtered out
@@ -301,9 +317,9 @@
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
-      filterOutParentHexes(featureSource: string) {
+      filterOutParentHexes(featureSource: string, array: string[]) {
         // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
-        this.map.setFilter(featureSource, this.filtered.length ? ['match', ['get', 'h3_address'], this.filtered, false, true] : null)
+        this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
       },
       removeItemFromArray(array: any[], item: any) {
         array.splice(array.indexOf(item), 1)
