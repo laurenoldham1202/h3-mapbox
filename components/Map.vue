@@ -172,9 +172,8 @@
                 this.removeItemFromArray(this.filtered, parent)
               }
               // set child layer with new parent, which is no longer filtered out
-              this.setChildFeatures()
-              // push parent BACK to filtered so that base-hex parent stays off map when selected new hex to explode
-              this.filtered.push(parent)
+              // this.setChildFeatures()
+
 
               // if (source === 'base-hex') {
               //   this.setChildFeatures()
@@ -191,8 +190,56 @@
               //
               // }
 
+                // empty array for all children through res 6 for the selected parent hex
+                const allChildren: any[] = []
+                // all possible resolutions on the map
+                const resolutions = [3, 4, 5, 6]
+                resolutions.forEach((resolution: number) => {
+                  if (resolution >= (clickedRes)) {
+                    // for each res, find children and push to array
+                    allChildren.push(...h3.h3ToChildren(parent, resolution))
+                  }
+                })
+
+              if (source === 'base-hex') {
+                // TODO still need to filter out all children?
+                console.log('filter children from base-hex?')
+                this.filtered.push(...allChildren)
+                this.filtered = this.uniqueValues(this.filtered)
+                this.filterOutParentHexes('base-hex')
+
+                allChildren.forEach((child: string) => {
+                  // if a child hex is already plotted on the map, remove it from the array
+                  if (this.children.includes(child)) {
+                    this.removeItemFromArray(this.children, child)
+                  }
+                })
+
+                this.setChildFeatures()
+              } else {
+                // FIXME click down two levels, collapse highest level makes everything disappear
+                console.log('remove children from children array, replot on map')
+                allChildren.forEach((child: string) => {
+                  // if a child hex is already plotted on the map, remove it from the array
+                  if (this.children.includes(child)) {
+                    this.removeItemFromArray(this.children, child)
+                  }
+                })
 
 
+                if (this.children.includes(parent)) {
+                  this.removeItemFromArray(this.children, parent)
+                }
+
+                this.setChildFeatures()
+                console.log(parent, this.children)
+              }
+              // console.log(allChildren)
+
+
+
+              // push parent BACK to filtered so that base-hex parent stays off map when selected new hex to explode
+              this.filtered.push(parent)
 
             } else {
               console.log('CANNOT COLLAPSE FOR RES', clickedRes)
@@ -325,7 +372,7 @@
 
 
               // console.log('SELECT MODE OFF')
-              console.log('filtered:', this.filtered)
+              // console.log('filtered:', this.filtered)
               // console.log(feature)
               // console.log('children:', this.children)
 
