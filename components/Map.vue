@@ -212,10 +212,12 @@
                 this.filteredChildren.forEach(child => {
                   if (this.children.includes(child)) {
                     // console.log('PROBLEM CHILD!!!!!!!!!', child)
-                    this.removeItemFromArray(this.children, child)
+                    // this.removeItemFromArray(this.children, child)
                     // this.children.push(child)
                   }
                 })
+
+                // FIXME collapse 5, explode same, explode neighbor 6
 
                 this.removeItemFromArray(this.filteredChildren, parent)
                 this.filterOutParentHexes('children', this.filteredChildren)
@@ -232,10 +234,11 @@
               }
 
               // console.log('handle children')
-              console.log('parent:', parent)
-              console.log('filtered children:', this.filteredChildren)
-              console.log('filtered base:', this.filteredBase)
-              console.log('children:', this.children)
+              // console.log('parent:', parent)
+              // console.log(clickedRes)
+              // console.log('filtered children:', this.filteredChildren)
+              console.log('COL filtered base:', this.filteredBase)
+              // console.log('children:', this.children)
 
               // this.filterOutParentHexes('children', this.filteredChildren)
               this.setChildFeatures()
@@ -324,6 +327,9 @@
             // TODO Combine res restriction and selectMode conditions?
             // only allow user to drill down to h3 res 6
             if (res <= 6) {
+
+              console.log('BEFORE CLICK filtered base:', this.filteredBase)
+
               // find children of clicked feature, push to array for app-wide usage
               const children = h3.h3ToChildren(feature.id, res)
               this.children.push(...children)
@@ -360,9 +366,9 @@
                 if (this.filteredChildren.includes(child)) {
                   this.removeItemFromArray(this.filteredChildren, child)
                 }
-                // if (this.filteredBase.includes(child)) {
-                //   this.removeItemFromArray(this.filteredBase, child)
-                // }
+                if (this.filteredBase.includes(child)) {
+                  // this.removeItemFromArray(this.filteredBase, child)
+                }
               })
 
               // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
@@ -386,11 +392,16 @@
               }
 
 
-              // // if the clicked hex is in the children array, remove it from array when hex is filtered out
-              // if (this.arrayIncludesItem(this.children, feature.id)) {
-              //     this.removeItemFromArray(this.children, feature.id)
-              // }
+              // if the clicked hex is in the children array, remove it from array when hex is filtered out
+              if (this.arrayIncludesItem(this.children, feature.id)) {
+                  this.removeItemFromArray(this.children, feature.id)
+              }
 
+              // console.log('handle children')
+              // console.log('parent:', parent)
+              // console.log('filtered children:', this.filteredChildren)
+              console.log('filtered base:', this.filteredBase)
+              console.log('children:', this.children)
 
               // console.log('SELECT MODE OFF')
               // console.log('filtered:', this.filtered)
