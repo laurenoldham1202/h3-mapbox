@@ -35,7 +35,7 @@
     data: () => ({
       map: undefined as any,
       coords: { lng: -96.35, lat: 37 } as M.LngLat,
-      selectMode: true,
+      selectMode: false,
       rangeOnly: false,
       resolution: 3,
       draw: undefined as any,
@@ -124,7 +124,8 @@
           type: 'fill',
           paint: {
             'fill-opacity': 0.3,
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+            'fill-color': 'blue'
           },
           layout: {
             'fill-sort-key': ['+', ['get', 'h3_address']],
