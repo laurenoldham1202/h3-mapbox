@@ -92,7 +92,7 @@
           promoteId: 'h3_address',
           // tiles: ['http://localhost:8083/data/all_clipped/{z}/{x}/{y}.pbf'],
           tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/test-2/{z}/{x}/{y}.pbf'],
-          maxzoom: 4,
+          maxzoom: 8,
         })
 
         // TODO Return single feature outline?
@@ -128,7 +128,7 @@
           type: 'fill',
           paint: {
             'fill-opacity': 0.3,
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'blue'],
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
             // 'fill-color': 'blue'
           },
           layout: {
@@ -172,6 +172,18 @@
               // remove children of parent from children arr
               // filter all children from base-hex
 
+
+                // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
+                // match parent selected state to clicked hex selected state, push to array if selected
+                this.map.setFeatureState({
+                  source: 'children',
+                  id: parent}, { selected: this.arrayIncludesItem(this.selected, feature.id)})
+                if (this.arrayIncludesItem(this.selected, feature.id)) {
+                  this.selected.push(parent)
+                }
+
+
+
               // empty array for all children through res 6 for the selected parent hex
               const allChildren: any[] = []
               // all possible resolutions on the map
@@ -187,6 +199,11 @@
                 // if a child hex is already plotted on the map, remove it from the array
                 if (this.children.includes(child)) {
                   this.removeItemFromArray(this.children, child)
+                }
+                // if a child hex is selected (pink), turn off its selected map state and remove from selected array
+                if (this.selected.includes(child)) {
+                  this.removeItemFromArray(this.selected, child)
+                  this.map.setFeatureState({source: 'children', id: child}, {selected: false})
                 }
               })
               // this.setChildFeatures()
@@ -352,7 +369,7 @@
               // is parent hex selected on the map
               // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
               const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
-              console.log(this.selected, parentSelected)
+              // console.log(this.selected, parentSelected)
 
               // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
               children.forEach((child: string) => {
@@ -360,7 +377,7 @@
                 if (parentSelected) {
                   this.map.setFeatureState({source: 'children', id: child}, {selected: true})
                   this.selected.push(child)
-                  console.log(child, this.map.getFeatureState({source: 'children', id: child}))
+                  // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
                 }
 
                 // TODO TEST AFTER COLLAPSE
