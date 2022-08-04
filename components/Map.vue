@@ -37,7 +37,7 @@
     data: () => ({
       map: undefined as any,
       coords: { lng: -96.35, lat: 37 } as M.LngLat,
-      selectMode: false,
+      selectMode: true,
       rangeOnly: false,
       resolution: 3,
       draw: undefined as any,
@@ -440,13 +440,17 @@
             // if feature is part of the default range on initial map load before feature state is set
             const defaultRange = !Object.keys(feature.state).length && isRange
 
+            // console.log(isRange, defaultRange, feature.state.selected)
+
             // update map feature state
             this.map.setFeatureState(
-              {source: 'children', id: feature.id},
+              {source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id},
               {selected: defaultRange ? !isRange : !feature.state.selected}
             )
 
             this.updateSelected(feature)
+
+            console.log(this.selected, this.selected.includes(feature.id))
           }
         })
 
@@ -483,10 +487,13 @@
         return array.includes(item)
       },
       updateSelected(feature: any) {
-        if (!feature.state.selected) {
+        if (!this.selected.includes(feature.id)) {
           this.selected.push(feature.id)
+          // console.log('pushed', feature.id)
         } else {
           this.removeItemFromArray(this.selected, feature.id)
+          // console.log('removed', feature.id)
+
         }
       },
       getChildrenHexes(parentHexArray: string[], res: number): string[] {
