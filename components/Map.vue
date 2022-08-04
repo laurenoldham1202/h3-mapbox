@@ -17,6 +17,8 @@
   import * as h3 from 'h3-js'
   import 'mapbox-gl/dist/mapbox-gl.css'
 
+  import {SELECTED} from '~/static/constants'
+
   import * as T from '@turf/turf'
 
 
@@ -41,7 +43,7 @@
       draw: undefined as any,
       filtered: [] as any[],
       children: [] as any[],
-      selected: [] as any[],
+      selected: SELECTED as any[],
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
     }),
@@ -126,8 +128,8 @@
           type: 'fill',
           paint: {
             'fill-opacity': 0.3,
-            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-            'fill-color': 'blue'
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'blue'],
+            // 'fill-color': 'blue'
           },
           layout: {
             'fill-sort-key': ['+', ['get', 'h3_address']],
@@ -205,9 +207,9 @@
                 // FIXME base hex res 3, drill down to res 6 in middle, then collapse back up until hex disappears
                 // FIXME res 3 drill, drill - base hex 6 collapse, collapse neighbor, collapse first collapse, then click first drilled child
 
-                console.log('filtered children BEFORE:', this.filteredChildren)
+                // console.log('filtered children BEFORE:', this.filteredChildren)
                 // console.log('filtered base:', this.filteredBase)
-                console.log('children BEFORE:', this.children)
+                // console.log('children BEFORE:', this.children)
 
                 this.filteredChildren.forEach(child => {
                   if (this.children.includes(child)) {
@@ -237,7 +239,7 @@
               // console.log('parent:', parent)
               // console.log(clickedRes)
               // console.log('filtered children:', this.filteredChildren)
-              console.log('COL filtered base:', this.filteredBase)
+              // console.log('COL filtered base:', this.filteredBase)
               // console.log('children:', this.children)
 
               // this.filterOutParentHexes('children', this.filteredChildren)
@@ -319,7 +321,7 @@
 
           const feature = e.features[0]
           const res = parseInt(feature.id[1]) + 1
-          const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
+          // const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
 
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
@@ -328,7 +330,7 @@
             // only allow user to drill down to h3 res 6
             if (res <= 6) {
 
-              console.log('BEFORE CLICK filtered base:', this.filteredBase)
+              // console.log('BEFORE CLICK filtered base:', this.filteredBase)
 
               // find children of clicked feature, push to array for app-wide usage
               const children = h3.h3ToChildren(feature.id, res)
@@ -350,6 +352,7 @@
               // is parent hex selected on the map
               // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
               const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
+              console.log(this.selected, parentSelected)
 
               // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
               children.forEach((child: string) => {
@@ -357,6 +360,7 @@
                 if (parentSelected) {
                   this.map.setFeatureState({source: 'children', id: child}, {selected: true})
                   this.selected.push(child)
+                  console.log(child, this.map.getFeatureState({source: 'children', id: child}))
                 }
 
                 // TODO TEST AFTER COLLAPSE
@@ -374,7 +378,7 @@
               // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
               // happens outside of children loop to not duplicate unnecessarily
               if (parentSelected) {
-                this.map.setFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}, {selected: false})
+                this.map.setFeatureState({source: 'children', id: feature.id}, {selected: false})
                 this.removeItemFromArray(this.selected, feature.id)
               }
 
@@ -400,8 +404,8 @@
               // console.log('handle children')
               // console.log('parent:', parent)
               // console.log('filtered children:', this.filteredChildren)
-              console.log('filtered base:', this.filteredBase)
-              console.log('children:', this.children)
+              // console.log('filtered base:', this.filteredBase)
+              // console.log('children:', this.children)
 
               // console.log('SELECT MODE OFF')
               // console.log('filtered:', this.filtered)
@@ -421,7 +425,7 @@
 
             // update map feature state
             this.map.setFeatureState(
-              {source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id},
+              {source: 'children', id: feature.id},
               {selected: defaultRange ? !isRange : !feature.state.selected}
             )
 
