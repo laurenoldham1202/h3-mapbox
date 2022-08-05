@@ -8,6 +8,9 @@
 
 <div id="map-2"></div>
 
+    <input v-model="selectedOutput">
+    {{ selected.length }}
+
   </span>
 </template>
 
@@ -44,10 +47,16 @@
       draw: undefined as any,
       filtered: [] as any[],
       children: [] as any[],
-      selected: SELECTED as any[],
+      selected: JSON.parse(JSON.stringify(SELECTED)) as any[],
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
+      // selectedOutput: 'bloop'
     }),
+    computed: {
+      selectedOutput() {
+        return JSON.stringify(this.selected)
+      }
+    },
     watch: {
       // TODO Add clear all selections, reset to initial range, etc.
       rangeOnly() {
@@ -63,10 +72,10 @@
           this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.selected, true, false])
           this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
         } else {
-          console.log('base FILT', this.filteredBase)
-          console.log('children FILT', this.filteredChildren)
-          console.log('children', this.children)
-          console.log('selected', this.selected)
+          // console.log('base FILT', this.filteredBase)
+          // console.log('children FILT', this.filteredChildren)
+          // console.log('children', this.children)
+          // console.log('selected', this.selected)
 
 
 
