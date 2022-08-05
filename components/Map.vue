@@ -7,13 +7,17 @@
     <div class="sidebar" style="padding: 0.5rem">
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
       <!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
-      <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>
+
+      <input type="checkbox" id="checkbox" v-model="rangeOnly">
+      <label for="checkbox">Selected range only</label>
+
+<!--      <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>-->
 <!--      <button @click="print">print filters</button>-->
 
       <hr>
-      Selected Hex Ids:
-      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>
-
+      Selected Hex Ids ({{selected.length}}):
+      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>
+      <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>
     </div>
 
 
@@ -57,6 +61,7 @@
       selected: JSON.parse(JSON.stringify(SELECTED)) as any[],
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
+      copied: false,
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -565,6 +570,10 @@
       },
       copyToClipboard() {
         navigator.clipboard.writeText(this.selectedOutput)
+        this.copied = true
+        setTimeout(() => {
+          this.copied = false
+        }, 2000)
         // alert('Ids copied to clipboard!')
       },
 
