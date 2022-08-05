@@ -1,17 +1,24 @@
 <template>
-  <span>
+  <div style="display: flex">
 
-    <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
-<!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
-<button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>
-<button @click="print">print filters</button>
 
-<div id="map-2"></div>
+    <div id="map-2"></div>
 
-    <input v-model="selectedOutput">
-    {{ selected.length }}
+    <div class="sidebar" style="padding: 0.5rem">
+      <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
+      <!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
+      <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>
+<!--      <button @click="print">print filters</button>-->
 
-  </span>
+      <hr>
+      Selected Hex Ids:
+      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>
+
+    </div>
+
+
+
+  </div>
 </template>
 
 <script lang="ts">
@@ -556,10 +563,10 @@
         // formatted as [{x: 10, y: 10}, {x: 20, y: 20}]
         return [swPixel, nePixel]
       },
-      print() {
-        console.log('BASE:', this.map.getFilter('base-hex'))
-        console.log('CHILD:', this.map.getFilter('children'))
-      }
+      copyToClipboard() {
+        navigator.clipboard.writeText(this.selectedOutput)
+        // alert('Ids copied to clipboard!')
+      },
 
     },
   })
@@ -567,7 +574,7 @@
 
 <style>
   #map-2 {
-    width: 1000px;
+    width: 70%;
     height: 800px;
     background: purple;
   }
@@ -590,5 +597,11 @@
 
   button {
     cursor: pointer;
+  }
+
+  #selected-ids {
+    width: 300px;
+    height: 300px;
+    white-space: pre-line;
   }
 </style>
