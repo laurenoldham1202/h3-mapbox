@@ -1,13 +1,28 @@
 <template>
-  <span>
+  <div style="display: flex">
 
-    <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
-<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>
-<!--<button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>-->
 
-<div id="map-2"></div>
+    <div id="map-2"></div>
 
-  </span>
+    <div class="sidebar" style="padding: 0.5rem">
+      <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
+      <!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
+
+      <input type="checkbox" id="checkbox" v-model="rangeOnly">
+      <label for="checkbox">Selected range only</label>
+
+<!--      <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>-->
+<!--      <button @click="print">print filters</button>-->
+
+      <hr>
+      Selected Hex Ids ({{selected.length}}):
+      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>
+      <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>
+    </div>
+
+
+
+  </div>
 </template>
 
 <script lang="ts">
@@ -36,17 +51,24 @@
   export default Vue.extend({
     data: () => ({
       map: undefined as any,
-      coords: { lng: -96.35, lat: 37 } as M.LngLat,
-      selectMode: true,
+      coords: { lng: -99.35, lat: 40 } as M.LngLat,
+      // selectMode: false,
       rangeOnly: false,
       resolution: 3,
       draw: undefined as any,
       filtered: [] as any[],
       children: [] as any[],
-      selected: SELECTED as any[],
+      selected: JSON.parse(JSON.stringify(SELECTED)) as any[],
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
+      copied: false,
+      // selectedOutput: 'bloop'
     }),
+    computed: {
+      selectedOutput() {
+        return JSON.stringify(this.selected)
+      }
+    },
     watch: {
       // TODO Add clear all selections, reset to initial range, etc.
       rangeOnly() {
@@ -58,19 +80,27 @@
         // console.log('children:', this.children)
 
         // TODO Style show range button to require update
-        if (this.rangeOnly) {
+        if (this.rangeOnly && this.selected.length) {
           this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.selected, true, false])
           this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
         } else {
-          // console.log(this.filteredBase)
-          console.log(this.filteredChildren)
+          // console.log('base FILT', this.filteredBase)
+          // console.log('children FILT', this.filteredChildren)
+          // console.log('children', this.children)
+          // console.log('selected', this.selected)
+
+
+
           // TODO Preserve filtered out values but remove selected filter
           // TODO CHeck if filteredBase is pop
 
           // filter out base-hex
           // filter in children?
           // this.map.setFilter('base-hex')
-          this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.filteredBase, false, true])
+          this.filteredBase = this.uniqueValues(this.filteredBase)
+          this.filteredChildren = this.uniqueValues(this.filteredChildren)
+          this.map.setFilter('base-hex', this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
+          this.map.setFilter('children', this.filteredChildren.length ? ['match', ['get', 'h3_address'], this.filteredChildren, false, true] : null)
           // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
         }
       },
@@ -84,8 +114,9 @@
         container: 'map-2',
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 6,
+        zoom: 5.2,
         doubleClickZoom: false,
+        boxZoom: false,
       })
 
       // this.draw = new MapboxDraw({
@@ -355,13 +386,17 @@
         // LEFT CLICK - select, deselect, or extrapolate features
         this.map.on('click', ['base-hex', 'children'], (e: any) => {
 
+          console.log(e.originalEvent.shiftKey)
+
+          const selectMode = !e.originalEvent.shiftKey
+
           const feature = e.features[0]
           const res = parseInt(feature.id[1]) + 1
           // const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
 
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
-          if (!this.selectMode) {
+          if (!selectMode) {
             // TODO Combine res restriction and selectMode conditions?
             // only allow user to drill down to h3 res 6
             if (res <= 6) {
@@ -533,6 +568,14 @@
         // formatted as [{x: 10, y: 10}, {x: 20, y: 20}]
         return [swPixel, nePixel]
       },
+      copyToClipboard() {
+        navigator.clipboard.writeText(this.selectedOutput)
+        this.copied = true
+        setTimeout(() => {
+          this.copied = false
+        }, 2000)
+        // alert('Ids copied to clipboard!')
+      },
 
     },
   })
@@ -540,7 +583,7 @@
 
 <style>
   #map-2 {
-    width: 1000px;
+    width: 70%;
     height: 800px;
     background: purple;
   }
@@ -563,5 +606,11 @@
 
   button {
     cursor: pointer;
+  }
+
+  #selected-ids {
+    width: 300px;
+    height: 300px;
+    white-space: pre-line;
   }
 </style>
