@@ -48,12 +48,31 @@
       filteredChildren: [] as any[],
     }),
     watch: {
+      // TODO Add clear all selections, reset to initial range, etc.
       rangeOnly() {
 
 
         // console.log('RANGE MODE')
+        // console.log(this.selected)
         // console.log('filtered:', this.filtered)
         // console.log('children:', this.children)
+
+        // TODO Style show range button to require update
+        if (this.rangeOnly) {
+          this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.selected, true, false])
+          this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
+        } else {
+          // console.log(this.filteredBase)
+          console.log(this.filteredChildren)
+          // TODO Preserve filtered out values but remove selected filter
+          // TODO CHeck if filteredBase is pop
+
+          // filter out base-hex
+          // filter in children?
+          // this.map.setFilter('base-hex')
+          this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.filteredBase, false, true])
+          // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
+        }
       },
       selected(x) {
         // console.log('selected:', x)
@@ -450,7 +469,7 @@
 
             this.updateSelected(feature)
 
-            console.log(this.selected, this.selected.includes(feature.id))
+            // console.log(this.selected, this.selected.includes(feature.id))
           }
         })
 
