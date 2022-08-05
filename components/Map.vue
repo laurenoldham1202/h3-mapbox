@@ -2,7 +2,7 @@
   <span>
 
     <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
-<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>
+<!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
 <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>
 <button @click="print">print filters</button>
 
@@ -37,8 +37,8 @@
   export default Vue.extend({
     data: () => ({
       map: undefined as any,
-      coords: { lng: -96.35, lat: 37 } as M.LngLat,
-      selectMode: false,
+      coords: { lng: -99.35, lat: 40 } as M.LngLat,
+      // selectMode: false,
       rangeOnly: false,
       resolution: 3,
       draw: undefined as any,
@@ -93,7 +93,7 @@
         container: 'map-2',
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 6,
+        zoom: 5.2,
         doubleClickZoom: false,
         boxZoom: false,
       })
