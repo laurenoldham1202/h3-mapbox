@@ -38,14 +38,15 @@
 
 
   // import { GeoJSON } from 'GeoJSON'
-  // import MapboxDraw from '@mapbox/mapbox-gl-draw'
-  // import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
+  // @ts-ignore
+  import MapboxDraw from '@mapbox/mapbox-gl-draw'
+  import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
   // import FreehandMode from 'mapbox-gl-draw-freehand-mode'
   import intersect from '@turf/intersect'
   import bbox from '@turf/bbox'
   import area from '@turf/area'
   // @ts-ignore
-  // import DrawRectangle from 'mapbox-gl-draw-rectangle-mode'
+  import DrawRectangle from 'mapbox-gl-draw-rectangle-mode'
 
 
   export default Vue.extend({
@@ -62,10 +63,11 @@
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
       copied: false,
+      drawMode: true,
       // selectedOutput: 'bloop'
     }),
     computed: {
-      selectedOutput() {
+      selectedOutput(): string {
         return JSON.stringify(this.selected)
       }
     },
@@ -119,20 +121,20 @@
         boxZoom: false,
       })
 
-      // this.draw = new MapboxDraw({
-      //   displayControlsDefault: false,
-      //   // defaultMode: 'draw_polygon',
-      //   controls: {
-      //     polygon: true,
-      //     trash: true,
-      //   },
-      //   // @ts-ignore
-      //   modes: Object.assign(MapboxDraw.modes, {
-      //     // draw_polygon: FreehandMode,
-      //     draw_polygon: DrawRectangle,
-      //   }),
-      // })
-      // this.map.addControl(this.draw, 'top-left')
+      this.draw = new MapboxDraw({
+        displayControlsDefault: false,
+        defaultMode: this.drawMode ? 'draw_polygon' : 'simple_select',
+        controls: {
+          polygon: true,
+          trash: true,
+        },
+        // @ts-ignore
+        modes: Object.assign(MapboxDraw.modes, {
+          // draw_polygon: FreehandMode,
+          draw_polygon: DrawRectangle,
+        }),
+      })
+      this.map.addControl(this.draw, 'top-left')
       this.map.addControl(new M.ScaleControl({maxWidth: 900}))
 
       this.map.on('load', () => {
@@ -188,6 +190,50 @@
 
 
         const allLayers = ['base-hex', 'children']
+
+
+
+
+        this.map.on('draw.create', (e: any) => {
+          // console.log(e)
+          // console.log()
+          const bbox = this.bboxToPixel(e.features[0])
+          // TODO Add option to user intersection or completely contained within?
+          const features = this.map.queryRenderedFeatures(bbox, {layers: ['base-hex', 'children']})
+          // console.log(features)
+          features.forEach((feature: any) => {
+            // TODO Rearrange so that selected is watched, which then updates feature state
+            if (!this.selected.includes(feature.id)) {
+              this.selected.push(feature.id)
+            }
+            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: feature.id}, {selected: true})
+          })
+
+          this.draw.delete(e.features[0].id)
+        })
+
+        this.map.on('draw.update', (e: any) => {
+          // console.log('update')
+        })
+
+        this.map.on('draw.selectionchange', (e: any) => {
+          // console.log('sel change')
+        })
+
+        this.map.on('draw.modechange', (e: any) => {
+          // console.log('mode change')
+          // console.log(e)
+          setTimeout(() => {
+            this.drawMode = Boolean(e.mode === 'draw_polygon')
+            // console.log(this.drawMode)
+          }, 10)
+
+        })
+
+
+
+
+
 
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
@@ -386,125 +432,131 @@
         // LEFT CLICK - select, deselect, or extrapolate features
         this.map.on('click', ['base-hex', 'children'], (e: any) => {
 
-          console.log(e.originalEvent.shiftKey)
+          // console.log(e.originalEvent.shiftKey)
 
-          const selectMode = !e.originalEvent.shiftKey
+          if (!this.drawMode) {
 
-          const feature = e.features[0]
-          const res = parseInt(feature.id[1]) + 1
-          // const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
+            const selectMode = !e.originalEvent.shiftKey
+
+            const feature = e.features[0]
+            const res = parseInt(feature.id[1]) + 1
+            // const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
 
 
-          // if select mode is off, i.e. if user is expanding or collapsing shapes
-          if (!selectMode) {
-            // TODO Combine res restriction and selectMode conditions?
-            // only allow user to drill down to h3 res 6
-            if (res <= 6) {
+            // if select mode is off, i.e. if user is expanding or collapsing shapes
+            if (!selectMode) {
+              // TODO Combine res restriction and selectMode conditions?
+              // only allow user to drill down to h3 res 6
+              if (res <= 6) {
 
-              // console.log('BEFORE CLICK filtered base:', this.filteredBase)
+                // console.log('BEFORE CLICK filtered base:', this.filteredBase)
 
-              // find children of clicked feature, push to array for app-wide usage
-              const children = h3.h3ToChildren(feature.id, res)
-              this.children.push(...children)
+                // find children of clicked feature, push to array for app-wide usage
+                const children = h3.h3ToChildren(feature.id, res)
+                this.children.push(...children)
 
-              // TODO Make sure that resetting all child features scales with thousands of children
-              // set child geojson features in layer
-              this.setChildFeatures()
+                // TODO Make sure that resetting all child features scales with thousands of children
+                // set child geojson features in layer
+                this.setChildFeatures()
 
-              // filter out the clicked feature so that parent and children are not layered on top of each other
-              // this.filtered.push(feature.id)
-              // console.log(feature.source)
-              if (feature.source === 'base-hex') {
-                this.filteredBase.push(feature.id)
-              } else {
-                this.filteredChildren.push(feature.id)
-              }
+                // filter out the clicked feature so that parent and children are not layered on top of each other
+                // this.filtered.push(feature.id)
+                // console.log(feature.source)
+                if (feature.source === 'base-hex') {
+                  this.filteredBase.push(feature.id)
+                } else {
+                  this.filteredChildren.push(feature.id)
+                }
 
-              // is parent hex selected on the map
-              // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
-              const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
-              // console.log(this.selected, parentSelected)
+                // is parent hex selected on the map
+                // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
+                const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
+                // console.log(this.selected, parentSelected)
 
-              // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
-              children.forEach((child: string) => {
-                // if parent hex is selected on the map, set ALL child features as selected too, push to array
+                // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
+                children.forEach((child: string) => {
+                  // if parent hex is selected on the map, set ALL child features as selected too, push to array
+                  if (parentSelected) {
+                    this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
+                    this.selected.push(child)
+                    // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
+                  }
+
+                  // TODO TEST AFTER COLLAPSE
+                  // if (this.filtered.includes(child)) {
+                  //   this.removeItemFromArray(this.filtered, child)
+                  // }
+                  if (this.filteredChildren.includes(child)) {
+                    this.removeItemFromArray(this.filteredChildren, child)
+                  }
+                  if (this.filteredBase.includes(child)) {
+                    // this.removeItemFromArray(this.filteredBase, child)
+                  }
+                })
+
+                // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
+                // happens outside of children loop to not duplicate unnecessarily
                 if (parentSelected) {
-                  this.map.setFeatureState({source: 'children', id: child}, {selected: true})
-                  this.selected.push(child)
-                  // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
+                  this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
+                  this.removeItemFromArray(this.selected, feature.id)
                 }
 
-                // TODO TEST AFTER COLLAPSE
-                // if (this.filtered.includes(child)) {
-                //   this.removeItemFromArray(this.filtered, child)
-                // }
-                if (this.filteredChildren.includes(child)) {
-                  this.removeItemFromArray(this.filteredChildren, child)
+                // // update all layers' filters
+                // const layers = ['base-hex', 'children']
+                // layers.forEach(layer => {
+                //   this.filterOutParentHexes(layer)
+                // })
+
+                if (feature.source === 'base-hex') {
+                  this.filterOutParentHexes('base-hex', this.filteredBase)
+                } else {
+                  // console.log('updated filtered children...', this.filteredChildren)
+                  this.filterOutParentHexes('children', this.filteredChildren)
                 }
-                if (this.filteredBase.includes(child)) {
-                  // this.removeItemFromArray(this.filteredBase, child)
-                }
-              })
-
-              // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
-              // happens outside of children loop to not duplicate unnecessarily
-              if (parentSelected) {
-                this.map.setFeatureState({source: 'children', id: feature.id}, {selected: false})
-                this.removeItemFromArray(this.selected, feature.id)
-              }
-
-              // // update all layers' filters
-              // const layers = ['base-hex', 'children']
-              // layers.forEach(layer => {
-              //   this.filterOutParentHexes(layer)
-              // })
-
-              if (feature.source === 'base-hex') {
-                this.filterOutParentHexes('base-hex', this.filteredBase)
-              } else {
-                // console.log('updated filtered children...', this.filteredChildren)
-                this.filterOutParentHexes('children', this.filteredChildren)
-              }
 
 
-              // if the clicked hex is in the children array, remove it from array when hex is filtered out
-              if (this.arrayIncludesItem(this.children, feature.id)) {
+                // if the clicked hex is in the children array, remove it from array when hex is filtered out
+                if (this.arrayIncludesItem(this.children, feature.id)) {
                   this.removeItemFromArray(this.children, feature.id)
+                }
+
+                // console.log('handle children')
+                // console.log('parent:', parent)
+                // console.log('filtered children:', this.filteredChildren)
+                // console.log('filtered base:', this.filteredBase)
+                // console.log('children:', this.children)
+
+                // console.log('SELECT MODE OFF')
+                // console.log('filtered:', this.filtered)
+                // console.log(feature)
+                // console.log('children:', this.children)
+
               }
+            } else {  // if selection mode is on
 
-              // console.log('handle children')
-              // console.log('parent:', parent)
-              // console.log('filtered children:', this.filteredChildren)
-              // console.log('filtered base:', this.filteredBase)
-              // console.log('children:', this.children)
+              // FIXME Sel mode false, click range erroneously deselects features
 
-              // console.log('SELECT MODE OFF')
-              // console.log('filtered:', this.filtered)
-              // console.log(feature)
-              // console.log('children:', this.children)
+              // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
+              // boolean feature property for range - set during tile generation
+              const isRange = feature.properties.isRange
+              // if feature is part of the default range on initial map load before feature state is set
+              const defaultRange = !Object.keys(feature.state).length && isRange
 
+              // console.log(isRange, defaultRange, feature.state.selected)
+
+              // update map feature state
+              this.map.setFeatureState(
+                {
+                  source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: 'hex' }),
+                  id: feature.id
+                },
+                { selected: defaultRange ? !isRange : !feature.state.selected }
+              )
+
+              this.updateSelected(feature)
+
+              // console.log(this.selected, this.selected.includes(feature.id))
             }
-          } else {  // if selection mode is on
-
-            // FIXME Sel mode false, click range erroneously deselects features
-
-            // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
-            // boolean feature property for range - set during tile generation
-            const isRange =  feature.properties.isRange
-            // if feature is part of the default range on initial map load before feature state is set
-            const defaultRange = !Object.keys(feature.state).length && isRange
-
-            // console.log(isRange, defaultRange, feature.state.selected)
-
-            // update map feature state
-            this.map.setFeatureState(
-              {source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id},
-              {selected: defaultRange ? !isRange : !feature.state.selected}
-            )
-
-            this.updateSelected(feature)
-
-            // console.log(this.selected, this.selected.includes(feature.id))
           }
         })
 
@@ -516,10 +568,10 @@
       })
     },
     methods: {
-      uniqueValues(array: any[]) {
+      uniqueValues(array: any[]): any[] {
         return Array.from(new Set(array))
       },
-      setChildFeatures() {
+      setChildFeatures(): void {
         // ensure that there are no duplicate children
         this.children = this.uniqueValues(this.children)
         // convert hex ids into geojson, preserving the indices
@@ -527,20 +579,20 @@
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
-      filterOutParentHexes(featureSource: string, array: string[]) {
+      filterOutParentHexes(featureSource: string, array: string[]): void {
         array = this.uniqueValues(array)
         // console.log(array.length)
         // console.log(array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
         // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
         this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
       },
-      removeItemFromArray(array: any[], item: any) {
+      removeItemFromArray(array: any[], item: any): void {
         array.splice(array.indexOf(item), 1)
       },
-      arrayIncludesItem(array: any[], item: any) {
+      arrayIncludesItem(array: any[], item: any): boolean {
         return array.includes(item)
       },
-      updateSelected(feature: any) {
+      updateSelected(feature: any): void {
         if (!this.selected.includes(feature.id)) {
           this.selected.push(feature.id)
           // console.log('pushed', feature.id)
@@ -568,7 +620,7 @@
         // formatted as [{x: 10, y: 10}, {x: 20, y: 20}]
         return [swPixel, nePixel]
       },
-      copyToClipboard() {
+      copyToClipboard(): void {
         navigator.clipboard.writeText(this.selectedOutput)
         this.copied = true
         setTimeout(() => {
