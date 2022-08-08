@@ -114,6 +114,7 @@
       ;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
       this.map = new M.Map({
         container: 'map-2',
+        // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
         zoom: 5.2,
@@ -155,8 +156,9 @@
           type: 'fill',
           // filter: ['match', ['get', 'h3_address'], range2, false, true],
           paint: {
-            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], 'deeppink', 'black'],
+            // 'fill-outline-color': 'white',
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
             'fill-opacity': 0.3,
             // 'fill-opacity': 1,
             // 'fill-outline-color': 'black',
@@ -195,15 +197,15 @@
 
 
         this.map.on('draw.create', (e: any) => {
-          // console.log(e)
+          console.log(e)
           // console.log()
           const bbox = this.bboxToPixel(e.features[0])
           // TODO Add option to user intersection or completely contained within?
           const features = this.map.queryRenderedFeatures(bbox, {layers: ['base-hex', 'children']})
           // console.log(features)
-          const intersection = []
+          const intersection: any[] = []
           features.forEach((feature: any) => {
-            console.log(feature)
+            // console.log(feature)
 
 
             const poly = turf.polygon(feature.geometry.coordinates)
@@ -214,7 +216,7 @@
 
           })
 
-          console.log(intersection)
+          // console.log(intersection)
           intersection.forEach(feature => {
             // TODO Rearrange so that selected is watched, which then updates feature state
             if (!this.selected.includes(feature.properties.h3_address)) {
