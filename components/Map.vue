@@ -34,14 +34,14 @@
 
   import {SELECTED} from '~/static/constants'
 
-  import * as T from '@turf/turf'
+  import * as turf from '@turf/turf'
 
 
   // import { GeoJSON } from 'GeoJSON'
   // @ts-ignore
   import MapboxDraw from '@mapbox/mapbox-gl-draw'
   import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
-  // import FreehandMode from 'mapbox-gl-draw-freehand-mode'
+  import FreehandMode from 'mapbox-gl-draw-freehand-mode'
   import intersect from '@turf/intersect'
   import bbox from '@turf/bbox'
   import area from '@turf/area'
@@ -126,12 +126,12 @@
         defaultMode: this.drawMode ? 'draw_polygon' : 'simple_select',
         controls: {
           polygon: true,
-          trash: true,
+          // trash: true,
         },
         // @ts-ignore
         modes: Object.assign(MapboxDraw.modes, {
-          // draw_polygon: FreehandMode,
-          draw_polygon: DrawRectangle,
+          draw_polygon: FreehandMode,
+          // draw_polygon: DrawRectangle,
         }),
       })
       this.map.addControl(this.draw, 'top-left')
@@ -201,12 +201,27 @@
           // TODO Add option to user intersection or completely contained within?
           const features = this.map.queryRenderedFeatures(bbox, {layers: ['base-hex', 'children']})
           // console.log(features)
+          const intersection = []
           features.forEach((feature: any) => {
-            // TODO Rearrange so that selected is watched, which then updates feature state
-            if (!this.selected.includes(feature.id)) {
-              this.selected.push(feature.id)
+            console.log(feature)
+
+
+            const poly = turf.polygon(feature.geometry.coordinates)
+            const int = turf.intersect(poly, turf.polygon(e.features[0].geometry.coordinates), {properties: feature.properties})
+            if (int) {
+              intersection.push(int);
             }
-            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: feature.id}, {selected: true})
+
+          })
+
+          console.log(intersection)
+          intersection.forEach(feature => {
+            // TODO Rearrange so that selected is watched, which then updates feature state
+            if (!this.selected.includes(feature.properties.h3_address)) {
+              this.selected.push(feature.properties.h3_address)
+            }
+            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: feature.properties.h3_address}, {selected: true})
+
           })
 
           this.draw.delete(e.features[0].id)

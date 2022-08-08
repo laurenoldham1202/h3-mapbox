@@ -21,6 +21,7 @@
     "geojson2h3": "^1.2.0",
     "h3-js": "^3.7.2",
     "mapbox-gl": "^2.9.2",
+    "mapbox-gl-draw-freehand-mode": "^2.1.0",
     "mapbox-gl-draw-rectangle-mode": "^1.0.4",
     "nuxt": "^2.15.8",
     "vue": "^2.6.14",
