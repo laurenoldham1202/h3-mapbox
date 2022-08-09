@@ -280,7 +280,6 @@
 
 
 
-        // TODO ADJUST RANGE 2-5
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
 
@@ -291,7 +290,7 @@
             const clickedRes = h3.h3GetResolution(feature.id)
             // console.log(clickedRes)
 
-            if (clickedRes >= 4) {
+            if (clickedRes >= 3) {
               // parent of clicked feature
               const parent = h3.h3ToParent(feature.id, clickedRes - 1)
               // console.log(parent)
@@ -315,7 +314,7 @@
               // empty array for all children through res 6 for the selected parent hex
               const allChildren: any[] = []
               // all possible resolutions on the map
-              const resolutions = [3, 4, 5, 6]
+              const resolutions = [2, 3, 4, 5]
               resolutions.forEach((resolution: number) => {
                 if (resolution >= clickedRes) {
                   // for each res, find children and push to array
@@ -396,7 +395,7 @@
             if (!selectMode) {
               // TODO Combine res restriction and selectMode conditions?
               // only allow user to drill down to h3 res 6
-              if (res <= 6) {
+              if (res <= 5) {
 
                 // console.log('BEFORE CLICK filtered base:', this.filteredBase)
 
@@ -431,7 +430,6 @@
                     // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
                   }
 
-                  // TODO TEST AFTER COLLAPSE
                   // if (this.filtered.includes(child)) {
                   //   this.removeItemFromArray(this.filtered, child)
                   // }
