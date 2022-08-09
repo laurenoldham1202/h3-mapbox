@@ -26,6 +26,8 @@
         </option>
       </select>
       <br>
+
+      <!-- TODO Add warning before switching seasons? Auto save or send? -->
       <select v-model="season">
         <option v-for="option in seasonOptions" :value="option.value">
           {{ option.text }}
@@ -33,8 +35,8 @@
       </select>
 
       <br>
-      <input type="checkbox" id="checkbox" v-model="rangeOnly">
-      <label for="checkbox">Selected range only</label>
+<!--      <input type="checkbox" id="checkbox" v-model="rangeOnly">-->
+<!--      <label for="checkbox">Selected range only</label>-->
 
 <!--      <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>-->
 <!--      <button @click="print">print filters</button>-->
@@ -57,7 +59,7 @@
   import * as h3 from 'h3-js'
   import 'mapbox-gl/dist/mapbox-gl.css'
 
-  import {SELECTED} from '~/static/constants'
+  import {SELECTED, ALDFLY_SELECTED} from '~/static/constants'
 
   import * as turf from '@turf/turf'
 
@@ -85,7 +87,8 @@
       draw: undefined as any,
       filtered: [] as any[],
       children: [] as any[],
-      selected: JSON.parse(JSON.stringify(SELECTED)) as any[],
+      // selected: JSON.parse(JSON.stringify(SELECTED)) as any[],
+      selected: [] as any[],
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
       copied: false,
@@ -113,6 +116,15 @@
       }
     },
     watch: {
+      season() {
+        console.log(this.season)
+
+        this.selected = ALDFLY_SELECTED[this.season]
+
+        this.filterOutParentHexes('base-hex', this.filteredBase)
+        this.filterOutParentHexes('children', this.filteredChildren)
+
+      },
       // TODO Add clear all selections, reset to initial range, etc.
       rangeOnly() {
 
@@ -152,6 +164,10 @@
       }
     },
     mounted(): void {
+
+      // TODO Make dynamic
+      this.selected = ALDFLY_SELECTED[this.season]
+
       ;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
       this.map = new M.Map({
         container: 'map-2',
