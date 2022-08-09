@@ -4,10 +4,19 @@
 
     <div id="map-2"></div>
 
-    <div class="sidebar" style="padding: 0.5rem">
+    <div class="sidebar" style="padding: 0.5rem; line-height: 30px;">
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
       <!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
 
+      SELECT: <strong>CLICK</strong> a grey hex
+      <br>
+      DESELECT: <strong>CLICK</strong> a pink hex
+      <br>
+      REFINE: <strong>CLICK + SHIFT</strong>
+      <br>
+      COLLAPSE: <strong>RIGHT CLICK</strong>
+
+      <hr>
       <input type="checkbox" id="checkbox" v-model="rangeOnly">
       <label for="checkbox">Selected range only</label>
 
