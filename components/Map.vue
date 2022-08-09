@@ -142,7 +142,7 @@
         // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 5.2,
+        zoom: 2,
         doubleClickZoom: false,
         boxZoom: false,
       })
@@ -225,7 +225,7 @@
 
 
         this.map.on('draw.create', (e: any) => {
-          console.log(e)
+          // console.log(e)
           // console.log()
           const bbox = this.bboxToPixel(e.features[0])
           // TODO Add option to user intersection or completely contained within?
@@ -280,6 +280,7 @@
 
 
 
+        // TODO ADJUST RANGE 2-5
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
 
@@ -298,20 +299,6 @@
               // console.log(this.children.includes(parent), parent)
               // add parent to children layer to keep totally separate from filtered based-hex values
               this.children.push(parent)
-              // this.setChildFeatures()
-
-              // IF COLLAPSING CHILD -
-              // get parent
-              // add parent to children
-              // get ALL children of parent
-              // remove children of parent from children arr
-              //
-              // IF COLLAPSING PARENT -
-              // get parent
-              // add parent to children
-              // get ALL children of parent
-              // remove children of parent from children arr
-              // filter all children from base-hex
 
 
                 // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
@@ -359,24 +346,6 @@
 
               } else {
 
-                // console.log('CHILDREN BEFORE:', this.filteredChildren)
-
-
-                // FIXME base hex res 3, drill down to res 6 in middle, then collapse back up until hex disappears
-                // FIXME res 3 drill, drill - base hex 6 collapse, collapse neighbor, collapse first collapse, then click first drilled child
-
-                // console.log('filtered children BEFORE:', this.filteredChildren)
-                // console.log('filtered base:', this.filteredBase)
-                // console.log('children BEFORE:', this.children)
-
-                this.filteredChildren.forEach(child => {
-                  if (this.children.includes(child)) {
-                    // console.log('PROBLEM CHILD!!!!!!!!!', child)
-                    // this.removeItemFromArray(this.children, child)
-                    // this.children.push(child)
-                  }
-                })
-
                 // FIXME collapse 5, explode same, explode neighbor 6
 
                 this.removeItemFromArray(this.filteredChildren, parent)
@@ -387,18 +356,7 @@
                 this.filterOutParentHexes('base-hex', this.filteredBase)
 
 
-                // console.log('CHILDREN AFTER:', this.filteredChildren)
-
-
-
               }
-
-              // console.log('handle children')
-              // console.log('parent:', parent)
-              // console.log(clickedRes)
-              // console.log('filtered children:', this.filteredChildren)
-              // console.log('COL filtered base:', this.filteredBase)
-              // console.log('children:', this.children)
 
               // this.filterOutParentHexes('children', this.filteredChildren)
               this.setChildFeatures()
@@ -412,64 +370,8 @@
             }
           }
 
-
-
-          // // TODO HAndle edges where you can explode/collapse children and it interferes with handling range features directly
-          // // selected feature - limited only to children layer (i.e. can't go past initial 3 res view)
-          // const feature = this.map.queryRenderedFeatures(e.point, {layers: ['children']})[0]
-          // if (feature) {
           //   // TODO Replace all w h3GetResolution
-          //   // desired resolution, one level up from selected res
-          //   const res = parseInt(feature.id[1]) - 1
-          //   // parent of clicked feature
-          //   const parent = h3.h3ToParent(feature.id, res)
-          //
-          //   // if the selected parent feature is currently filtered out of map, remove it from the filtered list so it will display
-          //   if (this.arrayIncludesItem(this.filtered, parent)) {
-          //     this.removeItemFromArray(this.filtered, parent)
-          //   }
-          //   // if clicking on res 4, use base-hex layer instead of children layer
-          //   const layer = res === 3 ? 'base-hex' : feature.source
-          //   // update proper map layer with unfiltered parents
-          //   this.filterOutParentHexes(layer)
-          //
-          //   // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
-          //   // match parent selected state to clicked hex selected state, push to array if selected
-          //   this.map.setFeatureState({
-          //     source: layer,
-          //     ...(layer === 'base-hex' && { sourceLayer: 'hex' }),
-          //     id: parent}, { selected: this.arrayIncludesItem(this.selected, feature.id)})
-          //   if (this.arrayIncludesItem(this.selected, feature.id)) {
-          //     this.selected.push(parent)
-          //   }
-          //
-          //   // empty array for all children through res 6 for the selected parent hex
-          //   const allChildren: any[] = []
-          //   // all possible resolutions on the map
-          //   const resolutions = [3, 4, 5, 6]
-          //   resolutions.forEach((resolution: number) => {
-          //     if (resolution >= (res + 1)) {
-          //       // for each res, find children and push to array
-          //       allChildren.push(...h3.h3ToChildren(parent, resolution))
-          //     }
-          //   })
-          //
-          //   allChildren.forEach((child: string) => {
-          //     // if a child hex is already plotted on the map, remove it from the array
-          //     if (this.children.includes(child)) {
-          //       this.removeItemFromArray(this.children, child)
-          //     }
-          //
-          //     // if a child hex is selected (pink), turn off its selected map state and remove from selected array
-          //     if (this.selected.includes(child)) {
-          //       this.removeItemFromArray(this.selected, child)
-          //       this.map.setFeatureState({source: 'children', id: child}, {selected: false})
-          //     }
-          //   })
-          //
-          //   // update map with removed children hexes
-          //   this.setChildFeatures()
-          // }
+
 
         })
 
@@ -548,11 +450,6 @@
                   this.removeItemFromArray(this.selected, feature.id)
                 }
 
-                // // update all layers' filters
-                // const layers = ['base-hex', 'children']
-                // layers.forEach(layer => {
-                //   this.filterOutParentHexes(layer)
-                // })
 
                 if (feature.source === 'base-hex') {
                   this.filterOutParentHexes('base-hex', this.filteredBase)
@@ -561,22 +458,10 @@
                   this.filterOutParentHexes('children', this.filteredChildren)
                 }
 
-
                 // if the clicked hex is in the children array, remove it from array when hex is filtered out
                 if (this.arrayIncludesItem(this.children, feature.id)) {
                   this.removeItemFromArray(this.children, feature.id)
                 }
-
-                // console.log('handle children')
-                // console.log('parent:', parent)
-                // console.log('filtered children:', this.filteredChildren)
-                // console.log('filtered base:', this.filteredBase)
-                // console.log('children:', this.children)
-
-                // console.log('SELECT MODE OFF')
-                // console.log('filtered:', this.filtered)
-                // console.log(feature)
-                // console.log('children:', this.children)
 
               }
             } else {  // if selection mode is on
@@ -630,8 +515,19 @@
         array = this.uniqueValues(array)
         // console.log(array.length)
         // console.log(array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
+
+        // TODO How to handle children for different seasons?
+        // TODO only apply breeding filter to base-hex?
+        const seasonFilter = ['==', ['get', 'season'], 'breeding']
+        const hexFilter = ['match', ['get', 'h3_address'], array, false, true]
         // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
-        this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
+        // this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
+        // this.map.setFilter(featureSource, array.length ? ['all', seasonFilter, ['match', ['get', 'h3_address'], array, false, true]] : seasonFilter)
+        if (featureSource === 'base-hex') {
+          this.map.setFilter(featureSource, array.length ? ['all', seasonFilter, hexFilter] : seasonFilter)
+        } else {
+          this.map.setFilter(featureSource, array.length ? hexFilter : null)
+        }
       },
       removeItemFromArray(array: any[], item: any): void {
         array.splice(array.indexOf(item), 1)
