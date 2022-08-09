@@ -25,6 +25,12 @@
           {{ option.text }}
         </option>
       </select>
+      <br>
+      <select v-model="season">
+        <option v-for="option in seasonOptions" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
 
       <br>
       <input type="checkbox" id="checkbox" v-model="rangeOnly">
@@ -89,11 +95,21 @@
         { text: 'Alder Flycatcher', value: 'aldfly' },
         { text: 'American Oystercatcher', value: 'ameoys' },
       ],
+      season: 'breeding',
+      seasonOptions: [
+        { text: 'breeding', value: 'breeding' },
+        { text: 'nonbreeding', value: 'nonbreeding' },
+        { text: 'prebreeding_migration', value: 'prebreeding_migration' },
+        { text: 'postbreeding_migration', value: 'postbreeding_migration' },
+      ],
       // selectedOutput: 'bloop'
     }),
     computed: {
       selectedOutput(): string {
         return JSON.stringify(this.selected)
+      },
+      seasonFilter(): Array<any> {
+        return ['==', ['get', 'season'], this.season]
       }
     },
     watch: {
@@ -181,7 +197,7 @@
           source: 'base-hex',
           'source-layer': this.species,
           type: 'fill',
-          filter: ['==', ['get', 'season'], 'breeding'],
+          filter: this.seasonFilter,
           // filter: ['match', ['get', 'h3_address'], range2, false, true],
           paint: {
             // 'fill-outline-color': 'white',
@@ -386,9 +402,7 @@
             const selectMode = !e.originalEvent.shiftKey
 
             const feature = e.features[0]
-            console.log(feature)
             const res = parseInt(feature.id[1]) + 1
-            // const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
 
 
             // if select mode is off, i.e. if user is expanding or collapsing shapes
@@ -418,6 +432,7 @@
 
                 // is parent hex selected on the map
                 // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
+                // TODO Get updated selected hexes for this to work with aldfly
                 const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
                 // console.log(this.selected, parentSelected)
 
@@ -516,13 +531,13 @@
 
         // TODO How to handle children for different seasons?
         // TODO only apply breeding filter to base-hex?
-        const seasonFilter = ['==', ['get', 'season'], 'breeding']
+        // const seasonFilter = ['==', ['get', 'season'], 'breeding']
         const hexFilter = ['match', ['get', 'h3_address'], array, false, true]
         // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
         // this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
         // this.map.setFilter(featureSource, array.length ? ['all', seasonFilter, ['match', ['get', 'h3_address'], array, false, true]] : seasonFilter)
         if (featureSource === 'base-hex') {
-          this.map.setFilter(featureSource, array.length ? ['all', seasonFilter, hexFilter] : seasonFilter)
+          this.map.setFilter(featureSource, array.length ? ['all', this.seasonFilter, hexFilter] : this.seasonFilter)
         } else {
           this.map.setFilter(featureSource, array.length ? hexFilter : null)
         }
