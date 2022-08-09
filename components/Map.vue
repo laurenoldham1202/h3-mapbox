@@ -4,19 +4,22 @@
 
     <div id="map-2"></div>
 
-    <div class="sidebar" style="padding: 0.5rem; line-height: 30px;">
+    <div class="sidebar" style="padding: 0.5rem;">
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
       <!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
 
-      SELECT: <strong>CLICK</strong> a grey hex
-      <br>
-      DESELECT: <strong>CLICK</strong> a pink hex
-      <br>
-      REFINE: <strong>CLICK + SHIFT</strong>
-      <br>
-      COLLAPSE: <strong>RIGHT CLICK</strong>
+      <span style="line-height: 30px;">
+        SELECT: <strong>CLICK</strong> a grey hex
+        <br>
+        DESELECT: <strong>CLICK</strong> a pink hex
+        <br>
+        REFINE: <strong>CLICK + SHIFT</strong>
+        <br>
+        COLLAPSE: <strong>RIGHT CLICK</strong>
+      </span>
 
       <hr>
+      <input type="select">
       <input type="checkbox" id="checkbox" v-model="rangeOnly">
       <label for="checkbox">Selected range only</label>
 
@@ -50,6 +53,7 @@
   // @ts-ignore
   import MapboxDraw from '@mapbox/mapbox-gl-draw'
   import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
+  // @ts-ignore
   import FreehandMode from 'mapbox-gl-draw-freehand-mode'
   import intersect from '@turf/intersect'
   import bbox from '@turf/bbox'
@@ -152,8 +156,8 @@
         this.map.addSource('base-hex', {
           type: 'vector',
           promoteId: 'h3_address',
-          // tiles: ['http://localhost:8083/data/all_clipped/{z}/{x}/{y}.pbf'],
-          tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/test-2/{z}/{x}/{y}.pbf'],
+          tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
+          // tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/test-2/{z}/{x}/{y}.pbf'],
           maxzoom: 8,
         })
 
@@ -161,13 +165,14 @@
         this.map.addLayer({
           id: 'base-hex',
           source: 'base-hex',
-          'source-layer': 'hex',
+          'source-layer': 'aldfly',
           type: 'fill',
+          filter: ['==', ['get', 'season'], 'breeding'],
           // filter: ['match', ['get', 'h3_address'], range2, false, true],
           paint: {
             // 'fill-outline-color': 'white',
             // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
             'fill-opacity': 0.3,
             // 'fill-opacity': 1,
             // 'fill-outline-color': 'black',
