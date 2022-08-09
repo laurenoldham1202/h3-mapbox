@@ -19,7 +19,14 @@
       </span>
 
       <hr>
-      <input type="select">
+
+      <select v-model="species">
+        <option v-for="option in options" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
+
+      <br>
       <input type="checkbox" id="checkbox" v-model="rangeOnly">
       <label for="checkbox">Selected range only</label>
 
@@ -76,7 +83,12 @@
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
       copied: false,
-      drawMode: true,
+      drawMode: false,
+      species: 'aldfly',
+      options: [
+        { text: 'Alder Flycatcher', value: 'aldfly' },
+        { text: 'American Oystercatcher', value: 'ameoys' },
+      ],
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -135,6 +147,8 @@
         boxZoom: false,
       })
 
+      this.map.doubleClickZoom.disable()
+
       this.draw = new MapboxDraw({
         displayControlsDefault: false,
         defaultMode: this.drawMode ? 'draw_polygon' : 'simple_select',
@@ -165,7 +179,7 @@
         this.map.addLayer({
           id: 'base-hex',
           source: 'base-hex',
-          'source-layer': 'aldfly',
+          'source-layer': this.species,
           type: 'fill',
           filter: ['==', ['get', 'season'], 'breeding'],
           // filter: ['match', ['get', 'h3_address'], range2, false, true],
@@ -236,7 +250,7 @@
             if (!this.selected.includes(feature.properties.h3_address)) {
               this.selected.push(feature.properties.h3_address)
             }
-            this.map.setFeatureState({source: 'base-hex', sourceLayer: 'hex', id: feature.properties.h3_address}, {selected: true})
+            this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: feature.properties.h3_address}, {selected: true})
 
           })
 
@@ -463,6 +477,7 @@
         // LEFT CLICK - select, deselect, or extrapolate features
         this.map.on('click', ['base-hex', 'children'], (e: any) => {
 
+          // console.log(e)
           // console.log(e.originalEvent.shiftKey)
 
           if (!this.drawMode) {
@@ -470,6 +485,7 @@
             const selectMode = !e.originalEvent.shiftKey
 
             const feature = e.features[0]
+            console.log(feature)
             const res = parseInt(feature.id[1]) + 1
             // const layer = res === 4 ? 'base-hex' : feature.source  // TODO CHECK THIS
 
@@ -569,7 +585,7 @@
 
               // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
               // boolean feature property for range - set during tile generation
-              const isRange = feature.properties.isRange
+              const isRange = feature.properties.in_range
               // if feature is part of the default range on initial map load before feature state is set
               const defaultRange = !Object.keys(feature.state).length && isRange
 
@@ -578,7 +594,7 @@
               // update map feature state
               this.map.setFeatureState(
                 {
-                  source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: 'hex' }),
+                  source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: this.species }),
                   id: feature.id
                 },
                 { selected: defaultRange ? !isRange : !feature.state.selected }
