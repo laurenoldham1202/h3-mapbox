@@ -34,6 +34,14 @@
         </option>
       </select>
 
+      <div style="width: 300px; border: 1px solid red; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;">
+        CHANGE SEASONS?
+        <br>Changing seasons will clear your map selections and cannot be retrieved.
+        <br>
+        <button @click="confirmSeasonChange = false">Cancel</button>
+        <button @click="confirmSeasonChange = !confirmSeasonChange">Change season</button>
+
+      </div>
       <br>
 <!--      <input type="checkbox" id="checkbox" v-model="rangeOnly">-->
 <!--      <label for="checkbox">Selected range only</label>-->
@@ -105,6 +113,7 @@
         { text: 'prebreeding_migration', value: 'prebreeding_migration' },
         { text: 'postbreeding_migration', value: 'postbreeding_migration' },
       ],
+      confirmSeasonChange: false,
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -116,13 +125,25 @@
       }
     },
     watch: {
+      confirmSeasonChange(confirm) {
+        if (confirm) {
+          console.log(this.season)
+
+          // TODO This doesn't clear select state from map
+          this.selected = ALDFLY_SELECTED[this.season]
+
+          this.filterOutParentHexes('base-hex', this.filteredBase)
+          this.filterOutParentHexes('children', this.filteredChildren)
+        }
+      },
       season() {
-        console.log(this.season)
-
-        this.selected = ALDFLY_SELECTED[this.season]
-
-        this.filterOutParentHexes('base-hex', this.filteredBase)
-        this.filterOutParentHexes('children', this.filteredChildren)
+        // console.log(this.season)
+        //
+        // // TODO This doesn't clear select state from map
+        // this.selected = ALDFLY_SELECTED[this.season]
+        //
+        // this.filterOutParentHexes('base-hex', this.filteredBase)
+        // this.filterOutParentHexes('children', this.filteredChildren)
 
       },
       // TODO Add clear all selections, reset to initial range, etc.
