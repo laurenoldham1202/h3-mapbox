@@ -16,6 +16,10 @@
         REFINE: <strong>CLICK + SHIFT</strong>
         <br>
         COLLAPSE: <strong>RIGHT CLICK</strong>
+        <br>
+        LASSO SELECT: <strong>SHIFT + DRAG</strong>
+        <br>
+        LASSO DESELECT: <strong>CTRL + DRAG</strong>
       </span>
 
       <hr>
@@ -28,17 +32,17 @@
       <br>
 
       <!-- TODO Add warning before switching seasons? Auto save or send? -->
-      <select v-model="season">
+      <select :value="season"  @input="onSeasonChange">
         <option v-for="option in seasonOptions" :value="option.value">
           {{ option.text }}
         </option>
       </select>
 
-      <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="changeSeason">
+      <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="displayMsg">
         CHANGE SEASONS?
         <br>Changing seasons will clear your map selections and cannot be retrieved.
         <br>
-        <button @click="confirmSeasonChange = false; changeSeason = false">Cancel</button>
+        <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
         <button @click="seasonChange">Change season</button>
 
       </div>
@@ -104,7 +108,7 @@
       species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
-        { text: 'American Oystercatcher', value: 'ameoys' },
+        // { text: 'American Oystercatcher', value: 'ameoys' },
       ],
       season: 'breeding',
       seasonOptions: [
@@ -114,8 +118,9 @@
         { text: 'postbreeding_migration', value: 'postbreeding_migration' },
       ],
       confirmSeasonChange: false,
-      changeSeason: false,
+      displayMsg: false,
       deselectLasso: false,
+      seasonChangeEvent: undefined as any,
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -152,6 +157,7 @@
           this.changeSeason = false
         }
       },
+      // TODO DONT UPDATE SELECT COMPONENT SEASON UNTIL CONFIRM, LEAVE ON CANCEL
       season() {
         this.changeSeason = true
         // console.log(this.season)
@@ -594,10 +600,20 @@
       })
     },
     methods: {
+      onSeasonChange(input: any) {
+        this.displayMsg = true
+        // console.log(input)
+        this.seasonChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+        this.season = this.seasonChangeEvent.newVal
+        // console.log(this.seasonChangeEvent)
+      },
       seasonChange() {
+        console.log('season change....')
         this.confirmSeasonChange = true
+        this.season = this.seasonChangeEvent.newVal
         setTimeout(() => {
           this.confirmSeasonChange = false
+          this.displayMsg = false
         }, 200)
       },
       uniqueValues(array: any[]): any[] {
