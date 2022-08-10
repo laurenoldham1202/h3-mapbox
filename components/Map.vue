@@ -225,7 +225,7 @@
         displayControlsDefault: false,
         defaultMode: this.drawMode ? 'draw_polygon' : 'simple_select',
         controls: {
-          // polygon: true,
+          polygon: true,
           // trash: true,
         },
         // @ts-ignore
@@ -300,11 +300,15 @@
 
         this.map.on('mousedown', (e: any) => {
           console.log(e.originalEvent)
-          this.draw.changeMode('draw_polygon')
-          this.deselectLasso = e.originalEvent.shiftKey
+          // this.draw.changeMode('draw_polygon')
+
+          if (e.originalEvent.shiftKey || e.originalEvent.ctrlKey) {
+            this.draw.changeMode('draw_polygon')
+          }
+          this.deselectLasso = e.originalEvent.ctrlKey
         })
         this.map.on('mouseup', (e: any) => {
-          console.log(e.originalEvent)
+          // console.log(e.originalEvent)
           this.draw.changeMode('simple_select')
           // this.deselectLasso = e.originalEvent.shiftKey
         })
@@ -336,7 +340,7 @@
             // TODO Rearrange so that selected is watched, which then updates feature state
             if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
               this.selected.push(feature.properties.h3_address)
-            } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso){
+            } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
               // console.log(this.selected.length)
               this.removeItemFromArray(this.selected, feature.properties.h3_address)
             }
