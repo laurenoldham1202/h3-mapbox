@@ -153,8 +153,6 @@
             this.selected.map(id => {this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: id}, {selected: true})})
           }
 
-          console.log(this.selected)
-
           this.filterOutParentHexes('base-hex', this.filteredBase)
           this.filterOutParentHexes('children', this.filteredChildren)
           this.displayMsg = false
@@ -213,7 +211,8 @@
     mounted(): void {
 
       // TODO Make dynamic
-      this.selected = ALDFLY_SELECTED[this.season]
+      // @ts-ignore
+      this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
 
       ;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
       this.map = new M.Map({
@@ -252,8 +251,8 @@
           type: 'vector',
           promoteId: 'h3_address',
           // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
-          tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
-          // tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/test-2/{z}/{x}/{y}.pbf'],
+          // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
+          tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/aldfly/{z}/{x}/{y}.pbf'],
           maxzoom: 8,
         })
 
@@ -355,6 +354,7 @@
               this.removeItemFromArray(this.selected, feature.properties.h3_address)
             }
             this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
+            this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
 
           })
 
