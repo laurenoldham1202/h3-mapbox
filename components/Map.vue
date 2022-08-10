@@ -100,13 +100,13 @@
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
       copied: false,
-      drawMode: false,
+      drawMode: true,
       species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
         { text: 'American Oystercatcher', value: 'ameoys' },
       ],
-      season: 'breeding',
+      season: 'nonbreeding',
       seasonOptions: [
         { text: 'breeding', value: 'breeding' },
         { text: 'nonbreeding', value: 'nonbreeding' },
@@ -115,6 +115,7 @@
       ],
       confirmSeasonChange: false,
       changeSeason: false,
+      deselectLasso: false,
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -214,6 +215,7 @@
         zoom: 2,
         doubleClickZoom: false,
         boxZoom: false,
+        dragRotate: false,
         // projection: 'equalEarth'
       })
 
@@ -256,7 +258,8 @@
           paint: {
             // 'fill-outline-color': 'white',
             // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
+            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'deeppink', 'black'],
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
             'fill-opacity': 0.3,
             // 'fill-opacity': 1,
             // 'fill-outline-color': 'black',
@@ -294,7 +297,15 @@
 
 
 
+
+        this.map.on('mousedown', (e: any) => {
+          console.log(e.originalEvent)
+          this.deselectLasso = e.originalEvent.shiftKey
+
+        })
+
         this.map.on('draw.create', (e: any) => {
+          console.log(this.deselectLasso)
           // console.log(e)
           // console.log()
           const bbox = this.bboxToPixel(e.features[0])
@@ -317,15 +328,21 @@
           // console.log(intersection)
           intersection.forEach(feature => {
             // TODO Rearrange so that selected is watched, which then updates feature state
-            if (!this.selected.includes(feature.properties.h3_address)) {
+            if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
               this.selected.push(feature.properties.h3_address)
+            } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso){
+              console.log(this.selected.length)
+              this.removeItemFromArray(this.selected, feature.properties.h3_address)
             }
-            this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: feature.properties.h3_address}, {selected: true})
+            this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
 
           })
 
+          console.log(this.selected)
+
           this.draw.delete(e.features[0].id)
         })
+
 
         this.map.on('draw.update', (e: any) => {
           // console.log('update')
@@ -449,7 +466,7 @@
         this.map.on('click', ['base-hex', 'children'], (e: any) => {
 
           // console.log(e)
-          // console.log(e.originalEvent.shiftKey)
+          // console.log('CLICK', e.originalEvent.shiftKey)
 
           if (!this.drawMode) {
 
