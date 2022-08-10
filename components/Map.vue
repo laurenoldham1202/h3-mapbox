@@ -34,12 +34,12 @@
         </option>
       </select>
 
-      <div style="width: 300px; border: 1px solid red; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;">
+      <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="changeSeason">
         CHANGE SEASONS?
         <br>Changing seasons will clear your map selections and cannot be retrieved.
         <br>
-        <button @click="confirmSeasonChange = false">Cancel</button>
-        <button @click="confirmSeasonChange = !confirmSeasonChange">Change season</button>
+        <button @click="confirmSeasonChange = false; changeSeason = false">Cancel</button>
+        <button @click="seasonChange">Change season</button>
 
       </div>
       <br>
@@ -114,6 +114,7 @@
         { text: 'postbreeding_migration', value: 'postbreeding_migration' },
       ],
       confirmSeasonChange: false,
+      changeSeason: false,
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -127,16 +128,31 @@
     watch: {
       confirmSeasonChange(confirm) {
         if (confirm) {
-          console.log(this.season)
+
+
+          if (this.filteredBase.length) {
+            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          }
+
+          // TODO Need to ensure base-hex has selected features
+          if (this.selected.length) {
+            this.selected.map(id => {this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: id}, {selected: false})})
+          }
 
           // TODO This doesn't clear select state from map
           this.selected = ALDFLY_SELECTED[this.season]
 
+          if (this.selected.length) {
+            this.selected.map(id => {this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: id}, {selected: true})})
+          }
+
           this.filterOutParentHexes('base-hex', this.filteredBase)
           this.filterOutParentHexes('children', this.filteredChildren)
+          this.changeSeason = false
         }
       },
       season() {
+        this.changeSeason = true
         // console.log(this.season)
         //
         // // TODO This doesn't clear select state from map
@@ -198,6 +214,7 @@
         zoom: 2,
         doubleClickZoom: false,
         boxZoom: false,
+        // projection: 'equalEarth'
       })
 
       this.map.doubleClickZoom.disable()
@@ -550,6 +567,12 @@
       })
     },
     methods: {
+      seasonChange() {
+        this.confirmSeasonChange = true
+        setTimeout(() => {
+          this.confirmSeasonChange = false
+        }, 200)
+      },
       uniqueValues(array: any[]): any[] {
         return Array.from(new Set(array))
       },
