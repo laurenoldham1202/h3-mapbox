@@ -100,13 +100,13 @@
       filteredBase: [] as any[],
       filteredChildren: [] as any[],
       copied: false,
-      drawMode: true,
+      drawMode: false,
       species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
         { text: 'American Oystercatcher', value: 'ameoys' },
       ],
-      season: 'nonbreeding',
+      season: 'breeding',
       seasonOptions: [
         { text: 'breeding', value: 'breeding' },
         { text: 'nonbreeding', value: 'nonbreeding' },
@@ -225,7 +225,7 @@
         displayControlsDefault: false,
         defaultMode: this.drawMode ? 'draw_polygon' : 'simple_select',
         controls: {
-          polygon: true,
+          // polygon: true,
           // trash: true,
         },
         // @ts-ignore
@@ -300,12 +300,18 @@
 
         this.map.on('mousedown', (e: any) => {
           console.log(e.originalEvent)
+          this.draw.changeMode('draw_polygon')
           this.deselectLasso = e.originalEvent.shiftKey
-
+        })
+        this.map.on('mouseup', (e: any) => {
+          console.log(e.originalEvent)
+          this.draw.changeMode('simple_select')
+          // this.deselectLasso = e.originalEvent.shiftKey
         })
 
+
         this.map.on('draw.create', (e: any) => {
-          console.log(this.deselectLasso)
+          // console.log(this.deselectLasso)
           // console.log(e)
           // console.log()
           const bbox = this.bboxToPixel(e.features[0])
@@ -331,14 +337,14 @@
             if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
               this.selected.push(feature.properties.h3_address)
             } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso){
-              console.log(this.selected.length)
+              // console.log(this.selected.length)
               this.removeItemFromArray(this.selected, feature.properties.h3_address)
             }
             this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
 
           })
 
-          console.log(this.selected)
+          // console.log(this.selected)
 
           this.draw.delete(e.features[0].id)
         })
