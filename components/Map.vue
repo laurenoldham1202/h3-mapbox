@@ -146,20 +146,23 @@
           }
 
           // TODO This doesn't clear select state from map
-          this.selected = ALDFLY_SELECTED[this.season]
+          // @ts-ignore
+          this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
 
           if (this.selected.length) {
             this.selected.map(id => {this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: id}, {selected: true})})
           }
 
+          console.log(this.selected)
+
           this.filterOutParentHexes('base-hex', this.filteredBase)
           this.filterOutParentHexes('children', this.filteredChildren)
-          this.changeSeason = false
+          this.displayMsg = false
         }
       },
       // TODO DONT UPDATE SELECT COMPONENT SEASON UNTIL CONFIRM, LEAVE ON CANCEL
       season() {
-        this.changeSeason = true
+        this.displayMsg = true
         // console.log(this.season)
         //
         // // TODO This doesn't clear select state from map
@@ -248,6 +251,7 @@
         this.map.addSource('base-hex', {
           type: 'vector',
           promoteId: 'h3_address',
+          // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
           tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
           // tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/test-2/{z}/{x}/{y}.pbf'],
           maxzoom: 8,
@@ -305,7 +309,7 @@
 
 
         this.map.on('mousedown', (e: any) => {
-          console.log(e.originalEvent)
+          // console.log(e.originalEvent)
           // this.draw.changeMode('draw_polygon')
 
           if (e.originalEvent.shiftKey || e.originalEvent.ctrlKey) {
@@ -489,6 +493,7 @@
             const selectMode = !e.originalEvent.shiftKey
 
             const feature = e.features[0]
+            console.log(feature)
             const res = parseInt(feature.id[1]) + 1
 
 
@@ -611,10 +616,12 @@
         console.log('season change....')
         this.confirmSeasonChange = true
         this.season = this.seasonChangeEvent.newVal
+
+        this.displayMsg = false
+
         setTimeout(() => {
           this.confirmSeasonChange = false
-          this.displayMsg = false
-        }, 200)
+        }, 2000)
       },
       uniqueValues(array: any[]): any[] {
         return Array.from(new Set(array))
