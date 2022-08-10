@@ -389,96 +389,98 @@
 
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
+          if (!this.drawMode) {
 
-          const feature = this.map.queryRenderedFeatures(e.point, {layers: allLayers})[0]
-          const source = feature.source
-          if (feature) {
-            // console.log(feature.id)
-            const clickedRes = h3.h3GetResolution(feature.id)
-            // console.log(clickedRes)
+            const feature = this.map.queryRenderedFeatures(e.point, { layers: allLayers })[0]
+            const source = feature.source
+            if (feature) {
+              // console.log(feature.id)
+              const clickedRes = h3.h3GetResolution(feature.id)
+              // console.log(clickedRes)
 
-            if (clickedRes >= 3) {
-              // parent of clicked feature
-              const parent = h3.h3ToParent(feature.id, clickedRes - 1)
-              // console.log(parent)
+              if (clickedRes >= 3) {
+                // parent of clicked feature
+                const parent = h3.h3ToParent(feature.id, clickedRes - 1)
+                // console.log(parent)
 
-              // console.log(this.children.includes(parent), parent)
-              // add parent to children layer to keep totally separate from filtered based-hex values
-              this.children.push(parent)
+                // console.log(this.children.includes(parent), parent)
+                // add parent to children layer to keep totally separate from filtered based-hex values
+                this.children.push(parent)
 
 
                 // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
                 // match parent selected state to clicked hex selected state, push to array if selected
                 this.map.setFeatureState({
                   source: 'children',
-                  id: parent}, { selected: this.arrayIncludesItem(this.selected, feature.id)})
+                  id: parent
+                }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
                 if (this.arrayIncludesItem(this.selected, feature.id)) {
                   this.selected.push(parent)
                 }
 
 
+                // empty array for all children through res 6 for the selected parent hex
+                const allChildren: any[] = []
+                // all possible resolutions on the map
+                const resolutions = [2, 3, 4, 5]
+                resolutions.forEach((resolution: number) => {
+                  if (resolution >= clickedRes) {
+                    // for each res, find children and push to array
+                    allChildren.push(...h3.h3ToChildren(parent, resolution))
+                  }
+                })
 
-              // empty array for all children through res 6 for the selected parent hex
-              const allChildren: any[] = []
-              // all possible resolutions on the map
-              const resolutions = [2, 3, 4, 5]
-              resolutions.forEach((resolution: number) => {
-                if (resolution >= clickedRes) {
-                  // for each res, find children and push to array
-                  allChildren.push(...h3.h3ToChildren(parent, resolution))
+                allChildren.forEach((child: string) => {
+                  // if a child hex is already plotted on the map, remove it from the array
+                  if (this.children.includes(child)) {
+                    this.removeItemFromArray(this.children, child)
+                  }
+                  // if a child hex is selected (pink), turn off its selected map state and remove from selected array
+                  if (this.selected.includes(child)) {
+                    this.removeItemFromArray(this.selected, child)
+                    this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
+                  }
+                })
+                // this.setChildFeatures()
+
+
+                if (source === 'base-hex') {
+                  // console.log('BASE:', this.filteredChildren)
+                  // console.log('filter all children from base-hex layer AND children from children layer?')
+                  this.filteredBase.push(...allChildren)
+                  // TODO STreamline the array within the func, tied to which layer is passed in
+                  this.filterOutParentHexes('base-hex', this.filteredBase)
+
+                } else {
+
+                  // FIXME collapse 5, explode same, explode neighbor 6
+
+                  this.removeItemFromArray(this.filteredChildren, parent)
+                  this.filterOutParentHexes('children', this.filteredChildren)
+
+                  this.filteredBase.push(...allChildren)
+                  // TODO STreamline the array within the func, tied to which layer is passed in
+                  this.filterOutParentHexes('base-hex', this.filteredBase)
+
+
                 }
-              })
 
-              allChildren.forEach((child: string) => {
-                // if a child hex is already plotted on the map, remove it from the array
-                if (this.children.includes(child)) {
-                  this.removeItemFromArray(this.children, child)
-                }
-                // if a child hex is selected (pink), turn off its selected map state and remove from selected array
-                if (this.selected.includes(child)) {
-                  this.removeItemFromArray(this.selected, child)
-                  this.map.setFeatureState({source: 'children', id: child}, {selected: false})
-                }
-              })
-              // this.setChildFeatures()
+                // this.filterOutParentHexes('children', this.filteredChildren)
+                this.setChildFeatures()
 
 
-              if (source === 'base-hex') {
-                // console.log('BASE:', this.filteredChildren)
-                // console.log('filter all children from base-hex layer AND children from children layer?')
-                this.filteredBase.push(...allChildren)
-                // TODO STreamline the array within the func, tied to which layer is passed in
-                this.filterOutParentHexes('base-hex', this.filteredBase)
+                // console.log(parent, this.filteredChildren)
+
 
               } else {
-
-                // FIXME collapse 5, explode same, explode neighbor 6
-
-                this.removeItemFromArray(this.filteredChildren, parent)
-                this.filterOutParentHexes('children', this.filteredChildren)
-
-                this.filteredBase.push(...allChildren)
-                // TODO STreamline the array within the func, tied to which layer is passed in
-                this.filterOutParentHexes('base-hex', this.filteredBase)
-
-
+                console.log('CANNOT COLLAPSE FOR RES', clickedRes)
               }
-
-              // this.filterOutParentHexes('children', this.filteredChildren)
-              this.setChildFeatures()
-
-
-              // console.log(parent, this.filteredChildren)
-
-
-            } else {
-              console.log('CANNOT COLLAPSE FOR RES', clickedRes)
             }
+
+            //   // TODO Replace all w h3GetResolution
+
+
           }
-
-          //   // TODO Replace all w h3GetResolution
-
-
         })
 
 
@@ -493,7 +495,7 @@
             const selectMode = !e.originalEvent.shiftKey
 
             const feature = e.features[0]
-            console.log(feature)
+            // console.log(feature)
             const res = parseInt(feature.id[1]) + 1
 
 
