@@ -244,6 +244,7 @@
       })
       this.map.addControl(this.draw, 'top-left')
       this.map.addControl(new M.ScaleControl({maxWidth: 900}))
+      this.map.addControl(new M.NavigationControl())
 
       this.map.on('load', () => {
 
