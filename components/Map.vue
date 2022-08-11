@@ -835,64 +835,22 @@
 
 
 
-          // const parent = h3.h3ToParent(ids[0], clickedRes - 1)
+
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
-          // const children = h3.h3ToChildren(parent, clickedRes + 1)
-          // // // console.log(children)
-          // //
-          // if (source[0] === 'base-hex') {
-          //   this.removeItemFromArray(this.filteredBase, parent)
-          //   this.filterOutParentHexes('base-hex', this.filteredBase)
-          // } else {
-          //   this.removeItemFromArray(this.filteredChildren, parent)
-          //   this.filterOutParentHexes('children', this.filteredChildren)
-          // }
-          //
-          // this.filteredChildren.push(...children)
-          // console.log('filtered children:', this.filteredChildren)
-          // this.filterOutParentHexes('children', this.filteredChildren)
-          // // this.setChildFeatures()
-          // // TODO Remove parent from filters, add children to filters
-
-
-
-
-
 
           // add parent to children layer to keep totally separate from filtered based-hex values
           this.children.push(parent)
 
-          //
           // // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
           // match parent selected state to clicked hex selected state, push to array if selected
+          if (!this.selected.includes(parent)) {
+            this.selected.push(parent)
+          }
           this.map.setFeatureState({
             source: 'children',
             id: parent
-          }, { selected: this.arrayIncludesItem(this.selected, parent) })
-          if (this.arrayIncludesItem(this.selected, parent)) {
-            this.selected.push(parent)
-          }
-
-
-
-          // this.lastEvent = {
-          //   event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
-          //   ids: [feature.id],
-          //   layers: [feature.source]
-          // }
-
-
-          // // empty array for all children through res 6 for the selected parent hex
-          // const allChildren: any[] = []
-          // // all possible resolutions on the map
-          // const resolutions = [2, 3, 4, 5]
-          // resolutions.forEach((resolution: number) => {
-          //   if (resolution >= clickedRes) {
-          //     // for each res, find children and push to array
-          //     allChildren.push(...h3.h3ToChildren(parent, resolution))
-          //   }
-          // })
+          }, { selected: true })
 
           const allChildren = h3.h3ToChildren(parent, clickedRes + 1)
 
@@ -907,8 +865,6 @@
               this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
             }
           })
-          // this.setChildFeatures()
-
 
           if (source === 'base-hex') {
             // console.log('BASE:', this.filteredChildren)
@@ -918,92 +874,25 @@
             this.filterOutParentHexes('base-hex', this.filteredBase)
 
           } else {
-
-            // FIXME collapse 5, explode same, explode neighbor 6
-
             this.removeItemFromArray(this.filteredChildren, parent)
             this.filterOutParentHexes('children', this.filteredChildren)
 
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
             this.filterOutParentHexes('base-hex', this.filteredBase)
-
-
           }
-
-          // this.filterOutParentHexes('children', this.filteredChildren)
           this.setChildFeatures()
-
-
-
-
-
-
 
         } else if (event === 'click_expand_deselected') {
           console.log('Need to collapse deselected', ids)
 
 
-          // const parent = h3.h3ToParent(ids[0], clickedRes - 1)
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
-          // const children = h3.h3ToChildren(parent, clickedRes + 1)
-          // // // console.log(children)
-          // //
-          // if (source[0] === 'base-hex') {
-          //   this.removeItemFromArray(this.filteredBase, parent)
-          //   this.filterOutParentHexes('base-hex', this.filteredBase)
-          // } else {
-          //   this.removeItemFromArray(this.filteredChildren, parent)
-          //   this.filterOutParentHexes('children', this.filteredChildren)
-          // }
-          //
-          // this.filteredChildren.push(...children)
-          // console.log('filtered children:', this.filteredChildren)
-          // this.filterOutParentHexes('children', this.filteredChildren)
-          // // this.setChildFeatures()
-          // // TODO Remove parent from filters, add children to filters
-
-
-
-
-
-
           // add parent to children layer to keep totally separate from filtered based-hex values
           this.children.push(parent)
 
-          //
-          // // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
-          // // match parent selected state to clicked hex selected state, push to array if selected
-          // this.map.setFeatureState({
-          //   source: 'children',
-          //   id: parent
-          // }, { selected: this.arrayIncludesItem(this.selected, parent) })
-          // if (this.arrayIncludesItem(this.selected, parent)) {
-          //   this.selected.push(parent)
-          // }
-
-
-          // this.lastEvent = {
-          //   event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
-          //   ids: [feature.id],
-          //   layers: [feature.source]
-          // }
-
-
-          // // empty array for all children through res 6 for the selected parent hex
-          // const allChildren: any[] = []
-          // // all possible resolutions on the map
-          // const resolutions = [2, 3, 4, 5]
-          // resolutions.forEach((resolution: number) => {
-          //   if (resolution >= clickedRes) {
-          //     // for each res, find children and push to array
-          //     allChildren.push(...h3.h3ToChildren(parent, resolution))
-          //   }
-          // })
-
           const allChildren = h3.h3ToChildren(parent, clickedRes + 1)
-
           allChildren.forEach((child: string) => {
             // if a child hex is already plotted on the map, remove it from the array
             if (this.children.includes(child)) {
@@ -1015,31 +904,18 @@
               this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
             }
           })
-          // this.setChildFeatures()
-
 
           if (source === 'base-hex') {
-            // console.log('BASE:', this.filteredChildren)
-            // console.log('filter all children from base-hex layer AND children from children layer?')
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
             this.filterOutParentHexes('base-hex', this.filteredBase)
-
           } else {
-
-            // FIXME collapse 5, explode same, explode neighbor 6
-
             this.removeItemFromArray(this.filteredChildren, parent)
             this.filterOutParentHexes('children', this.filteredChildren)
-
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
             this.filterOutParentHexes('base-hex', this.filteredBase)
-
-
           }
-
-          // this.filterOutParentHexes('children', this.filteredChildren)
           this.setChildFeatures()
 
 
