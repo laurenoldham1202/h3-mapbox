@@ -234,7 +234,7 @@
         // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 2,
+        zoom: 4,
         doubleClickZoom: false,
         boxZoom: false,
         dragRotate: false,
@@ -432,7 +432,16 @@
               if (clickedRes >= 3) {
                 // parent of clicked feature
                 const parent = h3.h3ToParent(feature.id, clickedRes - 1)
-                // console.log(parent)
+                console.log(parent)
+
+                let queryFeatures;
+                if (source === 'base-hex') {
+
+                  const poly = geojson2h3.h3ToFeature(parent)
+                  queryFeatures = this.map.queryRenderedFeatures(this.bboxToPixel(poly), { layers: ['base-hex'] })
+                }
+
+
 
                 // console.log(this.children.includes(parent), parent)
                 // add parent to children layer to keep totally separate from filtered based-hex values
@@ -470,7 +479,25 @@
                   }
                 })
 
+
+                // console.log('last event children:', this.lastEvent.children)
+                // // if (this.lastEvent.children.length === 0) {
+                // console.log('allChildren', allChildren)
+                // console.log('query:', queryFeatures)
+
+                if (source === 'base-hex') {
+                  queryFeatures.forEach(f => {
+                    if (allChildren.includes(f.id)) {
+                      console.log(f.id, this.selected.includes(f.id))
+                      this.lastEvent.children[f.id] = this.selected.includes(f.id)
+                    }
+                  })
+                }
+
+
+
                 allChildren.forEach((child: string) => {
+
                   // if a child hex is already plotted on the map, remove it from the array
                   if (this.children.includes(child)) {
                     this.lastEvent.children[child] = this.selected.includes(child)
@@ -483,7 +510,9 @@
                     this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
                   }
                 })
+
                 // this.setChildFeatures()
+
 
 
                 if (source === 'base-hex') {
@@ -892,6 +921,9 @@
         } else if (event === 'click_collapse_deselected') {
           console.log('Need to expand deselected', ids)
           console.log('restore ', this.lastEvent.children)
+
+          // TODO NEED TO ACCOUNT FOR BASE HEX COLLAPSE WITH NO CHILDREN
+          // TODO
 
           const id = ids[0]
           // find children of clicked feature, push to array for app-wide usage
