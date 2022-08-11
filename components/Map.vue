@@ -6,7 +6,7 @@
 
     <div class="sidebar" style="padding: 0.5rem;">
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
-      <!--<button @click="selectMode = !selectMode">Selection mode: {{ selectMode }}</button>-->
+      <button @click="undo">UNDO</button>
 
       <span style="line-height: 30px;">
         SELECT: <strong>CLICK</strong> a grey hex
@@ -121,6 +121,12 @@
       displayMsg: false,
       deselectLasso: false,
       seasonChangeEvent: undefined as any,
+      // TODO type
+      lastEvent: {
+        event: undefined as any,
+        ids: [] as any[],
+        layers: [] as any[],
+      }
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -492,14 +498,36 @@
           // console.log(e)
           // console.log('CLICK', e.originalEvent.shiftKey)
 
+
+
           if (!this.drawMode) {
 
             const selectMode = !e.originalEvent.shiftKey
-
             const feature = e.features[0]
             // console.log(feature)
             const res = parseInt(feature.id[1]) + 1
 
+
+            // options:
+            // select click
+            // deselect click
+            // expand click
+            // collapse click
+            // select lasso
+            // deselect lasso
+
+            // console.log(feature.state)
+            // console.log(feature.properties.in_range)
+            //
+            // console.log(selectMode && feature.source === 'base-hex' && feature.properties.in_range ? 'select_click BASE' : selectMode && feature.source === 'children' && feature.state.selected ? 'select_click CHILD' : selectMode && feature.source === 'base-hex' && !feature.properties.in_range ? 'deselect_click BASE' : selectMode && feature.source === 'children' && !feature.state.selected ? 'deselect_click CHILD' : 'expand_click')
+
+
+
+            // this.lastEvent = {
+            //   event: selectMode ? 'select_click' : 'expand_click',
+            //   ids: [feature.id],
+            //   layers: [feature.source]
+            // }
 
             // if select mode is off, i.e. if user is expanding or collapsing shapes
             if (!selectMode) {
@@ -596,6 +624,16 @@
 
               this.updateSelected(feature)
 
+
+              this.lastEvent = {
+                event: this.map.getFeatureState({
+                  source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: this.species }),
+                  id: feature.id
+                }).selected ? 'click_select' : 'click_deselect',
+                ids: [feature.id],
+                layers: [feature.source]
+              }
+
               // console.log(this.selected, this.selected.includes(feature.id))
             }
           }
@@ -617,7 +655,6 @@
         // console.log(this.seasonChangeEvent)
       },
       seasonChange() {
-        console.log('season change....')
         this.confirmSeasonChange = true
         this.season = this.seasonChangeEvent.newVal
 
@@ -698,6 +735,9 @@
         }, 2000)
         // alert('Ids copied to clipboard!')
       },
+      undo() {
+        console.log(this.lastEvent)
+      }
 
     },
   })
