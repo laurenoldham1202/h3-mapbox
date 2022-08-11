@@ -390,8 +390,9 @@
 
         // RIGHT CLICK - collapse features
         this.map.on('contextmenu', (e: any) => {
-          if (!this.drawMode) {
-
+          const event = e.originalEvent
+          // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
+          if (!this.drawMode && !e.event.ctrlKey && event.button !== 0) {
             const feature = this.map.queryRenderedFeatures(e.point, { layers: allLayers })[0]
             const source = feature.source
             if (feature) {
