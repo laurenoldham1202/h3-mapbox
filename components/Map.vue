@@ -108,7 +108,12 @@
       species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
-        // { text: 'American Oystercatcher', value: 'ameoys' },
+        { text: '', value: '' },
+        { text: '', value: '' },
+        { text: '', value: '' },
+        { text: '', value: '' },
+        { text: '', value: '' },
+        { text: '', value: '' },
       ],
       season: 'breeding',
       seasonOptions: [
@@ -786,6 +791,7 @@
 
         const event = this.lastEvent.event
         const ids = this.lastEvent.ids
+        const source = this.lastEvent.layers
         if (event === 'lasso_select') {
           console.log('Need to deselect', ids)
         } else if (event === 'lasso_deselect') {
@@ -803,6 +809,18 @@
           console.log('Need to click deselect', ids)
         } else if (event === 'click_deselect') {
           console.log('Need to click select', ids)
+          this.selected.push(...ids)
+          this.map.setFeatureState({
+            source: source[0],
+            ...(source[0] === 'base-hex' && { sourceLayer: this.species }),
+            id: ids[0]
+          }, {selected: true})
+        }
+
+        this.lastEvent = {
+          event: undefined,
+          ids: [],
+          layers: [],
         }
       }
 
