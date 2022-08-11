@@ -351,19 +351,34 @@
 
           })
 
+          this.lastEvent = {
+            event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
+            ids: [],
+            layers: ['base-hex', 'children']
+          }
+
           // console.log(intersection)
           intersection.forEach(feature => {
             // TODO Rearrange so that selected is watched, which then updates feature state
             if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
               this.selected.push(feature.properties.h3_address)
+              this.lastEvent.ids.push(feature.properties.h3_address)
             } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
               // console.log(this.selected.length)
               this.removeItemFromArray(this.selected, feature.properties.h3_address)
+              this.lastEvent.ids.push(feature.properties.h3_address)
+
+              // console.log(feature.properties.h3_address)
             }
             this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
             this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
 
           })
+
+
+
+
+
 
           // console.log(this.selected)
 
@@ -767,7 +782,7 @@
         }
       },
       undo() {
-        console.log(JSON.stringify(this.lastEvent))
+        console.log(this.lastEvent)
       }
 
     },
