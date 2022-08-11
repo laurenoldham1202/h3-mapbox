@@ -830,17 +830,8 @@
           // TODO See if we can restore partial children selections
         } else if (event === 'click_collapse_selected') {
           console.log('Need to expand selected ', ids)
-          // console.log('restore ', this.lastEvent.children)
 
           const id = ids[0]
-
-
-
-          // TODO REMOVE ID FROM SELECTED AND TURN OFF MAP FEATURE STATE
-
-
-
-
           // find children of clicked feature, push to array for app-wide usage
           const children = Object.keys(this.lastEvent.children)
           // console.log(children)
@@ -851,8 +842,6 @@
           this.setChildFeatures()
 
           // filter out the clicked feature so that parent and children are not layered on top of each other
-          // this.filtered.push(feature.id)
-          // console.log(feature.source)
           if (source[0] === 'base-hex') {
             this.filteredBase.push(id)
           } else {
@@ -860,121 +849,8 @@
           }
 
           // is parent hex selected on the map
-          // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
           // TODO Get updated selected hexes for this to work with aldfly
           const parentSelected = this.arrayIncludesItem(this.selected, id)
-          // console.log(id, parentSelected)
-
-
-
-          // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
-          children.forEach((child: string) => {
-              this.map.setFeatureState({ source: 'children', id: child }, { selected: this.lastEvent.children[child] })
-
-            if (!this.selected.includes(child) && this.lastEvent.children[child]) {
-              this.selected.push(child)
-              console.log('push to selected...', child)
-            } else if (this.selected.includes(child) && !this.lastEvent.children[child]) {
-              // TODO Only if in selected array?
-              console.log('PULL from selected...', child)
-
-              this.removeItemFromArray(this.selected, id)
-            }
-
-
-            // if parent hex is selected on the map, set ALL child features as selected too, push to array
-            // if (parentSelected) {
-            //   console.log(child)
-            //   this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
-            //   this.selected.push(child)
-            //   // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
-            // }
-
-            // if (this.filtered.includes(child)) {
-            //   this.removeItemFromArray(this.filtered, child)
-            // }
-            if (this.filteredChildren.includes(child)) {
-              this.removeItemFromArray(this.filteredChildren, child)
-            }
-            if (this.filteredBase.includes(child)) {
-              // this.removeItemFromArray(this.filteredBase, child)
-            }
-          })
-
-          // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
-          // happens outside of children loop to not duplicate unnecessarily
-          if (parentSelected) {
-            this.map.setFeatureState({ source: 'children', id: id }, { selected: false })
-            this.removeItemFromArray(this.selected, id)
-          }
-
-
-          if (source[0] === 'base-hex') {
-            this.filterOutParentHexes('base-hex', this.filteredBase)
-          } else {
-            // console.log('updated filtered children...', this.filteredChildren)
-            this.filterOutParentHexes('children', this.filteredChildren)
-          }
-
-          // if the clicked hex is in the children array, remove it from array when hex is filtered out
-          if (this.arrayIncludesItem(this.children, id)) {
-            this.removeItemFromArray(this.children, id)
-          }
-
-
-
-
-
-
-
-
-
-
-
-
-        } else if (event === 'click_collapse_deselected') {
-          console.log('Need to expand deselected', ids)
-          console.log('restore ', this.lastEvent.children)
-
-
-
-
-
-
-          const id = ids[0]
-
-
-
-          // TODO REMOVE ID FROM SELECTED AND TURN OFF MAP FEATURE STATE
-
-
-
-
-          // find children of clicked feature, push to array for app-wide usage
-          const children = Object.keys(this.lastEvent.children)
-          // console.log(children)
-          this.children.push(...children)
-
-          // TODO Make sure that resetting all child features scales with thousands of children
-          // set child geojson features in layer
-          this.setChildFeatures()
-
-          // filter out the clicked feature so that parent and children are not layered on top of each other
-          // this.filtered.push(feature.id)
-          // console.log(feature.source)
-          if (source[0] === 'base-hex') {
-            this.filteredBase.push(id)
-          } else {
-            this.filteredChildren.push(id)
-          }
-
-          // is parent hex selected on the map
-          // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
-          // TODO Get updated selected hexes for this to work with aldfly
-          const parentSelected = this.arrayIncludesItem(this.selected, id)
-          // console.log(id, parentSelected)
-
-
 
           // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
           children.forEach((child: string) => {
@@ -990,23 +866,8 @@
               this.removeItemFromArray(this.selected, id)
             }
 
-
-            // if parent hex is selected on the map, set ALL child features as selected too, push to array
-            // if (parentSelected) {
-            //   console.log(child)
-            //   this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
-            //   this.selected.push(child)
-            //   // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
-            // }
-
-            // if (this.filtered.includes(child)) {
-            //   this.removeItemFromArray(this.filtered, child)
-            // }
             if (this.filteredChildren.includes(child)) {
               this.removeItemFromArray(this.filteredChildren, child)
-            }
-            if (this.filteredBase.includes(child)) {
-              // this.removeItemFromArray(this.filteredBase, child)
             }
           })
 
@@ -1017,11 +878,9 @@
             this.removeItemFromArray(this.selected, id)
           }
 
-
           if (source[0] === 'base-hex') {
             this.filterOutParentHexes('base-hex', this.filteredBase)
           } else {
-            // console.log('updated filtered children...', this.filteredChildren)
             this.filterOutParentHexes('children', this.filteredChildren)
           }
 
@@ -1030,24 +889,72 @@
             this.removeItemFromArray(this.children, id)
           }
 
+        } else if (event === 'click_collapse_deselected') {
+          console.log('Need to expand deselected', ids)
+          console.log('restore ', this.lastEvent.children)
 
+          const id = ids[0]
+          // find children of clicked feature, push to array for app-wide usage
+          const children = Object.keys(this.lastEvent.children)
+          // console.log(children)
+          this.children.push(...children)
 
+          // TODO Make sure that resetting all child features scales with thousands of children
+          // set child geojson features in layer
+          this.setChildFeatures()
 
+          // filter out the clicked feature so that parent and children are not layered on top of each other
+          if (source[0] === 'base-hex') {
+            this.filteredBase.push(id)
+          } else {
+            this.filteredChildren.push(id)
+          }
 
+          // is parent hex selected on the map
+          // TODO Get updated selected hexes for this to work with aldfly
+          const parentSelected = this.arrayIncludesItem(this.selected, id)
 
+          // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
+          children.forEach((child: string) => {
+            this.map.setFeatureState({ source: 'children', id: child }, { selected: this.lastEvent.children[child] })
 
+            if (!this.selected.includes(child) && this.lastEvent.children[child]) {
+              this.selected.push(child)
+              console.log('push to selected...', child)
+            } else if (this.selected.includes(child) && !this.lastEvent.children[child]) {
+              // TODO Only if in selected array?
+              console.log('PULL from selected...', child)
 
+              this.removeItemFromArray(this.selected, id)
+            }
 
+            if (this.filteredChildren.includes(child)) {
+              this.removeItemFromArray(this.filteredChildren, child)
+            }
 
+          })
 
+          // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
+          // happens outside of children loop to not duplicate unnecessarily
+          // TODO HArdcode these since it's separated by selected/deselected?
+          if (parentSelected) {
+            this.map.setFeatureState({ source: 'children', id: id }, { selected: false })
+            this.removeItemFromArray(this.selected, id)
+          }
+
+          if (source[0] === 'base-hex') {
+            this.filterOutParentHexes('base-hex', this.filteredBase)
+          } else {
+            this.filterOutParentHexes('children', this.filteredChildren)
+          }
+
+          // if the clicked hex is in the children array, remove it from array when hex is filtered out
+          if (this.arrayIncludesItem(this.children, id)) {
+            this.removeItemFromArray(this.children, id)
+          }
 
         } else if (event === 'click_expand_selected') {
           console.log('Need to collapse selected', ids)
-
-
-
-
-
 
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
