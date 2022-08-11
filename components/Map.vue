@@ -110,12 +110,12 @@
       species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
-        { text: '', value: '' },
-        { text: '', value: '' },
-        { text: '', value: '' },
-        { text: '', value: '' },
-        { text: '', value: '' },
-        { text: '', value: '' },
+        { text: 'arcter', value: 'arcter' },
+        { text: 'balshe1', value: 'balshe1' },
+        { text: 'brant', value: 'brant' },
+        { text: 'comter', value: 'comter' },
+        { text: 'parjae', value: 'parjae' },
+        { text: 'westan', value: 'westan' },
       ],
       season: 'breeding',
       seasonOptions: [
