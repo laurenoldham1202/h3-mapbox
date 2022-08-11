@@ -807,6 +807,12 @@
           console.log('Need to collapse deselected', ids)
         } else if (event === 'click_select') {
           console.log('Need to click deselect', ids)
+          this.removeItemFromArray(this.selected, ...ids)
+          this.map.setFeatureState({
+            source: source[0],
+            ...(source[0] === 'base-hex' && { sourceLayer: this.species }),
+            id: ids[0]
+          }, {selected: false})
         } else if (event === 'click_deselect') {
           console.log('Need to click select', ids)
           this.selected.push(...ids)
