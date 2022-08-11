@@ -6,8 +6,6 @@
 
     <div class="sidebar" style="padding: 0.5rem;">
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
-      <button @click="undo">UNDO</button>
-
       <span style="line-height: 30px;">
         SELECT: <strong>CLICK</strong> a grey hex
         <br>
@@ -57,6 +55,10 @@
       Selected Hex Ids ({{selected.length}}):
       <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>
       <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>
+
+      <hr>
+      <button @click="undo" :disabled="!lastEvent.event">UNDO</button>
+
     </div>
 
 
@@ -794,8 +796,33 @@
         const source = this.lastEvent.layers
         if (event === 'lasso_select') {
           console.log('Need to deselect', ids)
+          ids.forEach(id => {
+            this.removeItemFromArray(this.selected, id)
+            this.map.setFeatureState({
+              source: 'children',
+              id: id
+            }, {selected: false})
+            this.map.setFeatureState({
+              source: 'base-hex',
+              sourceLayer: this.species,
+              id: id
+            }, {selected: false})
+          })
+
         } else if (event === 'lasso_deselect') {
           console.log('Need to select', ids)
+          ids.forEach(id => {
+            this.selected.push(id)
+            this.map.setFeatureState({
+              source: 'children',
+              id: id
+            }, {selected: true})
+            this.map.setFeatureState({
+              source: 'base-hex',
+              sourceLayer: this.species,
+              id: id
+            }, {selected: true})
+          })
           // TODO See if we can restore partial children selections
         } else if (event === 'click_collapse_selected') {
           console.log('Need to expand selected ', ids)
