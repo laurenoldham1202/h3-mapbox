@@ -427,6 +427,14 @@
                 }
 
 
+
+                this.lastEvent = {
+                  event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
+                  ids: [feature.id],
+                  layers: [feature.source]
+                }
+
+
                 // empty array for all children through res 6 for the selected parent hex
                 const allChildren: any[] = []
                 // all possible resolutions on the map
