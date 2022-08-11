@@ -782,7 +782,28 @@
         }
       },
       undo() {
-        console.log(this.lastEvent)
+        // console.log(this.lastEvent)
+
+        const event = this.lastEvent.event
+        const ids = this.lastEvent.ids
+        if (event === 'lasso_select') {
+          console.log('Need to deselect', ids)
+        } else if (event === 'lasso_deselect') {
+          console.log('Need to select', ids)
+          // TODO See if we can restore partial children selections
+        } else if (event === 'click_collapse_selected') {
+          console.log('Need to expand selected ', ids)
+        } else if (event === 'click_collapse_deselected') {
+          console.log('Need to expand deselected', ids)
+        } else if (event === 'click_expand_selected') {
+          console.log('Need to collapse selected', ids)
+        } else if (event === 'click_expand_deselected') {
+          console.log('Need to collapse deselected', ids)
+        } else if (event === 'click_select') {
+          console.log('Need to click deselect', ids)
+        } else if (event === 'click_deselect') {
+          console.log('Need to click select', ids)
+        }
       }
 
     },
