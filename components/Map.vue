@@ -432,7 +432,7 @@
               if (clickedRes >= 3) {
                 // parent of clicked feature
                 const parent = h3.h3ToParent(feature.id, clickedRes - 1)
-                console.log(parent)
+                // console.log(parent)
 
                 let queryFeatures;
                 if (source === 'base-hex') {
@@ -485,10 +485,11 @@
                 // console.log('allChildren', allChildren)
                 // console.log('query:', queryFeatures)
 
+                // TODO USE THESE QUERYFEATURES INSTEAD OF ALLCHILDREN??
                 if (source === 'base-hex') {
                   queryFeatures.forEach(f => {
                     if (allChildren.includes(f.id)) {
-                      console.log(f.id, this.selected.includes(f.id))
+                      // console.log(f.id, this.selected.includes(f.id))
                       this.lastEvent.children[f.id] = this.selected.includes(f.id)
                     }
                   })
@@ -952,10 +953,10 @@
 
             if (!this.selected.includes(child) && this.lastEvent.children[child]) {
               this.selected.push(child)
-              console.log('push to selected...', child)
+              // console.log('push to selected...', child)
             } else if (this.selected.includes(child) && !this.lastEvent.children[child]) {
               // TODO Only if in selected array?
-              console.log('PULL from selected...', child)
+              // console.log('PULL from selected...', child)
 
               this.removeItemFromArray(this.selected, id)
             }
@@ -975,8 +976,14 @@
           }
 
           if (source[0] === 'base-hex') {
+
+            // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
+            this.filteredChildren.push(id)
+            this.filterOutParentHexes('children', this.filteredChildren)
+
             this.filterOutParentHexes('base-hex', this.filteredBase)
           } else {
+
             this.filterOutParentHexes('children', this.filteredChildren)
           }
 
