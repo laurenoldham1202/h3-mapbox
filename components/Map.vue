@@ -133,6 +133,7 @@
         event: undefined as any,
         ids: [] as any[],
         layers: [] as any[],
+        children: {},
       }
       // selectedOutput: 'bloop'
     }),
@@ -453,7 +454,8 @@
                 this.lastEvent = {
                   event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
                   ids: [feature.id],
-                  layers: [feature.source]
+                  layers: [feature.source],
+                  children: {}, // TODO Clear children in other events?
                 }
 
 
@@ -471,6 +473,8 @@
                 allChildren.forEach((child: string) => {
                   // if a child hex is already plotted on the map, remove it from the array
                   if (this.children.includes(child)) {
+                    this.lastEvent.children[child] = this.selected.includes(child)
+                    // console.log(child)
                     this.removeItemFromArray(this.children, child)
                   }
                   // if a child hex is selected (pink), turn off its selected map state and remove from selected array
@@ -826,8 +830,24 @@
           // TODO See if we can restore partial children selections
         } else if (event === 'click_collapse_selected') {
           console.log('Need to expand selected ', ids)
+          console.log('restore ', this.lastEvent.children)
+
+
+
+
+
+
+
+
         } else if (event === 'click_collapse_deselected') {
           console.log('Need to expand deselected', ids)
+          console.log('restore ', this.lastEvent.children)
+
+
+
+
+
+
         } else if (event === 'click_expand_selected') {
           console.log('Need to collapse selected', ids)
 
@@ -946,6 +966,7 @@
           event: undefined,
           ids: [],
           layers: [],
+          children: {},
         }
       }
 
