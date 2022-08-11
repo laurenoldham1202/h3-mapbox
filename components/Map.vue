@@ -511,8 +511,10 @@
             // options:
             // select click
             // deselect click
-            // expand click
-            // collapse click
+            // expand click SELECTED
+            // expand click DESELECTED
+            // collapse click SELECTED
+            // collapse click DESELECTED
             // select lasso
             // deselect lasso
 
@@ -599,6 +601,20 @@
                 if (this.arrayIncludesItem(this.children, feature.id)) {
                   this.removeItemFromArray(this.children, feature.id)
                 }
+
+
+
+
+
+                // TODO Create fn?
+                this.lastEvent = {
+                  event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
+                  ids: [feature.id],
+                  layers: [feature.source]
+                }
+
+
+
 
               }
             } else {  // if selection mode is on
@@ -735,8 +751,15 @@
         }, 2000)
         // alert('Ids copied to clipboard!')
       },
+      saveLastEvent(event: any, ids: any, layers: any) {
+        this.lastEvent = {
+          event: event,
+          ids: ids,
+          layers: layers
+        }
+      },
       undo() {
-        console.log(this.lastEvent)
+        console.log(JSON.stringify(this.lastEvent))
       }
 
     },
