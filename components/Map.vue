@@ -513,7 +513,6 @@
 
 
           // this.map.on('draw.create', this.drawCreate)
-          this.map.on('click', [this.species, 'children'], this.mapClick)
 
           // // LEFT CLICK - select, deselect, or extrapolate features
           // this.map.on('click', [this.species, 'children'], (e: any) => {
@@ -674,6 +673,9 @@
           this.map.setLayoutProperty(this.species, 'visibility', 'visible')
 
         }
+
+        this.map.on('click', [this.species, 'children'], this.mapClick)
+
 
 
         // console.log(this.metadata)
