@@ -135,10 +135,10 @@
         event: undefined as any,
         ids: [] as any[],
         layers: [] as any[],
-        children: {},
+        children: {} as any,
       },
-      metadata: {},
-      popup: undefined,
+      metadata: {} as any,
+      popup: undefined as any,
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -604,7 +604,7 @@
 
                   // TODO USE THESE QUERYFEATURES INSTEAD OF ALLCHILDREN??
                   if (source === this.species) {
-                    queryFeatures.forEach(f => {
+                    queryFeatures.forEach((f: any) => {
                       if (allChildren.includes(f.id)) {
                         // console.log(f.id, this.selected.includes(f.id))
                         this.lastEvent.children[f.id] = this.selected.includes(f.id)
@@ -767,7 +767,8 @@
                   this.lastEvent = {
                     event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
                     ids: [feature.id],
-                    layers: [feature.source]
+                    layers: [feature.source],
+                    children: {},
                   }
 
 
@@ -804,7 +805,9 @@
                     id: feature.id
                   }).selected ? 'click_select' : 'click_deselect',
                   ids: [feature.id],
-                  layers: [feature.source]
+                  layers: [feature.source],
+                  children: {},
+
                 }
 
                 // console.log(this.selected, this.selected.includes(feature.id))
@@ -832,9 +835,10 @@
         // console.log(this.metadata)
 
       },
-      checkTileData(tileData, species) {
+      checkTileData(tileData: any, species: any): any {
         return new Promise((resolve) => {
           ;(function waitForLoad() {
+            // @ts-ignore
             if (tileData[species]) return resolve()
             // poll every 30ms until condition is met
             setTimeout(waitForLoad, 30)
@@ -889,7 +893,8 @@
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
-      filterOutParentHexes(featureSource: string, array: string[], species: string = this.species): void {
+      // @ts-ignore
+      filterOutParentHexes(featureSource: string, array: string[], species: any = this.species): void {
         array = this.uniqueValues(array)
         // console.log(array.length)
         // console.log(array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
@@ -953,10 +958,12 @@
         this.lastEvent = {
           event: event,
           ids: ids,
-          layers: layers
+          layers: layers,
+          children: {},
+
         }
       },
-      drawCreate(e) {
+      drawCreate(e: any) {
           // console.log(this.deselectLasso)
           console.log(e)
           // console.log()
@@ -980,7 +987,9 @@
           this.lastEvent = {
             event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
             ids: [],
-            layers: [this.species, 'children']
+            layers: [this.species, 'children'],
+            children: {},
+
           }
 
           // console.log(intersection)
@@ -1141,6 +1150,9 @@
 
           // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
           children.forEach((child: string) => {
+            // console.log(this.lastEvent.children[child])
+
+
             this.map.setFeatureState({ source: 'children', id: child }, { selected: this.lastEvent.children[child] })
 
             if (!this.selected.includes(child) && this.lastEvent.children[child]) {
@@ -1256,8 +1268,6 @@
               this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
             }
           })
-
-          console.log(source)
 
           if (source[0] === this.species) {
             this.filteredBase.push(...allChildren)
