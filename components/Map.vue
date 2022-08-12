@@ -53,8 +53,8 @@
 
       <hr>
       Selected Hex Ids ({{selected.length}}):
-      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>
-      <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>
+<!--      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>-->
+<!--      <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>-->
 
       <hr>
       <button @click="undo" :disabled="!lastEvent.event">UNDO</button>
@@ -152,20 +152,20 @@
       confirmSeasonChange(confirm) {
         if (confirm) {
 
+          // TODO NEED TO CLEAR FILTERS AND CHILDREN!!
+
 
           if (this.filteredBase.length) {
             this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
           }
 
-          // TODO Need to ensure base-hex has selected features
           if (this.selected.length) {
             this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
           }
 
-          // TODO This doesn't clear select state from map
           // @ts-ignore
           // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
-          this.selected = this.metadata[this.species].in_range_addresses[this.season]
+          this.resetSelected()
 
           if (this.selected.length) {
             this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
@@ -305,8 +305,8 @@
         // })
 
         // TODO Handle species changes
+        // TODO CLEAR CHILDREN AND FILTERS ON SEASON AND SPECIES CHANGE
         // TODO Add displayMsg to prevent species change without saving selections??
-        // TODO Import selected values from json
         // TODO Handle missing seasons
         // TODO Clear lastEvent on season or species change
         // TODO Handle antimeridian bugs
@@ -763,7 +763,8 @@
 
           this.checkTileData(this.metadata, this.species).then(() => {
 
-            this.selected = this.metadata[this.species].in_range_addresses[this.season]
+            this.resetSelected()
+            // this.selected = this.metadata[this.species].in_range_addresses[this.season]
 
             this.map.addSource(this.species, {
               type: 'vector',
@@ -831,6 +832,9 @@
           .catch((err) => {
             console.log(err)
           })
+      },
+      resetSelected() {
+        this.selected = JSON.parse(JSON.stringify(this.metadata[this.species].in_range_addresses[this.season]))
       },
       onSeasonChange(input: any) {
         this.displayMsg = true
