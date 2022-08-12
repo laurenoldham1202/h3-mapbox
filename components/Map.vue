@@ -159,7 +159,7 @@
       species(newSpecies, oldSpecies) {
         // TODO Turn of ALL old species events, also check season changes
         this.map.off('click', [oldSpecies, 'children'], this.mapClick)
-        this.map.off('contextmenu', this.mapRightClick)
+        this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
 
         // when species is changed, clear all children, filters, and selected hexes from previous species
         this.resetLayer(oldSpecies, false)
@@ -373,150 +373,6 @@
           })
 
 
-
-
-          // RIGHT CLICK - collapse features
-          // this.map.on('contextmenu', (e: any) => {
-            // console.log('RIGHT CLICK')
-            // const event = e.originalEvent
-            // // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
-            // if (!this.drawMode && !event.ctrlKey && event.button !== 0) {
-            //   console.log(this.species)
-            //   const feature = this.map.queryRenderedFeatures(e.point, { layers: [this.species, 'children'] })[0]
-            //   // console.log(feature)
-            //   const source = feature.source
-            //   // console.log(source)
-            //   if (feature) {
-            //     // console.log(feature.id)
-            //     const clickedRes = h3.h3GetResolution(feature.id)
-            //     // console.log(clickedRes)
-            //
-            //     if (clickedRes >= 3) {
-            //       // parent of clicked feature
-            //       const parent = h3.h3ToParent(feature.id, clickedRes - 1)
-            //       // console.log(parent)
-            //
-            //       let queryFeatures;
-            //       if (source === this.species) {
-            //
-            //         const poly = geojson2h3.h3ToFeature(parent)
-            //         queryFeatures = this.map.queryRenderedFeatures(this.bboxToPixel(poly), { layers: [this.species] })
-            //       }
-            //
-            //
-            //
-            //       // console.log(this.children.includes(parent), parent)
-            //       // add parent to children layer to keep totally separate from filtered based-hex values
-            //       this.children.push(parent)
-            //
-            //
-            //       // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
-            //       // match parent selected state to clicked hex selected state, push to array if selected
-            //       this.map.setFeatureState({
-            //         source: 'children',
-            //         id: parent
-            //       }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
-            //       if (this.arrayIncludesItem(this.selected, feature.id)) {
-            //         this.selected.push(parent)
-            //       }
-            //
-            //
-            //
-            //       this.lastEvent = {
-            //         event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
-            //         ids: [parent],
-            //         layers: [feature.source],
-            //         children: {}, // TODO Clear children in other events?
-            //       }
-            //
-            //
-            //       // empty array for all children through res 6 for the selected parent hex
-            //       const allChildren: any[] = []
-            //       // all possible resolutions on the map
-            //       const resolutions = [2, 3, 4, 5]
-            //       resolutions.forEach((resolution: number) => {
-            //         if (resolution >= clickedRes) {
-            //           // for each res, find children and push to array
-            //           allChildren.push(...h3.h3ToChildren(parent, resolution))
-            //         }
-            //       })
-            //
-            //
-            //       // console.log('last event children:', this.lastEvent.children)
-            //       // // if (this.lastEvent.children.length === 0) {
-            //       // console.log('allChildren', allChildren)
-            //       // console.log('query:', queryFeatures)
-            //
-            //       // TODO USE THESE QUERYFEATURES INSTEAD OF ALLCHILDREN??
-            //       if (source === this.species) {
-            //         queryFeatures.forEach((f: any) => {
-            //           if (allChildren.includes(f.id)) {
-            //             // console.log(f.id, this.selected.includes(f.id))
-            //             this.lastEvent.children[f.id] = this.selected.includes(f.id)
-            //           }
-            //         })
-            //       }
-            //
-            //
-            //
-            //       allChildren.forEach((child: string) => {
-            //
-            //         // if a child hex is already plotted on the map, remove it from the array
-            //         if (this.children.includes(child)) {
-            //           this.lastEvent.children[child] = this.selected.includes(child)
-            //           // console.log(child)
-            //           this.removeItemFromArray(this.children, child)
-            //         }
-            //         // if a child hex is selected (pink), turn off its selected map state and remove from selected array
-            //         if (this.selected.includes(child)) {
-            //           this.removeItemFromArray(this.selected, child)
-            //           this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
-            //         }
-            //       })
-            //
-            //       // this.setChildFeatures()
-            //
-            //
-            //
-            //       if (source === this.species) {
-            //         // console.log('BASE:', this.filteredChildren)
-            //         // console.log('filter all children from base-hex layer AND children from children layer?')
-            //         this.filteredBase.push(...allChildren)
-            //         // TODO STreamline the array within the func, tied to which layer is passed in
-            //         this.filterOutParentHexes(this.species, this.filteredBase)
-            //
-            //       } else {
-            //
-            //         // FIXME collapse 5, explode same, explode neighbor 6
-            //
-            //         this.removeItemFromArray(this.filteredChildren, parent)
-            //         this.filterOutParentHexes('children', this.filteredChildren)
-            //
-            //         this.filteredBase.push(...allChildren)
-            //         // TODO STreamline the array within the func, tied to which layer is passed in
-            //         this.filterOutParentHexes(this.species, this.filteredBase)
-            //
-            //
-            //       }
-            //
-            //       // this.filterOutParentHexes('children', this.filteredChildren)
-            //       this.setChildFeatures()
-            //
-            //
-            //       // console.log(parent, this.filteredChildren)
-            //
-            //
-            //     } else {
-            //       console.log('CANNOT COLLAPSE FOR RES', clickedRes)
-            //     }
-            //   }
-            //
-            //   //   // TODO Replace all w h3GetResolution
-            //
-            //
-            // }
-          // })
-
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
             this.popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
@@ -537,7 +393,7 @@
 
         // add layer click event any time a new species is selected, regardless of map status
         this.map.on('click', [this.species, 'children'], this.mapClick)
-        this.map.on('contextmenu', this.mapRightClick)
+        this.map.on('contextmenu', [this.species, 'children'], this.mapRightClick)
       },
       checkTileData(tileData: any, species: any): any {
         return new Promise((resolve) => {
