@@ -249,9 +249,12 @@
       },
       species(newSpecies, oldSpecies) {
 
+        // console.log(this.map.getSource(oldSpecies))
+        // console.log(this.map.getSource(newSpecies))
 
-        if (this.map.getSource('children')) {
-          console.log('good')
+        // // TODO MAke fn here and season change
+        if (this.map.getSource('children') && this.map.getSource(oldSpecies)) {
+          // console.log('bloop')
           if (this.filteredBase.length) {
             // console.log(this.filteredBase)
             // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
@@ -276,19 +279,10 @@
           this.filteredBase = []
           this.children = []
 
-          this.filterOutParentHexes(oldSpecies, this.filteredBase)
+          this.filterOutParentHexes(oldSpecies, this.filteredBase, oldSpecies)
           this.filterOutParentHexes('children', this.filteredChildren)
           this.setChildFeatures()
 
-
-          // // @ts-ignore
-          // // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
-          // this.resetSelected()
-          // // console.log(this.selected)
-          //
-          // if (this.selected.length) {
-          //   this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
-          // }
         }
 
 
@@ -671,7 +665,7 @@
           // LEFT CLICK - select, deselect, or extrapolate features
           this.map.on('click', [this.species, 'children'], (e: any) => {
 
-            console.log(e)
+            // console.log(e)
             // console.log('CLICK', e.originalEvent.shiftKey)
 
 
@@ -815,7 +809,14 @@
 
 
         } else {
+          this.resetSelected()
+          console.log(this.selected)
+          console.log(this.map.getPaintProperty(this.species, 'fill-color'))
+          // FIXME Make it so that these values are properly handled in species watch clearing?
+          this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+
           this.map.setLayoutProperty(this.species, 'visibility', 'visible')
+
         }
         // console.log(this.metadata)
 
@@ -877,7 +878,7 @@
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
-      filterOutParentHexes(featureSource: string, array: string[]): void {
+      filterOutParentHexes(featureSource: string, array: string[], species: string = this.species): void {
         array = this.uniqueValues(array)
         // console.log(array.length)
         // console.log(array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
@@ -889,7 +890,7 @@
         // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
         // this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
         // this.map.setFilter(featureSource, array.length ? ['all', seasonFilter, ['match', ['get', 'h3_address'], array, false, true]] : seasonFilter)
-        if (featureSource === this.species) {
+        if (featureSource === species) {
           this.map.setFilter(featureSource, array.length ? ['all', this.seasonFilter, hexFilter] : this.seasonFilter)
         } else {
           this.map.setFilter(featureSource, array.length ? hexFilter : null)
