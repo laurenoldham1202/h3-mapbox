@@ -157,6 +157,12 @@
 
 
           if (this.filteredBase.length) {
+            console.log(this.filteredBase)
+            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+            this.filteredBase.forEach(hex => {
+              this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: hex}, {selected: false})
+
+            })
             this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
           }
 
@@ -167,6 +173,18 @@
 
           console.log('children', this.children)
 
+
+
+
+          this.filteredChildren = []
+          this.filteredBase = []
+          this.children = []
+
+          this.filterOutParentHexes(this.species, this.filteredBase)
+          this.filterOutParentHexes('children', this.filteredChildren)
+          this.setChildFeatures()
+
+
           // @ts-ignore
           // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
           this.resetSelected()
@@ -176,13 +194,7 @@
             this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
           }
 
-          this.filteredChildren = []
-          this.filteredBase = []
-          this.children = []
 
-          this.filterOutParentHexes(this.species, this.filteredBase)
-          this.filterOutParentHexes('children', this.filteredChildren)
-          this.setChildFeatures()
           this.displayMsg = false
         }
       },
@@ -254,7 +266,7 @@
         // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 1,
+        zoom: 4,
         doubleClickZoom: false,
         boxZoom: false,
         dragRotate: false,
