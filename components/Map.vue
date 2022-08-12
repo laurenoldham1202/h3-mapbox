@@ -152,114 +152,39 @@
     watch: {
       confirmSeasonChange(confirm) {
         if (confirm) {
-
+          // clear all children, filters, and selected hexes when season is changed
           this.resetLayer(this.species, true)
-          // // TODO NEED TO CLEAR FILTERS AND CHILDREN!!
-          // // FIXME: bug, select then explode, change seasons - selected parent still on map
-          //
-          //
-          // if (this.filteredBase.length) {
-          //   console.log(this.filteredBase)
-          //   // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
-          //   this.filteredBase.forEach(hex => {
-          //     this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: hex}, {selected: false})
-          //
-          //   })
-          //   this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          // }
-          //
-          // if (this.selected.length) {
-          //   this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
-          //   this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          // }
-          //
-          // console.log('children', this.children)
-          //
-          //
-          //
-          //
-          // this.filteredChildren = []
-          // this.filteredBase = []
-          // this.children = []
-          //
-          // this.filterOutParentHexes(this.species, this.filteredBase)
-          // this.filterOutParentHexes('children', this.filteredChildren)
-          // this.setChildFeatures()
-          //
-          //
-          // // @ts-ignore
-          // // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
-          // this.resetSelected()
-          // // console.log(this.selected)
-          //
-          // if (this.selected.length) {
-          //   this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
-          // }
-          //
-          //
-          // this.displayMsg = false
         }
-      },
-      // TODO DONT UPDATE SELECT COMPONENT SEASON UNTIL CONFIRM, LEAVE ON CANCEL
-      season() {
-        this.displayMsg = true
-        // console.log(this.season)
-        //
-        // // TODO This doesn't clear select state from map
-        // this.selected = ALDFLY_SELECTED[this.season]
-        //
-        // this.filterOutParentHexes(this.species, this.filteredBase)
-        // this.filterOutParentHexes('children', this.filteredChildren)
-
-      },
-      // TODO Add clear all selections, reset to initial range, etc.
-      rangeOnly() {
-
-
-        // console.log('RANGE MODE')
-        // console.log(this.selected)
-        // console.log('filtered:', this.filtered)
-        // console.log('children:', this.children)
-
-        // TODO Style show range button to require update
-        if (this.rangeOnly && this.selected.length) {
-          this.map.setFilter(this.species, ['match', ['get', 'h3_address'], this.selected, true, false])
-          this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
-        } else {
-          // console.log('base FILT', this.filteredBase)
-          // console.log('children FILT', this.filteredChildren)
-          // console.log('children', this.children)
-          // console.log('selected', this.selected)
-
-
-
-          // TODO Preserve filtered out values but remove selected filter
-          // TODO CHeck if filteredBase is pop
-
-          // filter out base-hex
-          // filter in children?
-          // this.map.setFilter(this.species)
-          this.filteredBase = this.uniqueValues(this.filteredBase)
-          this.filteredChildren = this.uniqueValues(this.filteredChildren)
-          this.map.setFilter(this.species, this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
-          this.map.setFilter('children', this.filteredChildren.length ? ['match', ['get', 'h3_address'], this.filteredChildren, false, true] : null)
-          // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
-        }
-      },
-      selected(x) {
-        // console.log('selected:', x)
       },
       species(newSpecies, oldSpecies) {
+        // when species is changed, clear all children, filters, and selected hexes from previous species
         this.resetLayer(oldSpecies, false)
+        // turn off old species visibility on map
         this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
+        // plot new species layer
         this.updateLayer()
-      }
+      },
+      // // TODO Add clear all selections, reset to initial range, etc.
+      // rangeOnly() {
+      //
+      //   // TODO Style show range button to require update
+      //   if (this.rangeOnly && this.selected.length) {
+      //     this.map.setFilter(this.species, ['match', ['get', 'h3_address'], this.selected, true, false])
+      //     this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
+      //   } else {
+      //
+      //     // TODO Preserve filtered out values but remove selected filter
+      //     // TODO CHeck if filteredBase is pop
+      //
+      //     this.filteredBase = this.uniqueValues(this.filteredBase)
+      //     this.filteredChildren = this.uniqueValues(this.filteredChildren)
+      //     this.map.setFilter(this.species, this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
+      //     this.map.setFilter('children', this.filteredChildren.length ? ['match', ['get', 'h3_address'], this.filteredChildren, false, true] : null)
+      //     // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
+      //   }
+      // },
     },
     mounted(): void {
-
-      // TODO Make dynamic
-      // @ts-ignore
-      // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
 
       ;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
       this.map = new M.Map({
@@ -777,15 +702,11 @@
         this.selected = JSON.parse(JSON.stringify(this.metadata[this.species].in_range_addresses[this.season]))
       },
       resetLayer(layer: string, seasonChange: boolean) {
-        // // TODO MAke fn here and season change
         if (this.map.getSource('children') && this.map.getSource(layer)) {
-          // console.log('bloop')
           if (this.filteredBase.length) {
-            // console.log(this.filteredBase)
             // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
             this.filteredBase.forEach(hex => {
               this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
-
             })
             this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
           }
@@ -795,11 +716,6 @@
             this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
           }
 
-          // console.log('children', this.children)
-
-
-
-
           this.filteredChildren = []
           this.filteredBase = []
           this.children = []
@@ -808,22 +724,14 @@
           this.filterOutParentHexes('children', this.filteredChildren)
           this.setChildFeatures()
 
-
           if (seasonChange) {
             this.resetSelected()
-            // console.log(this.selected)
-
             if (this.selected.length) {
               this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
             }
-
-
             this.displayMsg = false
           }
-
         }
-
-
       },
       onSeasonChange(input: any) {
         this.displayMsg = true
