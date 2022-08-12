@@ -153,50 +153,51 @@
       confirmSeasonChange(confirm) {
         if (confirm) {
 
-          // TODO NEED TO CLEAR FILTERS AND CHILDREN!!
-          // FIXME: bug, select then explode, change seasons - selected parent still on map
-
-
-          if (this.filteredBase.length) {
-            console.log(this.filteredBase)
-            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
-            this.filteredBase.forEach(hex => {
-              this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: hex}, {selected: false})
-
-            })
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          console.log('children', this.children)
-
-
-
-
-          this.filteredChildren = []
-          this.filteredBase = []
-          this.children = []
-
-          this.filterOutParentHexes(this.species, this.filteredBase)
-          this.filterOutParentHexes('children', this.filteredChildren)
-          this.setChildFeatures()
-
-
-          // @ts-ignore
-          // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
-          this.resetSelected()
-          // console.log(this.selected)
-
-          if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
-          }
-
-
-          this.displayMsg = false
+          this.resetLayer(this.species, true)
+          // // TODO NEED TO CLEAR FILTERS AND CHILDREN!!
+          // // FIXME: bug, select then explode, change seasons - selected parent still on map
+          //
+          //
+          // if (this.filteredBase.length) {
+          //   console.log(this.filteredBase)
+          //   // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+          //   this.filteredBase.forEach(hex => {
+          //     this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: hex}, {selected: false})
+          //
+          //   })
+          //   this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          // }
+          //
+          // if (this.selected.length) {
+          //   this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
+          //   this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          // }
+          //
+          // console.log('children', this.children)
+          //
+          //
+          //
+          //
+          // this.filteredChildren = []
+          // this.filteredBase = []
+          // this.children = []
+          //
+          // this.filterOutParentHexes(this.species, this.filteredBase)
+          // this.filterOutParentHexes('children', this.filteredChildren)
+          // this.setChildFeatures()
+          //
+          //
+          // // @ts-ignore
+          // // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
+          // this.resetSelected()
+          // // console.log(this.selected)
+          //
+          // if (this.selected.length) {
+          //   this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+          // }
+          //
+          //
+          // this.displayMsg = false
         }
       },
       // TODO DONT UPDATE SELECT COMPONENT SEASON UNTIL CONFIRM, LEAVE ON CANCEL
@@ -249,46 +250,7 @@
         // console.log('selected:', x)
       },
       species(newSpecies, oldSpecies) {
-
-        // console.log(this.map.getSource(oldSpecies))
-        // console.log(this.map.getSource(newSpecies))
-
-        // // TODO MAke fn here and season change
-        if (this.map.getSource('children') && this.map.getSource(oldSpecies)) {
-          // console.log('bloop')
-          if (this.filteredBase.length) {
-            // console.log(this.filteredBase)
-            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
-            this.filteredBase.forEach(hex => {
-              this.map.setFeatureState({source: oldSpecies, sourceLayer: oldSpecies, id: hex}, {selected: false})
-
-            })
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: oldSpecies, sourceLayer: oldSpecies, id: id}, {selected: false})})
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          // console.log('children', this.children)
-
-
-
-
-          this.filteredChildren = []
-          this.filteredBase = []
-          this.children = []
-
-          this.filterOutParentHexes(oldSpecies, this.filteredBase, oldSpecies)
-          this.filterOutParentHexes('children', this.filteredChildren)
-          this.setChildFeatures()
-
-        }
-
-
-        // console.log('old:', oldSpecies)
-        // console.log('new:', newSpecies)
+        this.resetLayer(oldSpecies, false)
         this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
         this.updateLayer()
       }
@@ -376,6 +338,8 @@
         // TODO REdo selections to watch selected valuse and update map state from watcher
         // TODO satellite base
         // TODO Add mechanism to save selected vals
+        // TODO Add back rangeOnly option
+        // TODO Add line range as layer
 
 
 
@@ -467,59 +431,6 @@
 
           this.map.on('draw.create', this.drawCreate)
 
-          // this.map.on('draw.create', (e: any) => {
-          //   // console.log(this.deselectLasso)
-          //   console.log(e)
-          //   // console.log()
-          //   const bbox = this.bboxToPixel(e.features[0])
-          //   // TODO Add option to user intersection or completely contained within?
-          //   const features = this.map.queryRenderedFeatures(bbox, {layers: [this.species, 'children']})
-          //   // console.log(features)
-          //   const intersection: any[] = []
-          //   features.forEach((feature: any) => {
-          //     // console.log(feature)
-          //
-          //
-          //     const poly = turf.polygon(feature.geometry.coordinates)
-          //     const int = turf.intersect(poly, turf.polygon(e.features[0].geometry.coordinates), {properties: feature.properties})
-          //     if (int) {
-          //       intersection.push(int);
-          //     }
-          //
-          //   })
-          //
-          //   this.lastEvent = {
-          //     event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
-          //     ids: [],
-          //     layers: [this.species, 'children']
-          //   }
-          //
-          //   // console.log(intersection)
-          //   intersection.forEach(feature => {
-          //     // TODO Rearrange so that selected is watched, which then updates feature state
-          //     if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
-          //       this.selected.push(feature.properties.h3_address)
-          //       this.lastEvent.ids.push(feature.properties.h3_address)
-          //     } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
-          //       // console.log(this.selected.length)
-          //       this.removeItemFromArray(this.selected, feature.properties.h3_address)
-          //       this.lastEvent.ids.push(feature.properties.h3_address)
-          //
-          //       // console.log(feature.properties.h3_address)
-          //     }
-          //     this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
-          //     this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
-          //
-          //   })
-          //
-          //   console.log(this.lastEvent)
-          //
-          //
-          //
-          //   // console.log(this.selected)
-          //
-          //   this.draw.delete(e.features[0].id)
-          // })
 
 
           this.map.on('draw.modechange', (e: any) => {
@@ -864,6 +775,55 @@
       },
       resetSelected() {
         this.selected = JSON.parse(JSON.stringify(this.metadata[this.species].in_range_addresses[this.season]))
+      },
+      resetLayer(layer: string, seasonChange: boolean) {
+        // // TODO MAke fn here and season change
+        if (this.map.getSource('children') && this.map.getSource(layer)) {
+          // console.log('bloop')
+          if (this.filteredBase.length) {
+            // console.log(this.filteredBase)
+            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+            this.filteredBase.forEach(hex => {
+              this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
+
+            })
+            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          }
+
+          if (this.selected.length) {
+            this.selected.map(id => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
+            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          }
+
+          // console.log('children', this.children)
+
+
+
+
+          this.filteredChildren = []
+          this.filteredBase = []
+          this.children = []
+
+          this.filterOutParentHexes(layer, this.filteredBase, layer)
+          this.filterOutParentHexes('children', this.filteredChildren)
+          this.setChildFeatures()
+
+
+          if (seasonChange) {
+            this.resetSelected()
+            // console.log(this.selected)
+
+            if (this.selected.length) {
+              this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+            }
+
+
+            this.displayMsg = false
+          }
+
+        }
+
+
       },
       onSeasonChange(input: any) {
         this.displayMsg = true
