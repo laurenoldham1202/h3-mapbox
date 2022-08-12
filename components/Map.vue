@@ -248,6 +248,50 @@
         // console.log('selected:', x)
       },
       species(newSpecies, oldSpecies) {
+
+
+        if (this.map.getSource('children')) {
+          console.log('good')
+          if (this.filteredBase.length) {
+            // console.log(this.filteredBase)
+            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+            this.filteredBase.forEach(hex => {
+              this.map.setFeatureState({source: oldSpecies, sourceLayer: oldSpecies, id: hex}, {selected: false})
+
+            })
+            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          }
+
+          if (this.selected.length) {
+            this.selected.map(id => {this.map.setFeatureState({source: oldSpecies, sourceLayer: oldSpecies, id: id}, {selected: false})})
+            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          }
+
+          // console.log('children', this.children)
+
+
+
+
+          this.filteredChildren = []
+          this.filteredBase = []
+          this.children = []
+
+          this.filterOutParentHexes(oldSpecies, this.filteredBase)
+          this.filterOutParentHexes('children', this.filteredChildren)
+          this.setChildFeatures()
+
+
+          // // @ts-ignore
+          // // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
+          // this.resetSelected()
+          // // console.log(this.selected)
+          //
+          // if (this.selected.length) {
+          //   this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+          // }
+        }
+
+
         // console.log('old:', oldSpecies)
         // console.log('new:', newSpecies)
         this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
@@ -294,29 +338,6 @@
 
       this.map.on('load', () => {
 
-
-        this.updateLayer()
-
-        // // TODO Return single feature outline?
-
-
-        // TODO Handle species changes
-        // TODO CLEAR CHILDREN AND FILTERS ON SEASON AND SPECIES CHANGE
-        // TODO Restrict lasso values!! and/or restructure so that selections and deselections are saved separately to improve performance
-        // TODO Add displayMsg to prevent species change without saving selections??
-        // TODO Handle missing seasons
-        // TODO Clear lastEvent on season or species change
-        // TODO Handle antimeridian bugs
-        // TODO Add multiple undos
-        // TODO Add redo??
-        // TODO Allow season toggling without clearing prev season
-        // TODO Bbox zoom
-        // TODO REdo selections to watch selected valuse and update map state from watcher
-        // TODO satellite base
-        // TODO Add mechanism to save selected vals
-
-
-
         this.map.addSource('children', {
           type: 'geojson',
           data: {
@@ -341,6 +362,30 @@
         })
 
 
+        this.updateLayer()
+
+        // // TODO Return single feature outline?
+
+
+        // TODO Handle species changes
+        // TODO CLEAR CHILDREN AND FILTERS ON SEASON AND SPECIES CHANGE
+        // TODO Restrict lasso values!! and/or restructure so that selections and deselections are saved separately to improve performance
+        // TODO Add displayMsg to prevent species change without saving selections??
+        // TODO Handle missing seasons
+        // TODO Clear lastEvent on season or species change
+        // TODO Handle antimeridian bugs
+        // TODO Add multiple undos
+        // TODO Add redo??
+        // TODO Allow season toggling without clearing prev season
+        // TODO Bbox zoom
+        // TODO REdo selections to watch selected valuse and update map state from watcher
+        // TODO satellite base
+        // TODO Add mechanism to save selected vals
+
+
+
+
+
       })
     },
     methods: {
@@ -356,6 +401,12 @@
           this.checkTileData(this.metadata, this.species).then(() => {
 
             this.resetSelected()
+
+
+
+
+
+
             // this.selected = this.metadata[this.species].in_range_addresses[this.season]
 
             this.map.addSource(this.species, {
@@ -389,6 +440,8 @@
                 // 'fill-color': 'yellow'
               },
             })
+
+
 
           })
 
