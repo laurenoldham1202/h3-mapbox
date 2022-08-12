@@ -385,7 +385,7 @@
     },
     methods: {
       updateLayer() {
-        console.log('layer updated')
+        // console.log('layer updated')
         const allLayers = [this.species, 'children']
         if (this.popup) {
           this.popup.remove()
@@ -1218,7 +1218,7 @@
             }
           })
 
-          if (source === this.species) {
+          if (source[0] === this.species) {
             // console.log('BASE:', this.filteredChildren)
             // console.log('filter all children from base-hex layer AND children from children layer?')
             this.filteredBase.push(...allChildren)
@@ -1257,7 +1257,9 @@
             }
           })
 
-          if (source === this.species) {
+          console.log(source)
+
+          if (source[0] === this.species) {
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
             this.filterOutParentHexes(this.species, this.filteredBase)
@@ -1278,7 +1280,7 @@
 
         } else if (event === 'click_select') {
           console.log('Need to click deselect', ids)
-          this.removeItemFromArray(this.selected, ...ids)
+          this.removeItemFromArray(this.selected, ids[0])
           this.map.setFeatureState({
             source: source[0],
             ...(source[0] === this.species && { sourceLayer: this.species }),
