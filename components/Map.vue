@@ -107,7 +107,7 @@
       filteredChildren: [] as any[],
       copied: false,
       drawMode: false,
-      species: 'aldfly',
+      species: 'arcter',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
         { text: 'arcter', value: 'arcter' },
@@ -117,7 +117,7 @@
         { text: 'parjae', value: 'parjae' },
         { text: 'westan', value: 'westan' },
       ],
-      season: 'breeding',
+      season: 'postbreeding_migration',
       seasonOptions: [
         { text: 'breeding', value: 'breeding' },
         { text: 'nonbreeding', value: 'nonbreeding' },
@@ -267,7 +267,7 @@
           promoteId: 'h3_address',
           // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
           // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
-          tiles: ['https://test.cdn.shorebirdviz.ebird.org/range-map/aldfly/{z}/{x}/{y}.pbf'],
+          tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
           maxzoom: 8,
         })
 
@@ -290,6 +290,17 @@
             // 'fill-color': 'yellow'
           },
         })
+
+        // TODO Handle species changes
+        // TODO Import selected values from json
+        // TODO Handle missing seasons
+        // TODO Clear lastEvent on season or species change
+        // TODO Handle antimeridian bugs
+        // TODO Add multiple undos
+        // TODO Add redo??
+        // TODO Allow season toggling without clearing prev season
+        // TODO Bbox zoom
+
 
 
         this.map.addSource('children', {
