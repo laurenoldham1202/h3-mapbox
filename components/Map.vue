@@ -157,6 +157,9 @@
         }
       },
       species(newSpecies, oldSpecies) {
+        // TODO Turn of ALL old species events, also check season changes
+        this.map.off('click', [oldSpecies, 'children'], this.mapClick)
+
         // when species is changed, clear all children, filters, and selected hexes from previous species
         this.resetLayer(oldSpecies, false)
         // turn off old species visibility on map
@@ -509,147 +512,150 @@
           })
 
 
-          // LEFT CLICK - select, deselect, or extrapolate features
-          this.map.on('click', [this.species, 'children'], (e: any) => {
+          // this.map.on('draw.create', this.drawCreate)
+          this.map.on('click', [this.species, 'children'], this.mapClick)
 
-            // console.log(e)
-            // console.log('CLICK', e.originalEvent.shiftKey)
-
-
-
-            if (!this.drawMode) {
-
-              const selectMode = !e.originalEvent.shiftKey
-              const feature = e.features[0]
-              // console.log(feature)
-              const res = parseInt(feature.id[1]) + 1
-
-              // if select mode is off, i.e. if user is expanding or collapsing shapes
-              if (!selectMode) {
-                // TODO Combine res restriction and selectMode conditions?
-                // only allow user to drill down to h3 res 6
-                if (res <= 5) {
-
-                  // console.log('BEFORE CLICK filtered base:', this.filteredBase)
-
-                  // find children of clicked feature, push to array for app-wide usage
-                  const children = h3.h3ToChildren(feature.id, res)
-                  this.children.push(...children)
-
-                  // TODO Make sure that resetting all child features scales with thousands of children
-                  // set child geojson features in layer
-                  this.setChildFeatures()
-
-                  // filter out the clicked feature so that parent and children are not layered on top of each other
-                  // this.filtered.push(feature.id)
-                  // console.log(feature.source)
-                  if (feature.source === this.species) {
-                    this.filteredBase.push(feature.id)
-                  } else {
-                    this.filteredChildren.push(feature.id)
-                  }
-
-                  // is parent hex selected on the map
-                  // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === this.species && { sourceLayer: 'hex' }), id: feature.id}).selected
-                  // TODO Get updated selected hexes for this to work with aldfly
-                  const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
-                  // console.log(this.selected, parentSelected)
-
-                  // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
-                  children.forEach((child: string) => {
-                    // if parent hex is selected on the map, set ALL child features as selected too, push to array
-                    if (parentSelected) {
-                      this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
-                      this.selected.push(child)
-                      // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
-                    }
-
-                    // if (this.filtered.includes(child)) {
-                    //   this.removeItemFromArray(this.filtered, child)
-                    // }
-                    if (this.filteredChildren.includes(child)) {
-                      this.removeItemFromArray(this.filteredChildren, child)
-                    }
-                    if (this.filteredBase.includes(child)) {
-                      // this.removeItemFromArray(this.filteredBase, child)
-                    }
-                  })
-
-                  // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
-                  // happens outside of children loop to not duplicate unnecessarily
-                  if (parentSelected) {
-                    this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
-                    this.removeItemFromArray(this.selected, feature.id)
-                  }
-
-
-                  if (feature.source === this.species) {
-                    this.filterOutParentHexes(this.species, this.filteredBase)
-                  } else {
-                    // console.log('updated filtered children...', this.filteredChildren)
-                    this.filterOutParentHexes('children', this.filteredChildren)
-                  }
-
-                  // if the clicked hex is in the children array, remove it from array when hex is filtered out
-                  if (this.arrayIncludesItem(this.children, feature.id)) {
-                    this.removeItemFromArray(this.children, feature.id)
-                  }
-
-
-
-
-
-                  // TODO Create fn?
-                  this.lastEvent = {
-                    event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
-                    ids: [feature.id],
-                    layers: [feature.source],
-                    children: {},
-                  }
-
-
-
-
-                }
-              } else {  // if selection mode is on
-
-                // FIXME Sel mode false, click range erroneously deselects features
-
-                // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
-                // boolean feature property for range - set during tile generation
-                const isRange = feature.properties.in_range
-                // if feature is part of the default range on initial map load before feature state is set
-                const defaultRange = !Object.keys(feature.state).length && isRange
-
-                // console.log(isRange, defaultRange, feature.state.selected)
-
-                // update map feature state
-                this.map.setFeatureState(
-                  {
-                    source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
-                    id: feature.id
-                  },
-                  { selected: defaultRange ? !isRange : !feature.state.selected }
-                )
-
-                this.updateSelected(feature)
-
-
-                this.lastEvent = {
-                  event: this.map.getFeatureState({
-                    source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
-                    id: feature.id
-                  }).selected ? 'click_select' : 'click_deselect',
-                  ids: [feature.id],
-                  layers: [feature.source],
-                  children: {},
-
-                }
-
-                // console.log(this.selected, this.selected.includes(feature.id))
-              }
-            }
-          })
+          // // LEFT CLICK - select, deselect, or extrapolate features
+          // this.map.on('click', [this.species, 'children'], (e: any) => {
+          //
+          //   // console.log(e)
+          //   // console.log('CLICK', e.originalEvent.shiftKey)
+          //
+          //
+          //
+          //   if (!this.drawMode) {
+          //
+          //     const selectMode = !e.originalEvent.shiftKey
+          //     const feature = e.features[0]
+          //     console.log(feature)
+          //     const res = parseInt(feature.id[1]) + 1
+          //
+          //     // if select mode is off, i.e. if user is expanding or collapsing shapes
+          //     if (!selectMode) {
+          //       // TODO Combine res restriction and selectMode conditions?
+          //       // only allow user to drill down to h3 res 6
+          //       if (res <= 5) {
+          //
+          //         // console.log('BEFORE CLICK filtered base:', this.filteredBase)
+          //
+          //         // find children of clicked feature, push to array for app-wide usage
+          //         const children = h3.h3ToChildren(feature.id, res)
+          //         this.children.push(...children)
+          //
+          //         // TODO Make sure that resetting all child features scales with thousands of children
+          //         // set child geojson features in layer
+          //         this.setChildFeatures()
+          //
+          //         // filter out the clicked feature so that parent and children are not layered on top of each other
+          //         // this.filtered.push(feature.id)
+          //         // console.log(feature.source)
+          //         if (feature.source === this.species) {
+          //           this.filteredBase.push(feature.id)
+          //         } else {
+          //           this.filteredChildren.push(feature.id)
+          //         }
+          //
+          //         // is parent hex selected on the map
+          //         // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === this.species && { sourceLayer: 'hex' }), id: feature.id}).selected
+          //         // TODO Get updated selected hexes for this to work with aldfly
+          //         const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
+          //         // console.log(this.selected, parentSelected)
+          //
+          //         // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
+          //         children.forEach((child: string) => {
+          //           // if parent hex is selected on the map, set ALL child features as selected too, push to array
+          //           if (parentSelected) {
+          //             this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
+          //             this.selected.push(child)
+          //             // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
+          //           }
+          //
+          //           // if (this.filtered.includes(child)) {
+          //           //   this.removeItemFromArray(this.filtered, child)
+          //           // }
+          //           if (this.filteredChildren.includes(child)) {
+          //             this.removeItemFromArray(this.filteredChildren, child)
+          //           }
+          //           if (this.filteredBase.includes(child)) {
+          //             // this.removeItemFromArray(this.filteredBase, child)
+          //           }
+          //         })
+          //
+          //         // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
+          //         // happens outside of children loop to not duplicate unnecessarily
+          //         if (parentSelected) {
+          //           this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
+          //           this.removeItemFromArray(this.selected, feature.id)
+          //         }
+          //
+          //
+          //         if (feature.source === this.species) {
+          //           this.filterOutParentHexes(this.species, this.filteredBase)
+          //         } else {
+          //           // console.log('updated filtered children...', this.filteredChildren)
+          //           this.filterOutParentHexes('children', this.filteredChildren)
+          //         }
+          //
+          //         // if the clicked hex is in the children array, remove it from array when hex is filtered out
+          //         if (this.arrayIncludesItem(this.children, feature.id)) {
+          //           this.removeItemFromArray(this.children, feature.id)
+          //         }
+          //
+          //
+          //
+          //
+          //
+          //         // TODO Create fn?
+          //         this.lastEvent = {
+          //           event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
+          //           ids: [feature.id],
+          //           layers: [feature.source],
+          //           children: {},
+          //         }
+          //
+          //
+          //
+          //
+          //       }
+          //     } else {  // if selection mode is on
+          //
+          //       // FIXME Sel mode false, click range erroneously deselects features
+          //
+          //       // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
+          //       // boolean feature property for range - set during tile generation
+          //       const isRange = feature.properties.in_range
+          //       // if feature is part of the default range on initial map load before feature state is set
+          //       const defaultRange = !Object.keys(feature.state).length && isRange
+          //
+          //       // console.log(isRange, defaultRange, feature.state.selected)
+          //
+          //       // update map feature state
+          //       this.map.setFeatureState(
+          //         {
+          //           source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
+          //           id: feature.id
+          //         },
+          //         { selected: defaultRange ? !isRange : !feature.state.selected }
+          //       )
+          //
+          //       this.updateSelected(feature)
+          //
+          //
+          //       this.lastEvent = {
+          //         event: this.map.getFeatureState({
+          //           source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
+          //           id: feature.id
+          //         }).selected ? 'click_select' : 'click_deselect',
+          //         ids: [feature.id],
+          //         layers: [feature.source],
+          //         children: {},
+          //
+          //       }
+          //
+          //       // console.log(this.selected, this.selected.includes(feature.id))
+          //     }
+          //   }
+          // })
 
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
@@ -668,6 +674,8 @@
           this.map.setLayoutProperty(this.species, 'visibility', 'visible')
 
         }
+
+
         // console.log(this.metadata)
 
       },
@@ -886,6 +894,142 @@
 
           this.draw.delete(e.features[0].id)
       },
+
+      mapClick(e: any) {
+
+        if (!this.drawMode) {
+
+          const selectMode = !e.originalEvent.shiftKey
+          const feature = e.features[0]
+          console.log(feature)
+          const res = parseInt(feature.id[1]) + 1
+
+          // if select mode is off, i.e. if user is expanding or collapsing shapes
+          if (!selectMode) {
+            // TODO Combine res restriction and selectMode conditions?
+            // only allow user to drill down to h3 res 6
+            if (res <= 5) {
+
+              // console.log('BEFORE CLICK filtered base:', this.filteredBase)
+
+              // find children of clicked feature, push to array for app-wide usage
+              const children = h3.h3ToChildren(feature.id, res)
+              this.children.push(...children)
+
+              // TODO Make sure that resetting all child features scales with thousands of children
+              // set child geojson features in layer
+              this.setChildFeatures()
+
+              // filter out the clicked feature so that parent and children are not layered on top of each other
+              // this.filtered.push(feature.id)
+              // console.log(feature.source)
+              if (feature.source === this.species) {
+                this.filteredBase.push(feature.id)
+              } else {
+                this.filteredChildren.push(feature.id)
+              }
+
+              // is parent hex selected on the map
+              // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === this.species && { sourceLayer: 'hex' }), id: feature.id}).selected
+              // TODO Get updated selected hexes for this to work with aldfly
+              const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
+              // console.log(this.selected, parentSelected)
+
+              // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
+              children.forEach((child: string) => {
+                // if parent hex is selected on the map, set ALL child features as selected too, push to array
+                if (parentSelected) {
+                  this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
+                  this.selected.push(child)
+                  // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
+                }
+
+                // if (this.filtered.includes(child)) {
+                //   this.removeItemFromArray(this.filtered, child)
+                // }
+                if (this.filteredChildren.includes(child)) {
+                  this.removeItemFromArray(this.filteredChildren, child)
+                }
+                if (this.filteredBase.includes(child)) {
+                  // this.removeItemFromArray(this.filteredBase, child)
+                }
+              })
+
+              // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
+              // happens outside of children loop to not duplicate unnecessarily
+              if (parentSelected) {
+                this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
+                this.removeItemFromArray(this.selected, feature.id)
+              }
+
+
+              if (feature.source === this.species) {
+                this.filterOutParentHexes(this.species, this.filteredBase)
+              } else {
+                // console.log('updated filtered children...', this.filteredChildren)
+                this.filterOutParentHexes('children', this.filteredChildren)
+              }
+
+              // if the clicked hex is in the children array, remove it from array when hex is filtered out
+              if (this.arrayIncludesItem(this.children, feature.id)) {
+                this.removeItemFromArray(this.children, feature.id)
+              }
+
+
+
+
+
+              // TODO Create fn?
+              this.lastEvent = {
+                event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
+                ids: [feature.id],
+                layers: [feature.source],
+                children: {},
+              }
+
+
+
+
+            }
+          } else {  // if selection mode is on
+
+            // FIXME Sel mode false, click range erroneously deselects features
+
+            // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
+            // boolean feature property for range - set during tile generation
+            const isRange = feature.properties.in_range
+            // if feature is part of the default range on initial map load before feature state is set
+            const defaultRange = !Object.keys(feature.state).length && isRange
+
+            // console.log(isRange, defaultRange, feature.state.selected)
+
+            // update map feature state
+            this.map.setFeatureState(
+              {
+                source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
+                id: feature.id
+              },
+              { selected: defaultRange ? !isRange : !feature.state.selected }
+            )
+
+            this.updateSelected(feature)
+
+
+            this.lastEvent = {
+              event: this.map.getFeatureState({
+                source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
+                id: feature.id
+              }).selected ? 'click_select' : 'click_deselect',
+              ids: [feature.id],
+              layers: [feature.source],
+              children: {},
+
+            }
+
+            // console.log(this.selected, this.selected.includes(feature.id))
+          }
+        }
+      },
       undo() {
         // console.log(this.lastEvent)
 
@@ -1068,6 +1212,10 @@
         } else if (event === 'click_expand_selected') {
           console.log('Need to collapse selected', ids)
 
+          // FIXME change species, select, expand, undo - CAN'T DESELECT
+
+          // console.log(this.selected.includes(ids[0]))
+
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
 
@@ -1117,7 +1265,6 @@
 
         } else if (event === 'click_expand_deselected') {
           console.log('Need to collapse deselected', ids)
-
 
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
