@@ -138,6 +138,7 @@
         children: {},
       },
       metadata: {},
+      popup: undefined,
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -386,6 +387,9 @@
       updateLayer() {
         console.log('layer updated')
         const allLayers = [this.species, 'children']
+        if (this.popup) {
+          this.popup.remove()
+        }
 
         if (!this.map.getSource(this.species)) {
 
@@ -808,9 +812,9 @@
             }
           })
 
-          const popup = new M.Popup({closeButton: false})
+          this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
-            popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
+            this.popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
           })
 
 
