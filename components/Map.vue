@@ -107,7 +107,7 @@
       filteredChildren: [] as any[],
       copied: false,
       drawMode: false,
-      species: 'arcter',
+      species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
         { text: 'arcter', value: 'arcter' },
@@ -117,7 +117,7 @@
         { text: 'parjae', value: 'parjae' },
         { text: 'westan', value: 'westan' },
       ],
-      season: 'postbreeding_migration',
+      season: 'breeding',
       seasonOptions: [
         { text: 'breeding', value: 'breeding' },
         { text: 'nonbreeding', value: 'nonbreeding' },
@@ -156,7 +156,7 @@
 
           // TODO Need to ensure base-hex has selected features
           if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: id}, {selected: false})})
+            this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
           }
 
           // TODO This doesn't clear select state from map
@@ -164,10 +164,10 @@
           this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
 
           if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: id}, {selected: true})})
+            this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
           }
 
-          this.filterOutParentHexes('base-hex', this.filteredBase)
+          this.filterOutParentHexes(this.species, this.filteredBase)
           this.filterOutParentHexes('children', this.filteredChildren)
           this.displayMsg = false
         }
@@ -180,7 +180,7 @@
         // // TODO This doesn't clear select state from map
         // this.selected = ALDFLY_SELECTED[this.season]
         //
-        // this.filterOutParentHexes('base-hex', this.filteredBase)
+        // this.filterOutParentHexes(this.species, this.filteredBase)
         // this.filterOutParentHexes('children', this.filteredChildren)
 
       },
@@ -195,7 +195,7 @@
 
         // TODO Style show range button to require update
         if (this.rangeOnly && this.selected.length) {
-          this.map.setFilter('base-hex', ['match', ['get', 'h3_address'], this.selected, true, false])
+          this.map.setFilter(this.species, ['match', ['get', 'h3_address'], this.selected, true, false])
           this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
         } else {
           // console.log('base FILT', this.filteredBase)
@@ -210,16 +210,22 @@
 
           // filter out base-hex
           // filter in children?
-          // this.map.setFilter('base-hex')
+          // this.map.setFilter(this.species)
           this.filteredBase = this.uniqueValues(this.filteredBase)
           this.filteredChildren = this.uniqueValues(this.filteredChildren)
-          this.map.setFilter('base-hex', this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
+          this.map.setFilter(this.species, this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
           this.map.setFilter('children', this.filteredChildren.length ? ['match', ['get', 'h3_address'], this.filteredChildren, false, true] : null)
           // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
         }
       },
       selected(x) {
         // console.log('selected:', x)
+      },
+      species(newSpecies, oldSpecies) {
+        console.log('old:', oldSpecies)
+        console.log('new:', newSpecies)
+        this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
+        this.updateLayer()
       }
     },
     mounted(): void {
@@ -234,7 +240,7 @@
         // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 4,
+        zoom: 1,
         doubleClickZoom: false,
         boxZoom: false,
         dragRotate: false,
@@ -262,34 +268,37 @@
 
       this.map.on('load', () => {
 
-        this.map.addSource('base-hex', {
-          type: 'vector',
-          promoteId: 'h3_address',
-          // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
-          // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
-          tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
-          maxzoom: 8,
-        })
 
-        // TODO Return single feature outline?
-        this.map.addLayer({
-          id: 'base-hex',
-          source: 'base-hex',
-          'source-layer': this.species,
-          type: 'fill',
-          filter: this.seasonFilter,
-          // filter: ['match', ['get', 'h3_address'], range2, false, true],
-          paint: {
-            // 'fill-outline-color': 'white',
-            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
-            'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'deeppink', 'black'],
-            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
-            'fill-opacity': 0.3,
-            // 'fill-opacity': 1,
-            // 'fill-outline-color': 'black',
-            // 'fill-color': 'yellow'
-          },
-        })
+        this.updateLayer()
+
+        // this.map.addSource(this.species, {
+        //   type: 'vector',
+        //   promoteId: 'h3_address',
+        //   // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
+        //   // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
+        //   tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
+        //   maxzoom: 8,
+        // })
+        //
+        // // TODO Return single feature outline?
+        // this.map.addLayer({
+        //   id: this.species,
+        //   source: this.species,
+        //   'source-layer': this.species,
+        //   type: 'fill',
+        //   filter: this.seasonFilter,
+        //   // filter: ['match', ['get', 'h3_address'], range2, false, true],
+        //   paint: {
+        //     // 'fill-outline-color': 'white',
+        //     // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
+        //     'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'deeppink', 'black'],
+        //     // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
+        //     'fill-opacity': 0.3,
+        //     // 'fill-opacity': 1,
+        //     // 'fill-outline-color': 'black',
+        //     // 'fill-color': 'yellow'
+        //   },
+        // })
 
         // TODO Handle species changes
         // TODO Import selected values from json
@@ -300,6 +309,7 @@
         // TODO Add redo??
         // TODO Allow season toggling without clearing prev season
         // TODO Bbox zoom
+        // TODO REdo selections to watch selected valuse and update map state from watcher
 
 
 
@@ -327,7 +337,7 @@
         })
 
 
-        const allLayers = ['base-hex', 'children']
+        const allLayers = [this.species, 'children']
 
 
 
@@ -355,7 +365,7 @@
           // console.log()
           const bbox = this.bboxToPixel(e.features[0])
           // TODO Add option to user intersection or completely contained within?
-          const features = this.map.queryRenderedFeatures(bbox, {layers: ['base-hex', 'children']})
+          const features = this.map.queryRenderedFeatures(bbox, {layers: [this.species, 'children']})
           // console.log(features)
           const intersection: any[] = []
           features.forEach((feature: any) => {
@@ -373,7 +383,7 @@
           this.lastEvent = {
             event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
             ids: [],
-            layers: ['base-hex', 'children']
+            layers: [this.species, 'children']
           }
 
           // console.log(intersection)
@@ -389,7 +399,7 @@
 
               // console.log(feature.properties.h3_address)
             }
-            this.map.setFeatureState({source: 'base-hex', sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
+            this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
             this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
 
           })
@@ -446,10 +456,10 @@
                 // console.log(parent)
 
                 let queryFeatures;
-                if (source === 'base-hex') {
+                if (source === this.species) {
 
                   const poly = geojson2h3.h3ToFeature(parent)
-                  queryFeatures = this.map.queryRenderedFeatures(this.bboxToPixel(poly), { layers: ['base-hex'] })
+                  queryFeatures = this.map.queryRenderedFeatures(this.bboxToPixel(poly), { layers: [this.species] })
                 }
 
 
@@ -497,7 +507,7 @@
                 // console.log('query:', queryFeatures)
 
                 // TODO USE THESE QUERYFEATURES INSTEAD OF ALLCHILDREN??
-                if (source === 'base-hex') {
+                if (source === this.species) {
                   queryFeatures.forEach(f => {
                     if (allChildren.includes(f.id)) {
                       // console.log(f.id, this.selected.includes(f.id))
@@ -527,12 +537,12 @@
 
 
 
-                if (source === 'base-hex') {
+                if (source === this.species) {
                   // console.log('BASE:', this.filteredChildren)
                   // console.log('filter all children from base-hex layer AND children from children layer?')
                   this.filteredBase.push(...allChildren)
                   // TODO STreamline the array within the func, tied to which layer is passed in
-                  this.filterOutParentHexes('base-hex', this.filteredBase)
+                  this.filterOutParentHexes(this.species, this.filteredBase)
 
                 } else {
 
@@ -543,7 +553,7 @@
 
                   this.filteredBase.push(...allChildren)
                   // TODO STreamline the array within the func, tied to which layer is passed in
-                  this.filterOutParentHexes('base-hex', this.filteredBase)
+                  this.filterOutParentHexes(this.species, this.filteredBase)
 
 
                 }
@@ -568,7 +578,7 @@
 
 
         // LEFT CLICK - select, deselect, or extrapolate features
-        this.map.on('click', ['base-hex', 'children'], (e: any) => {
+        this.map.on('click', [this.species, 'children'], (e: any) => {
 
           // console.log(e)
           // console.log('CLICK', e.originalEvent.shiftKey)
@@ -596,7 +606,7 @@
             // console.log(feature.state)
             // console.log(feature.properties.in_range)
             //
-            // console.log(selectMode && feature.source === 'base-hex' && feature.properties.in_range ? 'select_click BASE' : selectMode && feature.source === 'children' && feature.state.selected ? 'select_click CHILD' : selectMode && feature.source === 'base-hex' && !feature.properties.in_range ? 'deselect_click BASE' : selectMode && feature.source === 'children' && !feature.state.selected ? 'deselect_click CHILD' : 'expand_click')
+            // console.log(selectMode && feature.source === this.species && feature.properties.in_range ? 'select_click BASE' : selectMode && feature.source === 'children' && feature.state.selected ? 'select_click CHILD' : selectMode && feature.source === this.species && !feature.properties.in_range ? 'deselect_click BASE' : selectMode && feature.source === 'children' && !feature.state.selected ? 'deselect_click CHILD' : 'expand_click')
 
 
 
@@ -625,14 +635,14 @@
                 // filter out the clicked feature so that parent and children are not layered on top of each other
                 // this.filtered.push(feature.id)
                 // console.log(feature.source)
-                if (feature.source === 'base-hex') {
+                if (feature.source === this.species) {
                   this.filteredBase.push(feature.id)
                 } else {
                   this.filteredChildren.push(feature.id)
                 }
 
                 // is parent hex selected on the map
-                // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === 'base-hex' && { sourceLayer: 'hex' }), id: feature.id}).selected
+                // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === this.species && { sourceLayer: 'hex' }), id: feature.id}).selected
                 // TODO Get updated selected hexes for this to work with aldfly
                 const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
                 // console.log(this.selected, parentSelected)
@@ -665,8 +675,8 @@
                 }
 
 
-                if (feature.source === 'base-hex') {
-                  this.filterOutParentHexes('base-hex', this.filteredBase)
+                if (feature.source === this.species) {
+                  this.filterOutParentHexes(this.species, this.filteredBase)
                 } else {
                   // console.log('updated filtered children...', this.filteredChildren)
                   this.filterOutParentHexes('children', this.filteredChildren)
@@ -707,7 +717,7 @@
               // update map feature state
               this.map.setFeatureState(
                 {
-                  source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: this.species }),
+                  source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
                   id: feature.id
                 },
                 { selected: defaultRange ? !isRange : !feature.state.selected }
@@ -718,7 +728,7 @@
 
               this.lastEvent = {
                 event: this.map.getFeatureState({
-                  source: feature.source, ...(feature.source === 'base-hex' && { sourceLayer: this.species }),
+                  source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
                   id: feature.id
                 }).selected ? 'click_select' : 'click_deselect',
                 ids: [feature.id],
@@ -731,13 +741,51 @@
         })
 
         const popup = new M.Popup({closeButton: false})
-        this.map.on('mousemove', ['base-hex', 'children'], (e: any) => {
+        this.map.on('mousemove', [this.species, 'children'], (e: any) => {
           popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
         })
 
       })
     },
     methods: {
+      updateLayer() {
+        if (!this.map.getSource(this.species)) {
+          this.map.addSource(this.species, {
+            type: 'vector',
+            promoteId: 'h3_address',
+            // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
+            // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
+            tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
+            maxzoom: 8,
+          })
+
+          // TODO Return single feature outline?
+          this.map.addLayer({
+            id: this.species,
+            source: this.species,
+            'source-layer': this.species,
+            type: 'fill',
+            filter: this.seasonFilter,
+            layout: {
+              'visibility': 'visible'
+            },
+            // filter: ['match', ['get', 'h3_address'], range2, false, true],
+            paint: {
+              // 'fill-outline-color': 'white',
+              // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
+              'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'green', 'black'],
+              // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
+              'fill-opacity': 0.3,
+              // 'fill-opacity': 1,
+              // 'fill-outline-color': 'black',
+              // 'fill-color': 'yellow'
+            },
+          })
+        } else {
+          this.map.setLayoutProperty(this.species, 'visibility', 'visible')
+
+        }
+      },
       onSeasonChange(input: any) {
         this.displayMsg = true
         // console.log(input)
@@ -778,7 +826,7 @@
         // if there are filtered features, filter listed ones out, otherwise remove filter to show all features
         // this.map.setFilter(featureSource, array.length ? ['match', ['get', 'h3_address'], array, false, true] : null)
         // this.map.setFilter(featureSource, array.length ? ['all', seasonFilter, ['match', ['get', 'h3_address'], array, false, true]] : seasonFilter)
-        if (featureSource === 'base-hex') {
+        if (featureSource === this.species) {
           this.map.setFilter(featureSource, array.length ? ['all', this.seasonFilter, hexFilter] : this.seasonFilter)
         } else {
           this.map.setFilter(featureSource, array.length ? hexFilter : null)
@@ -848,7 +896,7 @@
               id: id
             }, {selected: false})
             this.map.setFeatureState({
-              source: 'base-hex',
+              source: this.species,
               sourceLayer: this.species,
               id: id
             }, {selected: false})
@@ -863,7 +911,7 @@
               id: id
             }, {selected: true})
             this.map.setFeatureState({
-              source: 'base-hex',
+              source: this.species,
               sourceLayer: this.species,
               id: id
             }, {selected: true})
@@ -883,7 +931,7 @@
           this.setChildFeatures()
 
           // filter out the clicked feature so that parent and children are not layered on top of each other
-          if (source[0] === 'base-hex') {
+          if (source[0] === this.species) {
             this.filteredBase.push(id)
           } else {
             this.filteredChildren.push(id)
@@ -919,13 +967,13 @@
             this.removeItemFromArray(this.selected, id)
           }
 
-          if (source[0] === 'base-hex') {
+          if (source[0] === this.species) {
             // TODO Check selected??
             // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
             this.filteredChildren.push(id)
             this.filterOutParentHexes('children', this.filteredChildren)
 
-            this.filterOutParentHexes('base-hex', this.filteredBase)
+            this.filterOutParentHexes(this.species, this.filteredBase)
           } else {
             this.filterOutParentHexes('children', this.filteredChildren)
           }
@@ -953,7 +1001,7 @@
           this.setChildFeatures()
 
           // filter out the clicked feature so that parent and children are not layered on top of each other
-          if (source[0] === 'base-hex') {
+          if (source[0] === this.species) {
             this.filteredBase.push(id)
           } else {
             this.filteredChildren.push(id)
@@ -991,14 +1039,14 @@
             this.removeItemFromArray(this.selected, id)
           }
 
-          if (source[0] === 'base-hex') {
+          if (source[0] === this.species) {
 
             // TODO Check selected??
             // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
             this.filteredChildren.push(id)
             this.filterOutParentHexes('children', this.filteredChildren)
 
-            this.filterOutParentHexes('base-hex', this.filteredBase)
+            this.filterOutParentHexes(this.species, this.filteredBase)
           } else {
 
             this.filterOutParentHexes('children', this.filteredChildren)
@@ -1042,12 +1090,12 @@
             }
           })
 
-          if (source === 'base-hex') {
+          if (source === this.species) {
             // console.log('BASE:', this.filteredChildren)
             // console.log('filter all children from base-hex layer AND children from children layer?')
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes('base-hex', this.filteredBase)
+            this.filterOutParentHexes(this.species, this.filteredBase)
 
           } else {
             this.removeItemFromArray(this.filteredChildren, parent)
@@ -1055,7 +1103,7 @@
 
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes('base-hex', this.filteredBase)
+            this.filterOutParentHexes(this.species, this.filteredBase)
           }
           this.setChildFeatures()
 
@@ -1081,16 +1129,16 @@
             }
           })
 
-          if (source === 'base-hex') {
+          if (source === this.species) {
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes('base-hex', this.filteredBase)
+            this.filterOutParentHexes(this.species, this.filteredBase)
           } else {
             this.removeItemFromArray(this.filteredChildren, parent)
             this.filterOutParentHexes('children', this.filteredChildren)
             this.filteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes('base-hex', this.filteredBase)
+            this.filterOutParentHexes(this.species, this.filteredBase)
           }
           this.setChildFeatures()
 
@@ -1105,7 +1153,7 @@
           this.removeItemFromArray(this.selected, ...ids)
           this.map.setFeatureState({
             source: source[0],
-            ...(source[0] === 'base-hex' && { sourceLayer: this.species }),
+            ...(source[0] === this.species && { sourceLayer: this.species }),
             id: ids[0]
           }, {selected: false})
         } else if (event === 'click_deselect') {
@@ -1113,7 +1161,7 @@
           this.selected.push(...ids)
           this.map.setFeatureState({
             source: source[0],
-            ...(source[0] === 'base-hex' && { sourceLayer: this.species }),
+            ...(source[0] === this.species && { sourceLayer: this.species }),
             id: ids[0]
           }, {selected: true})
         }
