@@ -136,7 +136,8 @@
         ids: [] as any[],
         layers: [] as any[],
         children: {},
-      }
+      },
+      metadata: {},
       // selectedOutput: 'bloop'
     }),
     computed: {
@@ -224,8 +225,8 @@
         // console.log('selected:', x)
       },
       species(newSpecies, oldSpecies) {
-        console.log('old:', oldSpecies)
-        console.log('new:', newSpecies)
+        // console.log('old:', oldSpecies)
+        // console.log('new:', newSpecies)
         this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
         this.updateLayer()
       }
@@ -755,43 +756,52 @@
       updateLayer() {
         if (!this.map.getSource(this.species)) {
 
-          this.fetchTileData()
+          if (!this.metadata[this.species]) {
+            this.fetchTileData()
+          }
 
-          this.map.addSource(this.species, {
-            type: 'vector',
-            promoteId: 'h3_address',
-            // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
-            // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
-            tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
-            maxzoom: 8,
+          this.checkTileData(this.metadata, this.species).then(() => {
+
+            this.map.addSource(this.species, {
+              type: 'vector',
+              promoteId: 'h3_address',
+              // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
+              // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
+              tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
+              maxzoom: 8,
+            })
+
+            // TODO Return single feature outline?
+            this.map.addLayer({
+              id: this.species,
+              source: this.species,
+              'source-layer': this.species,
+              type: 'fill',
+              filter: this.seasonFilter,
+              layout: {
+                'visibility': 'visible'
+              },
+              // filter: ['match', ['get', 'h3_address'], range2, false, true],
+              paint: {
+                // 'fill-outline-color': 'white',
+                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
+                'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'green', 'black'],
+                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
+                'fill-opacity': 0.3,
+                // 'fill-opacity': 1,
+                // 'fill-outline-color': 'black',
+                // 'fill-color': 'yellow'
+              },
+            })
+
           })
 
-          // TODO Return single feature outline?
-          this.map.addLayer({
-            id: this.species,
-            source: this.species,
-            'source-layer': this.species,
-            type: 'fill',
-            filter: this.seasonFilter,
-            layout: {
-              'visibility': 'visible'
-            },
-            // filter: ['match', ['get', 'h3_address'], range2, false, true],
-            paint: {
-              // 'fill-outline-color': 'white',
-              // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
-              'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'green', 'black'],
-              // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
-              'fill-opacity': 0.3,
-              // 'fill-opacity': 1,
-              // 'fill-outline-color': 'black',
-              // 'fill-color': 'yellow'
-            },
-          })
+
         } else {
           this.map.setLayoutProperty(this.species, 'visibility', 'visible')
-
         }
+        console.log(this.metadata)
+
       },
       checkTileData(tileData, species) {
         return new Promise((resolve) => {
@@ -808,8 +818,7 @@
         axios
           .get(url)
           .then(async (response) => {
-            const x = response.data
-            console.log(x)
+            this.metadata[this.species] = await response.data
             // this.tileMetadata[this.species] = await response.data
             /**
              * Returns tile metadata object for selected species, formatted with species as keys, e.g. `{ bknsti: { ... }, grpchi: { ... } }` <br> Auto-updates and emits a new event every time a new species is selected
