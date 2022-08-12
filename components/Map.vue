@@ -384,6 +384,7 @@
     },
     methods: {
       updateLayer() {
+        console.log('layer updated')
         const allLayers = [this.species, 'children']
 
         if (!this.map.getSource(this.species)) {
@@ -441,6 +442,8 @@
 
 
 
+          // TODO REMOVE POPUPS ON LAYER CHANGE
+
 
           this.map.on('mousedown', (e: any) => {
             // console.log(e.originalEvent)
@@ -458,57 +461,61 @@
           })
 
 
-          this.map.on('draw.create', (e: any) => {
-            // console.log(this.deselectLasso)
-            // console.log(e)
-            // console.log()
-            const bbox = this.bboxToPixel(e.features[0])
-            // TODO Add option to user intersection or completely contained within?
-            const features = this.map.queryRenderedFeatures(bbox, {layers: [this.species, 'children']})
-            // console.log(features)
-            const intersection: any[] = []
-            features.forEach((feature: any) => {
-              // console.log(feature)
+          this.map.on('draw.create', this.drawCreate)
 
-
-              const poly = turf.polygon(feature.geometry.coordinates)
-              const int = turf.intersect(poly, turf.polygon(e.features[0].geometry.coordinates), {properties: feature.properties})
-              if (int) {
-                intersection.push(int);
-              }
-
-            })
-
-            this.lastEvent = {
-              event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
-              ids: [],
-              layers: [this.species, 'children']
-            }
-
-            // console.log(intersection)
-            intersection.forEach(feature => {
-              // TODO Rearrange so that selected is watched, which then updates feature state
-              if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
-                this.selected.push(feature.properties.h3_address)
-                this.lastEvent.ids.push(feature.properties.h3_address)
-              } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
-                // console.log(this.selected.length)
-                this.removeItemFromArray(this.selected, feature.properties.h3_address)
-                this.lastEvent.ids.push(feature.properties.h3_address)
-
-                // console.log(feature.properties.h3_address)
-              }
-              this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
-              this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
-
-            })
-
-
-
-            // console.log(this.selected)
-
-            this.draw.delete(e.features[0].id)
-          })
+          // this.map.on('draw.create', (e: any) => {
+          //   // console.log(this.deselectLasso)
+          //   console.log(e)
+          //   // console.log()
+          //   const bbox = this.bboxToPixel(e.features[0])
+          //   // TODO Add option to user intersection or completely contained within?
+          //   const features = this.map.queryRenderedFeatures(bbox, {layers: [this.species, 'children']})
+          //   // console.log(features)
+          //   const intersection: any[] = []
+          //   features.forEach((feature: any) => {
+          //     // console.log(feature)
+          //
+          //
+          //     const poly = turf.polygon(feature.geometry.coordinates)
+          //     const int = turf.intersect(poly, turf.polygon(e.features[0].geometry.coordinates), {properties: feature.properties})
+          //     if (int) {
+          //       intersection.push(int);
+          //     }
+          //
+          //   })
+          //
+          //   this.lastEvent = {
+          //     event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
+          //     ids: [],
+          //     layers: [this.species, 'children']
+          //   }
+          //
+          //   // console.log(intersection)
+          //   intersection.forEach(feature => {
+          //     // TODO Rearrange so that selected is watched, which then updates feature state
+          //     if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
+          //       this.selected.push(feature.properties.h3_address)
+          //       this.lastEvent.ids.push(feature.properties.h3_address)
+          //     } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
+          //       // console.log(this.selected.length)
+          //       this.removeItemFromArray(this.selected, feature.properties.h3_address)
+          //       this.lastEvent.ids.push(feature.properties.h3_address)
+          //
+          //       // console.log(feature.properties.h3_address)
+          //     }
+          //     this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
+          //     this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
+          //
+          //   })
+          //
+          //   console.log(this.lastEvent)
+          //
+          //
+          //
+          //   // console.log(this.selected)
+          //
+          //   this.draw.delete(e.features[0].id)
+          // })
 
 
           this.map.on('draw.modechange', (e: any) => {
@@ -944,6 +951,59 @@
           ids: ids,
           layers: layers
         }
+      },
+      drawCreate(e) {
+          // console.log(this.deselectLasso)
+          console.log(e)
+          // console.log()
+          const bbox = this.bboxToPixel(e.features[0])
+          // TODO Add option to user intersection or completely contained within?
+          const features = this.map.queryRenderedFeatures(bbox, {layers: [this.species, 'children']})
+          // console.log(features)
+          const intersection: any[] = []
+          features.forEach((feature: any) => {
+            // console.log(feature)
+
+
+            const poly = turf.polygon(feature.geometry.coordinates)
+            const int = turf.intersect(poly, turf.polygon(e.features[0].geometry.coordinates), {properties: feature.properties})
+            if (int) {
+              intersection.push(int);
+            }
+
+          })
+
+          this.lastEvent = {
+            event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
+            ids: [],
+            layers: [this.species, 'children']
+          }
+
+          // console.log(intersection)
+          intersection.forEach(feature => {
+            // TODO Rearrange so that selected is watched, which then updates feature state
+            if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
+              this.selected.push(feature.properties.h3_address)
+              this.lastEvent.ids.push(feature.properties.h3_address)
+            } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
+              // console.log(this.selected.length)
+              this.removeItemFromArray(this.selected, feature.properties.h3_address)
+              this.lastEvent.ids.push(feature.properties.h3_address)
+
+              // console.log(feature.properties.h3_address)
+            }
+            this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
+            this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
+
+          })
+
+          console.log(this.lastEvent)
+
+
+
+          // console.log(this.selected)
+
+          this.draw.delete(e.features[0].id)
       },
       undo() {
         // console.log(this.lastEvent)
