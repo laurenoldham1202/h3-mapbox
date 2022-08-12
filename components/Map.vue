@@ -164,7 +164,8 @@
 
           // TODO This doesn't clear select state from map
           // @ts-ignore
-          this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
+          // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
+          this.selected = this.metadata[this.species].in_range_addresses[this.season]
 
           if (this.selected.length) {
             this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
@@ -235,7 +236,7 @@
 
       // TODO Make dynamic
       // @ts-ignore
-      this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
+      // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
 
       ;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
       this.map = new M.Map({
@@ -761,6 +762,8 @@
           }
 
           this.checkTileData(this.metadata, this.species).then(() => {
+
+            this.selected = this.metadata[this.species].in_range_addresses[this.season]
 
             this.map.addSource(this.species, {
               type: 'vector',
