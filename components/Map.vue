@@ -909,6 +909,11 @@
           }
 
           if (source[0] === 'base-hex') {
+            // TODO Check selected??
+            // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
+            this.filteredChildren.push(id)
+            this.filterOutParentHexes('children', this.filteredChildren)
+
             this.filterOutParentHexes('base-hex', this.filteredBase)
           } else {
             this.filterOutParentHexes('children', this.filteredChildren)
@@ -924,7 +929,7 @@
           console.log('restore ', this.lastEvent.children)
 
           // TODO NEED TO ACCOUNT FOR BASE HEX COLLAPSE WITH NO CHILDREN
-          // TODO
+          // TODO CHECK ALL source[0] CONDITIONS W MULTI LAYERS
 
           const id = ids[0]
           // find children of clicked feature, push to array for app-wide usage
@@ -977,6 +982,7 @@
 
           if (source[0] === 'base-hex') {
 
+            // TODO Check selected??
             // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
             this.filteredChildren.push(id)
             this.filterOutParentHexes('children', this.filteredChildren)
