@@ -152,152 +152,43 @@
     watch: {
       confirmSeasonChange(confirm) {
         if (confirm) {
-
-          // TODO NEED TO CLEAR FILTERS AND CHILDREN!!
-          // FIXME: bug, select then explode, change seasons - selected parent still on map
-
-
-          if (this.filteredBase.length) {
-            console.log(this.filteredBase)
-            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
-            this.filteredBase.forEach(hex => {
-              this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: hex}, {selected: false})
-
-            })
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          console.log('children', this.children)
-
-
-
-
-          this.filteredChildren = []
-          this.filteredBase = []
-          this.children = []
-
-          this.filterOutParentHexes(this.species, this.filteredBase)
-          this.filterOutParentHexes('children', this.filteredChildren)
-          this.setChildFeatures()
-
-
-          // @ts-ignore
-          // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
-          this.resetSelected()
-          // console.log(this.selected)
-
-          if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
-          }
-
-
-          this.displayMsg = false
+          // clear all children, filters, and selected hexes when season is changed
+          this.resetLayer(this.species, true)
         }
-      },
-      // TODO DONT UPDATE SELECT COMPONENT SEASON UNTIL CONFIRM, LEAVE ON CANCEL
-      season() {
-        this.displayMsg = true
-        // console.log(this.season)
-        //
-        // // TODO This doesn't clear select state from map
-        // this.selected = ALDFLY_SELECTED[this.season]
-        //
-        // this.filterOutParentHexes(this.species, this.filteredBase)
-        // this.filterOutParentHexes('children', this.filteredChildren)
-
-      },
-      // TODO Add clear all selections, reset to initial range, etc.
-      rangeOnly() {
-
-
-        // console.log('RANGE MODE')
-        // console.log(this.selected)
-        // console.log('filtered:', this.filtered)
-        // console.log('children:', this.children)
-
-        // TODO Style show range button to require update
-        if (this.rangeOnly && this.selected.length) {
-          this.map.setFilter(this.species, ['match', ['get', 'h3_address'], this.selected, true, false])
-          this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
-        } else {
-          // console.log('base FILT', this.filteredBase)
-          // console.log('children FILT', this.filteredChildren)
-          // console.log('children', this.children)
-          // console.log('selected', this.selected)
-
-
-
-          // TODO Preserve filtered out values but remove selected filter
-          // TODO CHeck if filteredBase is pop
-
-          // filter out base-hex
-          // filter in children?
-          // this.map.setFilter(this.species)
-          this.filteredBase = this.uniqueValues(this.filteredBase)
-          this.filteredChildren = this.uniqueValues(this.filteredChildren)
-          this.map.setFilter(this.species, this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
-          this.map.setFilter('children', this.filteredChildren.length ? ['match', ['get', 'h3_address'], this.filteredChildren, false, true] : null)
-          // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
-        }
-      },
-      selected(x) {
-        // console.log('selected:', x)
       },
       species(newSpecies, oldSpecies) {
+        // TODO Turn of ALL old species events, also check season changes
+        this.map.off('click', [oldSpecies, 'children'], this.mapClick)
+        this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
 
-        // console.log(this.map.getSource(oldSpecies))
-        // console.log(this.map.getSource(newSpecies))
-
-        // // TODO MAke fn here and season change
-        if (this.map.getSource('children') && this.map.getSource(oldSpecies)) {
-          // console.log('bloop')
-          if (this.filteredBase.length) {
-            // console.log(this.filteredBase)
-            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
-            this.filteredBase.forEach(hex => {
-              this.map.setFeatureState({source: oldSpecies, sourceLayer: oldSpecies, id: hex}, {selected: false})
-
-            })
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          if (this.selected.length) {
-            this.selected.map(id => {this.map.setFeatureState({source: oldSpecies, sourceLayer: oldSpecies, id: id}, {selected: false})})
-            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
-
-          // console.log('children', this.children)
-
-
-
-
-          this.filteredChildren = []
-          this.filteredBase = []
-          this.children = []
-
-          this.filterOutParentHexes(oldSpecies, this.filteredBase, oldSpecies)
-          this.filterOutParentHexes('children', this.filteredChildren)
-          this.setChildFeatures()
-
-        }
-
-
-        // console.log('old:', oldSpecies)
-        // console.log('new:', newSpecies)
+        // when species is changed, clear all children, filters, and selected hexes from previous species
+        this.resetLayer(oldSpecies, false)
+        // turn off old species visibility on map
         this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
+        // plot new species layer
         this.updateLayer()
-      }
+      },
+      // // TODO Add clear all selections, reset to initial range, etc.
+      // rangeOnly() {
+      //
+      //   // TODO Style show range button to require update
+      //   if (this.rangeOnly && this.selected.length) {
+      //     this.map.setFilter(this.species, ['match', ['get', 'h3_address'], this.selected, true, false])
+      //     this.map.setFilter('children', ['match', ['get', 'h3_address'], this.selected, true, false])
+      //   } else {
+      //
+      //     // TODO Preserve filtered out values but remove selected filter
+      //     // TODO CHeck if filteredBase is pop
+      //
+      //     this.filteredBase = this.uniqueValues(this.filteredBase)
+      //     this.filteredChildren = this.uniqueValues(this.filteredChildren)
+      //     this.map.setFilter(this.species, this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
+      //     this.map.setFilter('children', this.filteredChildren.length ? ['match', ['get', 'h3_address'], this.filteredChildren, false, true] : null)
+      //     // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
+      //   }
+      // },
     },
     mounted(): void {
-
-      // TODO Make dynamic
-      // @ts-ignore
-      // this.selected = JSON.parse(JSON.stringify(ALDFLY_SELECTED[this.season]))
 
       ;(M as any).accessToken = 'pk.eyJ1IjoibGF1cmVub2xkaGFtMTIwMiIsImEiOiJjaW55dm52N2gxODJrdWtseWZ5czAyZmp5In0.YkEUt6GvIDujjudu187eyA'
       this.map = new M.Map({
@@ -376,6 +267,9 @@
         // TODO REdo selections to watch selected valuse and update map state from watcher
         // TODO satellite base
         // TODO Add mechanism to save selected vals
+        // TODO Add back rangeOnly option
+        // TODO Add line range as layer
+        // TODO Update collapse event to only look for queryFeatures instead of AllChildren
 
 
 
@@ -385,28 +279,20 @@
     },
     methods: {
       updateLayer() {
-        // console.log('layer updated')
-        const allLayers = [this.species, 'children']
+        // clear any existing popups when species is updated
         if (this.popup) {
           this.popup.remove()
         }
-
+        // if the species hasn't been mapped yet...
         if (!this.map.getSource(this.species)) {
-
+          // fetch tile data if it hasn't been fetched yet
           if (!this.metadata[this.species]) {
             this.fetchTileData()
           }
-
+          // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
-
+            // reset selected hexes any time a new species is selected
             this.resetSelected()
-
-
-
-
-
-
-            // this.selected = this.metadata[this.species].in_range_addresses[this.season]
 
             this.map.addSource(this.species, {
               type: 'vector',
@@ -427,413 +313,61 @@
               layout: {
                 'visibility': 'visible'
               },
-              // filter: ['match', ['get', 'h3_address'], range2, false, true],
               paint: {
-                // 'fill-outline-color': 'white',
-                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
+                // 'fill-outline-color': 'white',  // hot pink '#fc035e'
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'deeppink', 'black'],
-                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
                 'fill-opacity': 0.3,
-                // 'fill-opacity': 1,
-                // 'fill-outline-color': 'black',
-                // 'fill-color': 'yellow'
               },
             })
-
-
-
           })
 
-
-
-          // TODO REMOVE POPUPS ON LAYER CHANGE
-
-
+          // MOUSE CLICK DOWN/DRAG EVENT
           this.map.on('mousedown', (e: any) => {
-            // console.log(e.originalEvent)
-            // this.draw.changeMode('draw_polygon')
-
-            if (e.originalEvent.shiftKey || e.originalEvent.ctrlKey) {
+            const event = e.originalEvent  // mouse event
+            const ctrlClicked = event.ctrlKey  // whether ctrl key is being pressed while clicking
+            if (event.shiftKey || ctrlClicked) {  // if shift OR ctrl key are pressed while holding down the mouse, enable draw mode
               this.draw.changeMode('draw_polygon')
             }
-            this.deselectLasso = e.originalEvent.ctrlKey
+            // if ctrl is pressed, enter deselectLasso mode
+            this.deselectLasso = ctrlClicked
           })
-          this.map.on('mouseup', (e: any) => {
-            // console.log(e.originalEvent)
+
+          // any time mouse is released, exit draw mode
+          this.map.on('mouseup', () => {
             this.draw.changeMode('simple_select')
-            // this.deselectLasso = e.originalEvent.shiftKey
           })
 
-
+          // map draw event - either lasso select or deselect
           this.map.on('draw.create', this.drawCreate)
 
-          // this.map.on('draw.create', (e: any) => {
-          //   // console.log(this.deselectLasso)
-          //   console.log(e)
-          //   // console.log()
-          //   const bbox = this.bboxToPixel(e.features[0])
-          //   // TODO Add option to user intersection or completely contained within?
-          //   const features = this.map.queryRenderedFeatures(bbox, {layers: [this.species, 'children']})
-          //   // console.log(features)
-          //   const intersection: any[] = []
-          //   features.forEach((feature: any) => {
-          //     // console.log(feature)
-          //
-          //
-          //     const poly = turf.polygon(feature.geometry.coordinates)
-          //     const int = turf.intersect(poly, turf.polygon(e.features[0].geometry.coordinates), {properties: feature.properties})
-          //     if (int) {
-          //       intersection.push(int);
-          //     }
-          //
-          //   })
-          //
-          //   this.lastEvent = {
-          //     event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
-          //     ids: [],
-          //     layers: [this.species, 'children']
-          //   }
-          //
-          //   // console.log(intersection)
-          //   intersection.forEach(feature => {
-          //     // TODO Rearrange so that selected is watched, which then updates feature state
-          //     if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
-          //       this.selected.push(feature.properties.h3_address)
-          //       this.lastEvent.ids.push(feature.properties.h3_address)
-          //     } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
-          //       // console.log(this.selected.length)
-          //       this.removeItemFromArray(this.selected, feature.properties.h3_address)
-          //       this.lastEvent.ids.push(feature.properties.h3_address)
-          //
-          //       // console.log(feature.properties.h3_address)
-          //     }
-          //     this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: feature.properties.h3_address}, {selected: !this.deselectLasso})
-          //     this.map.setFeatureState({source: 'children', id: feature.properties.h3_address}, {selected: !this.deselectLasso})
-          //
-          //   })
-          //
-          //   console.log(this.lastEvent)
-          //
-          //
-          //
-          //   // console.log(this.selected)
-          //
-          //   this.draw.delete(e.features[0].id)
-          // })
-
-
+          // if draw mode is changed, update drawMode boolean on a brief timeout to prevent closing click from exploding a polygon
           this.map.on('draw.modechange', (e: any) => {
-            // console.log('mode change')
-            // console.log(e)
             setTimeout(() => {
               this.drawMode = Boolean(e.mode === 'draw_polygon')
-              // console.log(this.drawMode)
             }, 10)
-
           })
 
-
-
-          // RIGHT CLICK - collapse features
-          this.map.on('contextmenu', (e: any) => {
-            const event = e.originalEvent
-            // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
-            if (!this.drawMode && !event.ctrlKey && event.button !== 0) {
-              const feature = this.map.queryRenderedFeatures(e.point, { layers: allLayers })[0]
-              const source = feature.source
-              if (feature) {
-                // console.log(feature.id)
-                const clickedRes = h3.h3GetResolution(feature.id)
-                // console.log(clickedRes)
-
-                if (clickedRes >= 3) {
-                  // parent of clicked feature
-                  const parent = h3.h3ToParent(feature.id, clickedRes - 1)
-                  // console.log(parent)
-
-                  let queryFeatures;
-                  if (source === this.species) {
-
-                    const poly = geojson2h3.h3ToFeature(parent)
-                    queryFeatures = this.map.queryRenderedFeatures(this.bboxToPixel(poly), { layers: [this.species] })
-                  }
-
-
-
-                  // console.log(this.children.includes(parent), parent)
-                  // add parent to children layer to keep totally separate from filtered based-hex values
-                  this.children.push(parent)
-
-
-                  // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
-                  // match parent selected state to clicked hex selected state, push to array if selected
-                  this.map.setFeatureState({
-                    source: 'children',
-                    id: parent
-                  }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
-                  if (this.arrayIncludesItem(this.selected, feature.id)) {
-                    this.selected.push(parent)
-                  }
-
-
-
-                  this.lastEvent = {
-                    event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
-                    ids: [parent],
-                    layers: [feature.source],
-                    children: {}, // TODO Clear children in other events?
-                  }
-
-
-                  // empty array for all children through res 6 for the selected parent hex
-                  const allChildren: any[] = []
-                  // all possible resolutions on the map
-                  const resolutions = [2, 3, 4, 5]
-                  resolutions.forEach((resolution: number) => {
-                    if (resolution >= clickedRes) {
-                      // for each res, find children and push to array
-                      allChildren.push(...h3.h3ToChildren(parent, resolution))
-                    }
-                  })
-
-
-                  // console.log('last event children:', this.lastEvent.children)
-                  // // if (this.lastEvent.children.length === 0) {
-                  // console.log('allChildren', allChildren)
-                  // console.log('query:', queryFeatures)
-
-                  // TODO USE THESE QUERYFEATURES INSTEAD OF ALLCHILDREN??
-                  if (source === this.species) {
-                    queryFeatures.forEach((f: any) => {
-                      if (allChildren.includes(f.id)) {
-                        // console.log(f.id, this.selected.includes(f.id))
-                        this.lastEvent.children[f.id] = this.selected.includes(f.id)
-                      }
-                    })
-                  }
-
-
-
-                  allChildren.forEach((child: string) => {
-
-                    // if a child hex is already plotted on the map, remove it from the array
-                    if (this.children.includes(child)) {
-                      this.lastEvent.children[child] = this.selected.includes(child)
-                      // console.log(child)
-                      this.removeItemFromArray(this.children, child)
-                    }
-                    // if a child hex is selected (pink), turn off its selected map state and remove from selected array
-                    if (this.selected.includes(child)) {
-                      this.removeItemFromArray(this.selected, child)
-                      this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
-                    }
-                  })
-
-                  // this.setChildFeatures()
-
-
-
-                  if (source === this.species) {
-                    // console.log('BASE:', this.filteredChildren)
-                    // console.log('filter all children from base-hex layer AND children from children layer?')
-                    this.filteredBase.push(...allChildren)
-                    // TODO STreamline the array within the func, tied to which layer is passed in
-                    this.filterOutParentHexes(this.species, this.filteredBase)
-
-                  } else {
-
-                    // FIXME collapse 5, explode same, explode neighbor 6
-
-                    this.removeItemFromArray(this.filteredChildren, parent)
-                    this.filterOutParentHexes('children', this.filteredChildren)
-
-                    this.filteredBase.push(...allChildren)
-                    // TODO STreamline the array within the func, tied to which layer is passed in
-                    this.filterOutParentHexes(this.species, this.filteredBase)
-
-
-                  }
-
-                  // this.filterOutParentHexes('children', this.filteredChildren)
-                  this.setChildFeatures()
-
-
-                  // console.log(parent, this.filteredChildren)
-
-
-                } else {
-                  console.log('CANNOT COLLAPSE FOR RES', clickedRes)
-                }
-              }
-
-              //   // TODO Replace all w h3GetResolution
-
-
-            }
-          })
-
-
-          // LEFT CLICK - select, deselect, or extrapolate features
-          this.map.on('click', [this.species, 'children'], (e: any) => {
-
-            // console.log(e)
-            // console.log('CLICK', e.originalEvent.shiftKey)
-
-
-
-            if (!this.drawMode) {
-
-              const selectMode = !e.originalEvent.shiftKey
-              const feature = e.features[0]
-              // console.log(feature)
-              const res = parseInt(feature.id[1]) + 1
-
-              // if select mode is off, i.e. if user is expanding or collapsing shapes
-              if (!selectMode) {
-                // TODO Combine res restriction and selectMode conditions?
-                // only allow user to drill down to h3 res 6
-                if (res <= 5) {
-
-                  // console.log('BEFORE CLICK filtered base:', this.filteredBase)
-
-                  // find children of clicked feature, push to array for app-wide usage
-                  const children = h3.h3ToChildren(feature.id, res)
-                  this.children.push(...children)
-
-                  // TODO Make sure that resetting all child features scales with thousands of children
-                  // set child geojson features in layer
-                  this.setChildFeatures()
-
-                  // filter out the clicked feature so that parent and children are not layered on top of each other
-                  // this.filtered.push(feature.id)
-                  // console.log(feature.source)
-                  if (feature.source === this.species) {
-                    this.filteredBase.push(feature.id)
-                  } else {
-                    this.filteredChildren.push(feature.id)
-                  }
-
-                  // is parent hex selected on the map
-                  // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === this.species && { sourceLayer: 'hex' }), id: feature.id}).selected
-                  // TODO Get updated selected hexes for this to work with aldfly
-                  const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
-                  // console.log(this.selected, parentSelected)
-
-                  // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
-                  children.forEach((child: string) => {
-                    // if parent hex is selected on the map, set ALL child features as selected too, push to array
-                    if (parentSelected) {
-                      this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
-                      this.selected.push(child)
-                      // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
-                    }
-
-                    // if (this.filtered.includes(child)) {
-                    //   this.removeItemFromArray(this.filtered, child)
-                    // }
-                    if (this.filteredChildren.includes(child)) {
-                      this.removeItemFromArray(this.filteredChildren, child)
-                    }
-                    if (this.filteredBase.includes(child)) {
-                      // this.removeItemFromArray(this.filteredBase, child)
-                    }
-                  })
-
-                  // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
-                  // happens outside of children loop to not duplicate unnecessarily
-                  if (parentSelected) {
-                    this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
-                    this.removeItemFromArray(this.selected, feature.id)
-                  }
-
-
-                  if (feature.source === this.species) {
-                    this.filterOutParentHexes(this.species, this.filteredBase)
-                  } else {
-                    // console.log('updated filtered children...', this.filteredChildren)
-                    this.filterOutParentHexes('children', this.filteredChildren)
-                  }
-
-                  // if the clicked hex is in the children array, remove it from array when hex is filtered out
-                  if (this.arrayIncludesItem(this.children, feature.id)) {
-                    this.removeItemFromArray(this.children, feature.id)
-                  }
-
-
-
-
-
-                  // TODO Create fn?
-                  this.lastEvent = {
-                    event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
-                    ids: [feature.id],
-                    layers: [feature.source],
-                    children: {},
-                  }
-
-
-
-
-                }
-              } else {  // if selection mode is on
-
-                // FIXME Sel mode false, click range erroneously deselects features
-
-                // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
-                // boolean feature property for range - set during tile generation
-                const isRange = feature.properties.in_range
-                // if feature is part of the default range on initial map load before feature state is set
-                const defaultRange = !Object.keys(feature.state).length && isRange
-
-                // console.log(isRange, defaultRange, feature.state.selected)
-
-                // update map feature state
-                this.map.setFeatureState(
-                  {
-                    source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
-                    id: feature.id
-                  },
-                  { selected: defaultRange ? !isRange : !feature.state.selected }
-                )
-
-                this.updateSelected(feature)
-
-
-                this.lastEvent = {
-                  event: this.map.getFeatureState({
-                    source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
-                    id: feature.id
-                  }).selected ? 'click_select' : 'click_deselect',
-                  ids: [feature.id],
-                  layers: [feature.source],
-                  children: {},
-
-                }
-
-                // console.log(this.selected, this.selected.includes(feature.id))
-              }
-            }
-          })
-
+          // TESTING: Add popup for each hex
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
             this.popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
           })
 
-
-
         } else {
+          // TODO Include this only once, not in both if and else statements?
           this.resetSelected()
-          console.log(this.selected)
-          console.log(this.map.getPaintProperty(this.species, 'fill-color'))
+          // console.log(this.selected)
+          // console.log(this.map.getPaintProperty(this.species, 'fill-color'))
           // FIXME Make it so that these values are properly handled in species watch clearing?
           this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
 
           this.map.setLayoutProperty(this.species, 'visibility', 'visible')
 
         }
-        // console.log(this.metadata)
 
+        // add layer click event any time a new species is selected, regardless of map status
+        this.map.on('click', [this.species, 'children'], this.mapClick)
+        this.map.on('contextmenu', [this.species, 'children'], this.mapRightClick)
       },
       checkTileData(tileData: any, species: any): any {
         return new Promise((resolve) => {
@@ -864,6 +398,38 @@
       },
       resetSelected() {
         this.selected = JSON.parse(JSON.stringify(this.metadata[this.species].in_range_addresses[this.season]))
+      },
+      resetLayer(layer: string, seasonChange: boolean) {
+        if (this.map.getSource('children') && this.map.getSource(layer)) {
+          if (this.filteredBase.length) {
+            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+            this.filteredBase.forEach(hex => {
+              this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
+            })
+            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          }
+
+          if (this.selected.length) {
+            this.selected.map(id => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
+            this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          }
+
+          this.filteredChildren = []
+          this.filteredBase = []
+          this.children = []
+
+          this.filterOutParentHexes(layer, this.filteredBase, layer)
+          this.filterOutParentHexes('children', this.filteredChildren)
+          this.setChildFeatures()
+
+          if (seasonChange) {
+            this.resetSelected()
+            if (this.selected.length) {
+              this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+            }
+            this.displayMsg = false
+          }
+        }
       },
       onSeasonChange(input: any) {
         this.displayMsg = true
@@ -1017,6 +583,280 @@
           // console.log(this.selected)
 
           this.draw.delete(e.features[0].id)
+      },
+      mapClick(e: any) {
+        if (!this.drawMode) {
+
+          const selectMode = !e.originalEvent.shiftKey
+          const feature = e.features[0]
+          console.log(feature)
+          const res = parseInt(feature.id[1]) + 1
+
+          // if select mode is off, i.e. if user is expanding or collapsing shapes
+          if (!selectMode) {
+            // TODO Combine res restriction and selectMode conditions?
+            // only allow user to drill down to h3 res 6
+            if (res <= 5) {
+
+              // console.log('BEFORE CLICK filtered base:', this.filteredBase)
+
+              // find children of clicked feature, push to array for app-wide usage
+              const children = h3.h3ToChildren(feature.id, res)
+              this.children.push(...children)
+
+              // TODO Make sure that resetting all child features scales with thousands of children
+              // set child geojson features in layer
+              this.setChildFeatures()
+
+              // filter out the clicked feature so that parent and children are not layered on top of each other
+              // this.filtered.push(feature.id)
+              // console.log(feature.source)
+              if (feature.source === this.species) {
+                this.filteredBase.push(feature.id)
+              } else {
+                this.filteredChildren.push(feature.id)
+              }
+
+              // is parent hex selected on the map
+              // const parentSelected = this.map.getFeatureState({source: layer, ...(layer === this.species && { sourceLayer: 'hex' }), id: feature.id}).selected
+              // TODO Get updated selected hexes for this to work with aldfly
+              const parentSelected = this.arrayIncludesItem(this.selected, feature.id)
+              // console.log(this.selected, parentSelected)
+
+              // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
+              children.forEach((child: string) => {
+                // if parent hex is selected on the map, set ALL child features as selected too, push to array
+                if (parentSelected) {
+                  this.map.setFeatureState({ source: 'children', id: child }, { selected: true })
+                  this.selected.push(child)
+                  // console.log(child, this.map.getFeatureState({source: 'children', id: child}))
+                }
+
+                // if (this.filtered.includes(child)) {
+                //   this.removeItemFromArray(this.filtered, child)
+                // }
+                if (this.filteredChildren.includes(child)) {
+                  this.removeItemFromArray(this.filteredChildren, child)
+                }
+                if (this.filteredBase.includes(child)) {
+                  // this.removeItemFromArray(this.filteredBase, child)
+                }
+              })
+
+              // if parent is selected when children are exploded, remove the selected map state for the parent and remove from array
+              // happens outside of children loop to not duplicate unnecessarily
+              if (parentSelected) {
+                this.map.setFeatureState({ source: 'children', id: feature.id }, { selected: false })
+                this.removeItemFromArray(this.selected, feature.id)
+              }
+
+
+              if (feature.source === this.species) {
+                this.filterOutParentHexes(this.species, this.filteredBase)
+              } else {
+                // console.log('updated filtered children...', this.filteredChildren)
+                this.filterOutParentHexes('children', this.filteredChildren)
+              }
+
+              // if the clicked hex is in the children array, remove it from array when hex is filtered out
+              if (this.arrayIncludesItem(this.children, feature.id)) {
+                this.removeItemFromArray(this.children, feature.id)
+              }
+
+
+
+
+
+              // TODO Create fn?
+              this.lastEvent = {
+                event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
+                ids: [feature.id],
+                layers: [feature.source],
+                children: {},
+              }
+
+
+
+
+            }
+          } else {  // if selection mode is on
+
+            // FIXME Sel mode false, click range erroneously deselects features
+
+            // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
+            // boolean feature property for range - set during tile generation
+            const isRange = feature.properties.in_range
+            // if feature is part of the default range on initial map load before feature state is set
+            const defaultRange = !Object.keys(feature.state).length && isRange
+
+            // console.log(isRange, defaultRange, feature.state.selected)
+
+            // update map feature state
+            this.map.setFeatureState(
+              {
+                source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
+                id: feature.id
+              },
+              { selected: defaultRange ? !isRange : !feature.state.selected }
+            )
+
+            this.updateSelected(feature)
+
+
+            this.lastEvent = {
+              event: this.map.getFeatureState({
+                source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
+                id: feature.id
+              }).selected ? 'click_select' : 'click_deselect',
+              ids: [feature.id],
+              layers: [feature.source],
+              children: {},
+
+            }
+
+            // console.log(this.selected, this.selected.includes(feature.id))
+          }
+        }
+      },
+      mapRightClick(e: any) {
+        console.log('RIGHT CLICK')
+        const event = e.originalEvent
+        // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
+        if (!this.drawMode && !event.ctrlKey && event.button !== 0) {
+          console.log(this.species)
+          const feature = this.map.queryRenderedFeatures(e.point, { layers: [this.species, 'children'] })[0]
+          // console.log(feature)
+          const source = feature.source
+          // console.log(source)
+          if (feature) {
+            // console.log(feature.id)
+            const clickedRes = h3.h3GetResolution(feature.id)
+            // console.log(clickedRes)
+
+            if (clickedRes >= 3) {
+              // parent of clicked feature
+              const parent = h3.h3ToParent(feature.id, clickedRes - 1)
+              // console.log(parent)
+
+              let queryFeatures;
+              if (source === this.species) {
+
+                const poly = geojson2h3.h3ToFeature(parent)
+                queryFeatures = this.map.queryRenderedFeatures(this.bboxToPixel(poly), { layers: [this.species] })
+              }
+
+
+
+              // console.log(this.children.includes(parent), parent)
+              // add parent to children layer to keep totally separate from filtered based-hex values
+              this.children.push(parent)
+
+
+              // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
+              // match parent selected state to clicked hex selected state, push to array if selected
+              this.map.setFeatureState({
+                source: 'children',
+                id: parent
+              }, { selected: this.arrayIncludesItem(this.selected, feature.id) })
+              if (this.arrayIncludesItem(this.selected, feature.id)) {
+                this.selected.push(parent)
+              }
+
+
+
+              this.lastEvent = {
+                event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
+                ids: [parent],
+                layers: [feature.source],
+                children: {}, // TODO Clear children in other events?
+              }
+
+
+              // empty array for all children through res 6 for the selected parent hex
+              const allChildren: any[] = []
+              // all possible resolutions on the map
+              const resolutions = [2, 3, 4, 5]
+              resolutions.forEach((resolution: number) => {
+                if (resolution >= clickedRes) {
+                  // for each res, find children and push to array
+                  allChildren.push(...h3.h3ToChildren(parent, resolution))
+                }
+              })
+
+
+              // console.log('last event children:', this.lastEvent.children)
+              // // if (this.lastEvent.children.length === 0) {
+              // console.log('allChildren', allChildren)
+              // console.log('query:', queryFeatures)
+
+              // TODO USE THESE QUERYFEATURES INSTEAD OF ALLCHILDREN??
+              if (source === this.species) {
+                queryFeatures.forEach((f: any) => {
+                  if (allChildren.includes(f.id)) {
+                    // console.log(f.id, this.selected.includes(f.id))
+                    this.lastEvent.children[f.id] = this.selected.includes(f.id)
+                  }
+                })
+              }
+
+
+
+              allChildren.forEach((child: string) => {
+
+                // if a child hex is already plotted on the map, remove it from the array
+                if (this.children.includes(child)) {
+                  this.lastEvent.children[child] = this.selected.includes(child)
+                  // console.log(child)
+                  this.removeItemFromArray(this.children, child)
+                }
+                // if a child hex is selected (pink), turn off its selected map state and remove from selected array
+                if (this.selected.includes(child)) {
+                  this.removeItemFromArray(this.selected, child)
+                  this.map.setFeatureState({ source: 'children', id: child }, { selected: false })
+                }
+              })
+
+              // this.setChildFeatures()
+
+
+
+              if (source === this.species) {
+                // console.log('BASE:', this.filteredChildren)
+                // console.log('filter all children from base-hex layer AND children from children layer?')
+                this.filteredBase.push(...allChildren)
+                // TODO STreamline the array within the func, tied to which layer is passed in
+                this.filterOutParentHexes(this.species, this.filteredBase)
+
+              } else {
+
+                // FIXME collapse 5, explode same, explode neighbor 6
+
+                this.removeItemFromArray(this.filteredChildren, parent)
+                this.filterOutParentHexes('children', this.filteredChildren)
+
+                this.filteredBase.push(...allChildren)
+                // TODO STreamline the array within the func, tied to which layer is passed in
+                this.filterOutParentHexes(this.species, this.filteredBase)
+
+
+              }
+
+              // this.filterOutParentHexes('children', this.filteredChildren)
+              this.setChildFeatures()
+
+
+              // console.log(parent, this.filteredChildren)
+
+
+            } else {
+              console.log('CANNOT COLLAPSE FOR RES', clickedRes)
+            }
+          }
+
+          //   // TODO Replace all w h3GetResolution
+
+
+        }
       },
       undo() {
         // console.log(this.lastEvent)
@@ -1200,6 +1040,10 @@
         } else if (event === 'click_expand_selected') {
           console.log('Need to collapse selected', ids)
 
+          // FIXME change species, select, expand, undo - CAN'T DESELECT
+
+          // console.log(this.selected.includes(ids[0]))
+
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
 
@@ -1249,7 +1093,6 @@
 
         } else if (event === 'click_expand_deselected') {
           console.log('Need to collapse deselected', ids)
-
 
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
