@@ -72,6 +72,8 @@
   import geojson2h3 from 'geojson2h3'
   import * as h3 from 'h3-js'
   import 'mapbox-gl/dist/mapbox-gl.css'
+  import axios from 'axios'
+
 
   import {SELECTED, ALDFLY_SELECTED} from '~/static/constants'
 
@@ -301,6 +303,7 @@
         // })
 
         // TODO Handle species changes
+        // TODO Add displayMsg to prevent species change without saving selections??
         // TODO Import selected values from json
         // TODO Handle missing seasons
         // TODO Clear lastEvent on season or species change
@@ -310,6 +313,7 @@
         // TODO Allow season toggling without clearing prev season
         // TODO Bbox zoom
         // TODO REdo selections to watch selected valuse and update map state from watcher
+        // TODO satellite base
 
 
 
@@ -750,6 +754,9 @@
     methods: {
       updateLayer() {
         if (!this.map.getSource(this.species)) {
+
+          this.fetchTileData()
+
           this.map.addSource(this.species, {
             type: 'vector',
             promoteId: 'h3_address',
@@ -785,6 +792,33 @@
           this.map.setLayoutProperty(this.species, 'visibility', 'visible')
 
         }
+      },
+      checkTileData(tileData, species) {
+        return new Promise((resolve) => {
+          ;(function waitForLoad() {
+            if (tileData[species]) return resolve()
+            // poll every 30ms until condition is met
+            setTimeout(waitForLoad, 30)
+          })()
+        })
+      },
+      fetchTileData() {
+        // TODO Make fn
+        const url = `https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/range_editor.json`
+        axios
+          .get(url)
+          .then(async (response) => {
+            const x = response.data
+            console.log(x)
+            // this.tileMetadata[this.species] = await response.data
+            /**
+             * Returns tile metadata object for selected species, formatted with species as keys, e.g. `{ bknsti: { ... }, grpchi: { ... } }` <br> Auto-updates and emits a new event every time a new species is selected
+             */
+            // this.$emit('get-tile-data', this.tileMetadata)
+          })
+          .catch((err) => {
+            console.log(err)
+          })
       },
       onSeasonChange(input: any) {
         this.displayMsg = true
