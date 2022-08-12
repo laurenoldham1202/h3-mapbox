@@ -269,6 +269,7 @@
         // TODO Add mechanism to save selected vals
         // TODO Add back rangeOnly option
         // TODO Add line range as layer
+        // TODO Update collapse event to only look for queryFeatures instead of AllChildren
 
 
 
@@ -278,28 +279,20 @@
     },
     methods: {
       updateLayer() {
-        // console.log('layer updated')
+        // clear any existing popups when species is updated
         if (this.popup) {
           this.popup.remove()
         }
-
+        // if the species hasn't been mapped yet...
         if (!this.map.getSource(this.species)) {
-
+          // fetch tile data if it hasn't been fetched yet
           if (!this.metadata[this.species]) {
             this.fetchTileData()
           }
-
+          // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
-
+            // reset selected hexes any time a new species is selected
             this.resetSelected()
-
-
-
-            // console.log(this.species)
-
-
-
-            // this.selected = this.metadata[this.species].in_range_addresses[this.season]
 
             this.map.addSource(this.species, {
               type: 'vector',
@@ -320,67 +313,48 @@
               layout: {
                 'visibility': 'visible'
               },
-              // filter: ['match', ['get', 'h3_address'], range2, false, true],
               paint: {
-                // 'fill-outline-color': 'white',
-                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'isRange']], '#fc035e', 'black'],
+                // 'fill-outline-color': 'white',  // hot pink '#fc035e'
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'deeppink', 'black'],
-                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], '#fc035e', 'black'],
                 'fill-opacity': 0.3,
-                // 'fill-opacity': 1,
-                // 'fill-outline-color': 'black',
-                // 'fill-color': 'yellow'
               },
             })
-
-
-
           })
 
-
-
-          // TODO REMOVE POPUPS ON LAYER CHANGE
-
-
+          // MOUSE CLICK DOWN/DRAG EVENT
           this.map.on('mousedown', (e: any) => {
-            // console.log(e.originalEvent)
-            // this.draw.changeMode('draw_polygon')
-
-            if (e.originalEvent.shiftKey || e.originalEvent.ctrlKey) {
+            const event = e.originalEvent  // mouse event
+            const ctrlClicked = event.ctrlKey  // whether ctrl key is being pressed while clicking
+            if (event.shiftKey || ctrlClicked) {  // if shift OR ctrl key are pressed while holding down the mouse, enable draw mode
               this.draw.changeMode('draw_polygon')
             }
-            this.deselectLasso = e.originalEvent.ctrlKey
+            // if ctrl is pressed, enter deselectLasso mode
+            this.deselectLasso = ctrlClicked
           })
-          this.map.on('mouseup', (e: any) => {
-            // console.log(e.originalEvent)
+
+          // any time mouse is released, exit draw mode
+          this.map.on('mouseup', () => {
             this.draw.changeMode('simple_select')
-            // this.deselectLasso = e.originalEvent.shiftKey
           })
 
-
+          // map draw event - either lasso select or deselect
           this.map.on('draw.create', this.drawCreate)
 
-
-
+          // if draw mode is changed, update drawMode boolean on a brief timeout to prevent closing click from exploding a polygon
           this.map.on('draw.modechange', (e: any) => {
-            // console.log('mode change')
-            // console.log(e)
             setTimeout(() => {
               this.drawMode = Boolean(e.mode === 'draw_polygon')
-              // console.log(this.drawMode)
             }, 10)
-
           })
 
-
+          // TESTING: Add popup for each hex
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
             this.popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
           })
 
-
-
         } else {
+          // TODO Include this only once, not in both if and else statements?
           this.resetSelected()
           // console.log(this.selected)
           // console.log(this.map.getPaintProperty(this.species, 'fill-color'))
