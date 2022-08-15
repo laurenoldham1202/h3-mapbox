@@ -167,7 +167,7 @@
 
         this.map.once('style.load', () => {
           // TODO UPDATE STYLE AND ADD SELECTIONS
-          this.updateLayer()
+          this.updateLayer(false)
         })
       },
       confirmSeasonChange(confirm) {
@@ -313,7 +313,7 @@
           this.map.fitBounds(coords, { padding: 100 })
         }
       },
-      updateLayer() {
+      updateLayer(resetSelected = true) {
         // clear any existing popups when species is updated
         if (this.popup) {
           this.popup.remove()
@@ -326,11 +326,11 @@
           }
           // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
-            // reset selected hexes any time a new species is selected
-            this.resetSelected()
 
-            // zoom to species extent on map
-            this.zoomToExtent()
+
+            // console.log(this.selected)
+
+
 
             this.map.addSource(this.species, {
               type: 'vector',
@@ -353,10 +353,57 @@
               },
               paint: {
                 // 'fill-outline-color': 'white',  // hot pink '#fc035e'
-                'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'deeppink', 'black'],
+                'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
+                  resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
+                ], 'deeppink', 'black'],
                 'fill-opacity': 0.3,
               },
             })
+
+            if (resetSelected) {
+              // reset selected hexes any time a new species is selected
+              this.resetSelected()
+              // zoom to species extent on map
+              this.zoomToExtent()
+            } else {
+              // console.log(this.map.getLayer('children'))
+              // // TODO NEED TO DESELECT BASE HEXES
+              // this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+              //
+              //
+              // this.map.addSource('children', {
+              //   type: 'geojson',
+              //   data: {
+              //     type: 'FeatureCollection',
+              //     features: [],
+              //   },
+              //   promoteId: 'h3_address',
+              // })
+              //
+              // this.map.addLayer({
+              //   id: 'children',
+              //   source: 'children',
+              //   type: 'fill',
+              //   paint: {
+              //     'fill-opacity': 0.3,
+              //     'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+              //     // 'fill-color': 'blue'
+              //   },
+              //   layout: {
+              //     'fill-sort-key': ['+', ['get', 'h3_address']],
+              //   },
+              // })
+              //
+              // this.setChildFeatures()
+              // this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
+              // this.filterOutParentHexes('children', this.filteredChildren)
+              // this.filterOutParentHexes(this.species, this.filteredBase)
+              //
+              //
+              // console.log(this.filteredChildren)
+              // console.log(this.children)
+
+            }
 
           })
 
