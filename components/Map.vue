@@ -365,17 +365,25 @@
               },
             })
 
+            console.log('diff fill color conditions')
+
             if (resetSelected) {
               // reset selected hexes any time a new species is selected
               this.resetSelected()
               // zoom to species extent on map
               this.zoomToExtent()
+              console.log('reset selected')
             } else {
               // console.log(this.map.getLayer('children'))
-              // // TODO NEED TO DESELECT BASE HEXES
               // this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
               //
               //
+
+              // TODO HANDLE DESELECTED FEATURES ON STYLE CHANGE
+              // ^^ the feature.state is cleared and only pink selected values are given selected value, so any {selected: false} need to be set
+              console.log('DONT reset selected')
+
+              // FIXME Reselecting deselected base hex after style change
               this.map.addSource('children', {
                 type: 'geojson',
                 data: {
@@ -400,8 +408,11 @@
               })
               this.filterOutParentHexes(this.species, this.filteredBase)
               this.filterOutParentHexes('children', this.filteredChildren)
-              this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
               this.setChildFeatures()
+              this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+              this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
+
+              // console.log('selected set')
 
               //
               //
@@ -637,7 +648,7 @@
       },
       drawCreate(e: any) {
           // console.log(this.deselectLasso)
-          console.log(e)
+          // console.log(e)
           // console.log()
           const bbox = this.bboxToPixel(e.features[0])
           // TODO Add option to user intersection or completely contained within?
@@ -682,7 +693,7 @@
 
           })
 
-          console.log(this.lastEvent)
+          // console.log(this.lastEvent)
 
 
 
@@ -695,7 +706,7 @@
 
           const selectMode = !e.originalEvent.shiftKey
           const feature = e.features[0]
-          console.log(feature)
+          console.log('map click', feature)
           const res = parseInt(feature.id[1]) + 1
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
@@ -795,7 +806,11 @@
             // if feature is part of the default range on initial map load before feature state is set
             const defaultRange = !Object.keys(feature.state).length && isRange
 
-            // console.log(isRange, defaultRange, feature.state.selected)
+            // console.log('is_range var:', isRange, defaultRange, feature.state.selected)
+
+
+            console.log('has selected state is MISSING KEY', Object.keys(feature.state), !Object.keys(feature.state).length)
+            // console.log(defaultRange ? !isRange : !feature.state.selected)
 
             // update map feature state
             this.map.setFeatureState(
@@ -857,7 +872,7 @@
               // add parent to children layer to keep totally separate from filtered based-hex values
               this.children.push(parent)
 
-              console.log(feature.id, this.arrayIncludesItem(this.selected, feature.id))
+              // console.log(feature.id, this.arrayIncludesItem(this.selected, feature.id))
 
               // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
               // match parent selected state to clicked hex selected state, push to array if selected
