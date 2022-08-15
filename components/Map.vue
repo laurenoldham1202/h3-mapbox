@@ -195,7 +195,7 @@
         // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: this.coords,
-        zoom: 4,
+        zoom: 1,
         doubleClickZoom: false,
         boxZoom: false,
         dragRotate: false,
@@ -254,7 +254,6 @@
 
         // TODO Restrict lasso values!! and/or restructure so that selections and deselections are saved separately to improve performance
         // TODO Add displayMsg to prevent species change without saving selections??
-        // TODO Handle missing seasons
         // TODO Clear lastEvent on season or species change
         // TODO Handle antimeridian bugs
         // TODO Add multiple undos
@@ -275,6 +274,25 @@
       })
     },
     methods: {
+      zoomToExtent() {
+        const bbox = this.metadata[this.species].bounding_box
+        if (bbox) {
+          let sw = [bbox.lon_min, bbox.lat_min]
+          let ne = [bbox.lon_max, bbox.lat_max]
+
+          // if extent crosses the antimeridian, set lng bounds to farthest sw and ne bounds without crossing
+          if (sw[0] - ne[0] > 0) {
+            // preserve latitude coords
+            sw = [-179, sw[1]]
+            ne = [179, ne[1]]
+          }
+
+          const coords = [sw, ne]
+          // if small screen, omit extra padding around bbox
+          // this.map.fitBounds(coords, { padding: window.innerWidth <= 900 || window.innerHeight <= 500 ? 0 : 200 })
+          this.map.fitBounds(coords, { padding: 100 })
+        }
+      },
       updateLayer() {
         // clear any existing popups when species is updated
         if (this.popup) {
@@ -290,6 +308,9 @@
           this.checkTileData(this.metadata, this.species).then(() => {
             // reset selected hexes any time a new species is selected
             this.resetSelected()
+
+            // zoom to species extent on map
+            this.zoomToExtent()
 
             this.map.addSource(this.species, {
               type: 'vector',
@@ -316,7 +337,9 @@
                 'fill-opacity': 0.3,
               },
             })
+
           })
+
 
           // MOUSE CLICK DOWN/DRAG EVENT
           this.map.on('mousedown', (e: any) => {
