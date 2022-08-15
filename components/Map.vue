@@ -31,7 +31,7 @@
 
       <!-- TODO Add warning before switching seasons? Auto save or send? -->
       <select :value="season"  @input="onSeasonChange">
-        <option v-for="option in seasonOptions" :value="option.value">
+        <option v-for="option in seasonOptions" :value="option.value" :disabled="disableSeason(option.value)">
           {{ option.text }}
         </option>
       </select>
@@ -398,6 +398,11 @@
           .catch((err) => {
             console.log(err)
           })
+      },
+      disableSeason(season: string) {
+        if (this.metadata[this.species]) {
+          return !this.metadata[this.species].in_range_addresses[season]
+        }
       },
       resetSelected() {
         // json response data for the selected season
