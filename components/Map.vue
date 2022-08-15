@@ -48,6 +48,14 @@
         <button @click="seasonChange">Change season</button>
 
       </div>
+
+      <hr>
+      <select v-model="style">
+        <option v-for="option in styleOptions" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
+      <br>
       <br>
 <!--      <input type="checkbox" id="checkbox" v-model="rangeOnly">-->
 <!--      <label for="checkbox">Selected range only</label>-->
@@ -126,6 +134,10 @@
         { text: 'prebreeding_migration', value: 'prebreeding_migration' },
         { text: 'postbreeding_migration', value: 'postbreeding_migration' },
       ],
+      styleOptions: [
+        { text: 'Street', value: 'streets-v11' },
+        { text: 'Satellite', value: 'satellite-streets-v11' },
+      ],
       confirmSeasonChange: false,
       displayMsg: false,
       deselectLasso: false,
@@ -139,6 +151,7 @@
       },
       metadata: {} as any,
       popup: undefined as any,
+      style: 'streets-v11'
     }),
     computed: {
       selectedOutput(): string {
@@ -149,6 +162,14 @@
       },
     },
     watch: {
+      style() {
+        this.map.setStyle(`mapbox://styles/mapbox/${this.style}`)
+
+        this.map.once('style.load', () => {
+          // TODO UPDATE STYLE AND ADD SELECTIONS
+          this.updateLayer()
+        })
+      },
       confirmSeasonChange(confirm) {
         if (confirm) {
           // clear all children, filters, and selected hexes when season is changed
@@ -193,7 +214,7 @@
       this.map = new M.Map({
         container: 'map-2',
         // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
-        style: 'mapbox://styles/mapbox/streets-v11', // style URL
+        style: `mapbox://styles/mapbox/${this.style}`, // style URL
         center: this.coords,
         zoom: 1,
         doubleClickZoom: false,
@@ -259,7 +280,6 @@
         // TODO Add multiple undos
         // TODO Add redo??
         // TODO Allow season toggling without clearing prev season
-        // TODO Bbox zoom
         // TODO REdo selections to watch selected valuse and update map state from watcher
         // TODO satellite base
         // TODO Add mechanism to save selected vals
