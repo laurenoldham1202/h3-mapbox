@@ -166,6 +166,11 @@
         this.map.setStyle(`mapbox://styles/mapbox/${this.style}`)
 
         this.map.once('style.load', () => {
+
+          // TODO MAKE FN FOR SPECIES CHANGE, SEASON CHANGE?, STYLE CHANGE
+          this.map.off('click', [this.species, 'children'], this.mapClick)
+          this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
+
           // TODO UPDATE STYLE AND ADD SELECTIONS
           this.updateLayer(false)
         })
@@ -352,7 +357,7 @@
                 'visibility': 'visible'
               },
               paint: {
-                // 'fill-outline-color': 'white',  // hot pink '#fc035e'
+              // ...(!resetSelected && {'fill-outline-color': 'white'}),  // hot pink '#fc035e'
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
                   resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
                 ], 'deeppink', 'black'],
@@ -371,33 +376,33 @@
               // this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
               //
               //
-              // this.map.addSource('children', {
-              //   type: 'geojson',
-              //   data: {
-              //     type: 'FeatureCollection',
-              //     features: [],
-              //   },
-              //   promoteId: 'h3_address',
-              // })
-              //
-              // this.map.addLayer({
-              //   id: 'children',
-              //   source: 'children',
-              //   type: 'fill',
-              //   paint: {
-              //     'fill-opacity': 0.3,
-              //     'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-              //     // 'fill-color': 'blue'
-              //   },
-              //   layout: {
-              //     'fill-sort-key': ['+', ['get', 'h3_address']],
-              //   },
-              // })
-              //
-              // this.setChildFeatures()
-              // this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
-              // this.filterOutParentHexes('children', this.filteredChildren)
-              // this.filterOutParentHexes(this.species, this.filteredBase)
+              this.map.addSource('children', {
+                type: 'geojson',
+                data: {
+                  type: 'FeatureCollection',
+                  features: [],
+                },
+                promoteId: 'h3_address',
+              })
+
+              this.map.addLayer({
+                id: 'children',
+                source: 'children',
+                type: 'fill',
+                paint: {
+                  'fill-opacity': 0.3,
+                  'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+                  // 'fill-color': 'blue'
+                },
+                layout: {
+                  'fill-sort-key': ['+', ['get', 'h3_address']],
+                },
+              })
+              this.filterOutParentHexes(this.species, this.filteredBase)
+              this.filterOutParentHexes('children', this.filteredChildren)
+              this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
+              this.setChildFeatures()
+
               //
               //
               // console.log(this.filteredChildren)
@@ -820,11 +825,11 @@
         }
       },
       mapRightClick(e: any) {
-        console.log('RIGHT CLICK')
+        // console.log('RIGHT CLICK')
         const event = e.originalEvent
         // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
         if (!this.drawMode && !event.ctrlKey && event.button !== 0) {
-          console.log(this.species)
+          // console.log(this.species)
           const feature = this.map.queryRenderedFeatures(e.point, { layers: [this.species, 'children'] })[0]
           // console.log(feature)
           const source = feature.source
@@ -852,6 +857,7 @@
               // add parent to children layer to keep totally separate from filtered based-hex values
               this.children.push(parent)
 
+              console.log(feature.id, this.arrayIncludesItem(this.selected, feature.id))
 
               // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
               // match parent selected state to clicked hex selected state, push to array if selected
