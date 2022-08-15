@@ -36,7 +36,7 @@
         </option>
       </select>
 
-      <p style="color: red; font-weight: 500;" v-show="!seasonAvailable">
+      <p style="color: red; font-weight: 500;" v-show="disableSeason(season)">
         {{season}} season UNAVAILABLE for {{species}}
       </p>
 
@@ -77,10 +77,6 @@
   import * as h3 from 'h3-js'
   import 'mapbox-gl/dist/mapbox-gl.css'
   import axios from 'axios'
-
-
-  import {SELECTED, ALDFLY_SELECTED} from '~/static/constants'
-
   import * as turf from '@turf/turf'
 
 
@@ -143,7 +139,6 @@
       },
       metadata: {} as any,
       popup: undefined as any,
-      seasonAvailable: true,
     }),
     computed: {
       selectedOutput(): string {
@@ -400,6 +395,7 @@
           })
       },
       disableSeason(season: string) {
+        // boolean value to indicate if selected season is available for a given species - used in template for messaging
         if (this.metadata[this.species]) {
           return !this.metadata[this.species].in_range_addresses[season]
         }
@@ -407,8 +403,6 @@
       resetSelected() {
         // json response data for the selected season
         const seasonData = this.metadata[this.species].in_range_addresses[this.season]
-        // boolean value to indicate if selected season is available for a given species - used in template for messaging
-        this.seasonAvailable = !!seasonData
         if (seasonData) {
           // only reset JSON data if season exists to prevent errors
           this.selected = JSON.parse(JSON.stringify(seasonData))
