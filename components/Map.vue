@@ -36,6 +36,10 @@
         </option>
       </select>
 
+      <p style="color: red; font-weight: 500;" v-show="!seasonAvailable">
+        {{season}} season UNAVAILABLE for {{species}}
+      </p>
+
       <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="displayMsg">
         CHANGE SEASONS?
         <br>Changing seasons will clear your map selections and cannot be retrieved.
@@ -139,7 +143,7 @@
       },
       metadata: {} as any,
       popup: undefined as any,
-      // selectedOutput: 'bloop'
+      seasonAvailable: true,
     }),
     computed: {
       selectedOutput(): string {
@@ -147,7 +151,7 @@
       },
       seasonFilter(): Array<any> {
         return ['==', ['get', 'season'], this.season]
-      }
+      },
     },
     watch: {
       confirmSeasonChange(confirm) {
@@ -253,8 +257,6 @@
         // // TODO Return single feature outline?
 
 
-        // TODO Handle species changes
-        // TODO CLEAR CHILDREN AND FILTERS ON SEASON AND SPECIES CHANGE
         // TODO Restrict lasso values!! and/or restructure so that selections and deselections are saved separately to improve performance
         // TODO Add displayMsg to prevent species change without saving selections??
         // TODO Handle missing seasons
@@ -385,6 +387,7 @@
         axios
           .get(url)
           .then(async (response) => {
+            // console.log(response)
             this.metadata[this.species] = await response.data
             // this.tileMetadata[this.species] = await response.data
             /**
@@ -397,7 +400,16 @@
           })
       },
       resetSelected() {
-        this.selected = JSON.parse(JSON.stringify(this.metadata[this.species].in_range_addresses[this.season]))
+        // json response data for the selected season
+        const seasonData = this.metadata[this.species].in_range_addresses[this.season]
+        // boolean value to indicate if selected season is available for a given species - used in template for messaging
+        this.seasonAvailable = !!seasonData
+        if (seasonData) {
+          // only reset JSON data if season exists to prevent errors
+          this.selected = JSON.parse(JSON.stringify(seasonData))
+        } else {
+          console.log(`SEASON NOT AVAILABLE FOR ${this.species}`)
+        }
       },
       resetLayer(layer: string, seasonChange: boolean) {
         if (this.map.getSource('children') && this.map.getSource(layer)) {
