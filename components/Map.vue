@@ -365,14 +365,14 @@
               },
             })
 
-            console.log('diff fill color conditions')
+            // console.log('diff fill color conditions')
 
             if (resetSelected) {
               // reset selected hexes any time a new species is selected
               this.resetSelected()
               // zoom to species extent on map
               this.zoomToExtent()
-              console.log('reset selected')
+              // console.log('reset selected')
             } else {
               // console.log(this.map.getLayer('children'))
               // this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
@@ -381,7 +381,7 @@
 
               // TODO HANDLE DESELECTED FEATURES ON STYLE CHANGE
               // ^^ the feature.state is cleared and only pink selected values are given selected value, so any {selected: false} need to be set
-              console.log('DONT reset selected')
+              // console.log('DONT reset selected')
 
               // FIXME Reselecting deselected base hex after style change
               this.map.addSource('children', {
@@ -406,6 +406,12 @@
                   'fill-sort-key': ['+', ['get', 'h3_address']],
                 },
               })
+
+              // console.log('BASE', this.filteredBase)
+              // console.log('FILTERED CHILDREN', this.filteredChildren)
+              // console.log('CHILDREN', this.children)
+
+
               this.filterOutParentHexes(this.species, this.filteredBase)
               this.filterOutParentHexes('children', this.filteredChildren)
               this.setChildFeatures()
@@ -802,14 +808,23 @@
 
             // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
             // boolean feature property for range - set during tile generation
-            const isRange = feature.properties.in_range
+            const inRange = feature.properties.in_range
+
+            // handle hexes that were deselected in base range when basemap changed, which removed {selected: false}
+            const deselectedFromBase = !this.selected.includes(feature.id) && inRange
+
             // if feature is part of the default range on initial map load before feature state is set
-            const defaultRange = !Object.keys(feature.state).length && isRange
+            const defaultRange = !Object.keys(feature.state).length && inRange
 
             // console.log('is_range var:', isRange, defaultRange, feature.state.selected)
 
+            // console.log(feature.state)
+            // console.log('loaded as default range, has no feature state:', defaultRange)
+            // console.log('clicked in selected?', this.selected.includes(feature.id))
+            // console.log('in range:', isRange)
 
-            console.log('has selected state is MISSING KEY', Object.keys(feature.state), !Object.keys(feature.state).length)
+            console.log('set to true:', feature.id, !this.selected.includes(feature.id) && inRange)
+
             // console.log(defaultRange ? !isRange : !feature.state.selected)
 
             // update map feature state
@@ -818,7 +833,7 @@
                 source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
                 id: feature.id
               },
-              { selected: defaultRange ? !isRange : !feature.state.selected }
+              { selected: deselectedFromBase ? deselectedFromBase : defaultRange ? !inRange : !feature.state.selected }
             )
 
             this.updateSelected(feature)
