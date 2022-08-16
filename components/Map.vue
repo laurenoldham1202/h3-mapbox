@@ -4,7 +4,54 @@
 
     <div id="map-2"></div>
 
-    <div class="sidebar" style="padding: 0.5rem;">
+    <div id="sidebar" style="">
+
+
+      <span>Select a species:</span> <br>
+      <select v-model="species" class="select">
+        <option v-for="option in options" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
+      <br>
+      <br>
+
+      <!-- TODO Add warning before switching seasons? Auto save or send? -->
+      <span>Select a season:</span> <br>
+      <select :value="season"  @input="onSeasonChange" class="select">
+        <option v-for="option in seasonOptions" :value="option.value" :disabled="disableSeason(option.value)">
+          {{ option.text }}
+        </option>
+      </select>
+
+      <p style="color: red; font-weight: 500;" v-show="disableSeason(season)">
+        {{season}} season UNAVAILABLE for {{species}}
+      </p>
+
+      <!--  ONLY DISPLAY IF SELECTED VALUES HAVE CHANGED, have save point here, not necessarily able to reload, add to species change, MENTION THIS IN TRAINING -->
+      <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="displayMsg">
+        CHANGE SEASONS?
+        <br>Changing seasons will clear your map selections and cannot be retrieved.
+        <br>
+        <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
+        <button @click="seasonChange">Change season</button>
+
+      </div>
+
+      <br><br>
+      <label for="basemap">Basemap: </label><br>
+      <select v-model="style" id="basemap" class="select">
+        <option v-for="option in styleOptions" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
+
+      <hr>
+      # selected hexes: <strong>{{selected.length}}</strong>
+      <br><br>
+      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>
+      <hr>
+
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
       <span style="line-height: 30px;">
         SELECT: <strong>CLICK</strong> a grey hex
@@ -20,44 +67,19 @@
         LASSO DESELECT: <strong>CTRL + DRAG</strong>
       </span>
 
-      <hr>
 
-      <select v-model="species">
-        <option v-for="option in options" :value="option.value">
-          {{ option.text }}
-        </option>
-      </select>
-      <br>
 
-      <!-- TODO Add warning before switching seasons? Auto save or send? -->
-      <select :value="season"  @input="onSeasonChange">
-        <option v-for="option in seasonOptions" :value="option.value">
-          {{ option.text }}
-        </option>
-      </select>
-
-      <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="displayMsg">
-        CHANGE SEASONS?
-        <br>Changing seasons will clear your map selections and cannot be retrieved.
-        <br>
-        <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
-        <button @click="seasonChange">Change season</button>
-
-      </div>
-      <br>
 <!--      <input type="checkbox" id="checkbox" v-model="rangeOnly">-->
 <!--      <label for="checkbox">Selected range only</label>-->
 
 <!--      <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>-->
 <!--      <button @click="print">print filters</button>-->
 
-      <hr>
-      Selected Hex Ids ({{selected.length}}):
+<!--      Selected Hex Ids ({{selected.length}}):-->
+
 <!--      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>-->
 <!--      <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>-->
 
-      <hr>
-      <button @click="undo" :disabled="!lastEvent.event">UNDO</button>
 
     </div>
 
@@ -73,10 +95,6 @@
   import * as h3 from 'h3-js'
   import 'mapbox-gl/dist/mapbox-gl.css'
   import axios from 'axios'
-
-
-  import {SELECTED, ALDFLY_SELECTED} from '~/static/constants'
-
   import * as turf from '@turf/turf'
 
 
@@ -126,6 +144,10 @@
         { text: 'prebreeding_migration', value: 'prebreeding_migration' },
         { text: 'postbreeding_migration', value: 'postbreeding_migration' },
       ],
+      styleOptions: [
+        { text: 'Street', value: 'streets-v11' },
+        { text: 'Satellite', value: 'satellite-streets-v11' },
+      ],
       confirmSeasonChange: false,
       displayMsg: false,
       deselectLasso: false,
@@ -139,7 +161,7 @@
       },
       metadata: {} as any,
       popup: undefined as any,
-      // selectedOutput: 'bloop'
+      style: 'streets-v11'
     }),
     computed: {
       selectedOutput(): string {
@@ -147,9 +169,22 @@
       },
       seasonFilter(): Array<any> {
         return ['==', ['get', 'season'], this.season]
-      }
+      },
     },
     watch: {
+      style() {
+        this.map.setStyle(`mapbox://styles/mapbox/${this.style}`)
+
+        this.map.once('style.load', () => {
+
+          // TODO MAKE FN FOR SPECIES CHANGE, SEASON CHANGE?, STYLE CHANGE
+          this.map.off('click', [this.species, 'children'], this.mapClick)
+          this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
+
+          // TODO UPDATE STYLE AND ADD SELECTIONS
+          this.updateLayer(false)
+        })
+      },
       confirmSeasonChange(confirm) {
         if (confirm) {
           // clear all children, filters, and selected hexes when season is changed
@@ -194,9 +229,9 @@
       this.map = new M.Map({
         container: 'map-2',
         // style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
-        style: 'mapbox://styles/mapbox/streets-v11', // style URL
+        style: `mapbox://styles/mapbox/${this.style}`, // style URL
         center: this.coords,
-        zoom: 4,
+        zoom: 1,
         doubleClickZoom: false,
         boxZoom: false,
         dragRotate: false,
@@ -253,17 +288,13 @@
         // // TODO Return single feature outline?
 
 
-        // TODO Handle species changes
-        // TODO CLEAR CHILDREN AND FILTERS ON SEASON AND SPECIES CHANGE
         // TODO Restrict lasso values!! and/or restructure so that selections and deselections are saved separately to improve performance
         // TODO Add displayMsg to prevent species change without saving selections??
-        // TODO Handle missing seasons
         // TODO Clear lastEvent on season or species change
         // TODO Handle antimeridian bugs
         // TODO Add multiple undos
         // TODO Add redo??
         // TODO Allow season toggling without clearing prev season
-        // TODO Bbox zoom
         // TODO REdo selections to watch selected valuse and update map state from watcher
         // TODO satellite base
         // TODO Add mechanism to save selected vals
@@ -278,7 +309,26 @@
       })
     },
     methods: {
-      updateLayer() {
+      zoomToExtent() {
+        const bbox = this.metadata[this.species].bounding_box
+        if (bbox) {
+          let sw = [bbox.lon_min, bbox.lat_min]
+          let ne = [bbox.lon_max, bbox.lat_max]
+
+          // if extent crosses the antimeridian, set lng bounds to farthest sw and ne bounds without crossing
+          if (sw[0] - ne[0] > 0) {
+            // preserve latitude coords
+            sw = [-179, sw[1]]
+            ne = [179, ne[1]]
+          }
+
+          const coords = [sw, ne]
+          // if small screen, omit extra padding around bbox
+          // this.map.fitBounds(coords, { padding: window.innerWidth <= 900 || window.innerHeight <= 500 ? 0 : 200 })
+          this.map.fitBounds(coords, { padding: 100 })
+        }
+      },
+      updateLayer(resetSelected = true) {
         // clear any existing popups when species is updated
         if (this.popup) {
           this.popup.remove()
@@ -291,8 +341,11 @@
           }
           // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
-            // reset selected hexes any time a new species is selected
-            this.resetSelected()
+
+
+            // console.log(this.selected)
+
+
 
             this.map.addSource(this.species, {
               type: 'vector',
@@ -314,12 +367,65 @@
                 'visibility': 'visible'
               },
               paint: {
-                // 'fill-outline-color': 'white',  // hot pink '#fc035e'
-                'fill-color': ['case', ['boolean', ['feature-state', 'selected'], ['get', 'in_range']], 'deeppink', 'black'],
+              // ...(!resetSelected && {'fill-outline-color': 'white'}),  // hot pink '#fc035e'
+                'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
+                  resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
+                ], 'deeppink', 'black'],
                 'fill-opacity': 0.3,
               },
             })
+
+            // console.log('diff fill color conditions')
+
+            if (resetSelected) {
+              // reset selected hexes any time a new species is selected
+              this.resetSelected()
+              // zoom to species extent on map
+              this.zoomToExtent()
+              // console.log('reset selected')
+            } else {
+              // console.log(this.map.getLayer('children'))
+              // this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+              //
+              //
+
+              // TODO HANDLE DESELECTED FEATURES ON STYLE CHANGE
+              // ^^ the feature.state is cleared and only pink selected values are given selected value, so any {selected: false} need to be set
+              // console.log('DONT reset selected')
+
+              // FIXME Reselecting deselected base hex after style change
+              this.map.addSource('children', {
+                type: 'geojson',
+                data: {
+                  type: 'FeatureCollection',
+                  features: [],
+                },
+                promoteId: 'h3_address',
+              })
+
+              this.map.addLayer({
+                id: 'children',
+                source: 'children',
+                type: 'fill',
+                paint: {
+                  'fill-opacity': 0.3,
+                  'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
+                  // 'fill-color': 'blue'
+                },
+                layout: {
+                  'fill-sort-key': ['+', ['get', 'h3_address']],
+                },
+              })
+
+              this.filterOutParentHexes(this.species, this.filteredBase)
+              this.filterOutParentHexes('children', this.filteredChildren)
+              this.setChildFeatures()
+              this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+              this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
+            }
+
           })
+
 
           // MOUSE CLICK DOWN/DRAG EVENT
           this.map.on('mousedown', (e: any) => {
@@ -385,6 +491,7 @@
         axios
           .get(url)
           .then(async (response) => {
+            // console.log(response)
             this.metadata[this.species] = await response.data
             // this.tileMetadata[this.species] = await response.data
             /**
@@ -396,8 +503,21 @@
             console.log(err)
           })
       },
+      disableSeason(season: string) {
+        // boolean value to indicate if selected season is available for a given species - used in template for messaging
+        if (this.metadata[this.species]) {
+          return !this.metadata[this.species].in_range_addresses[season]
+        }
+      },
       resetSelected() {
-        this.selected = JSON.parse(JSON.stringify(this.metadata[this.species].in_range_addresses[this.season]))
+        // json response data for the selected season
+        const seasonData = this.metadata[this.species].in_range_addresses[this.season]
+        if (seasonData) {
+          // only reset JSON data if season exists to prevent errors
+          this.selected = JSON.parse(JSON.stringify(seasonData))
+        } else {
+          console.log(`SEASON NOT AVAILABLE FOR ${this.species}`)
+        }
       },
       resetLayer(layer: string, seasonChange: boolean) {
         if (this.map.getSource('children') && this.map.getSource(layer)) {
@@ -531,7 +651,7 @@
       },
       drawCreate(e: any) {
           // console.log(this.deselectLasso)
-          console.log(e)
+          // console.log(e)
           // console.log()
           const bbox = this.bboxToPixel(e.features[0])
           // TODO Add option to user intersection or completely contained within?
@@ -576,7 +696,7 @@
 
           })
 
-          console.log(this.lastEvent)
+          // console.log(this.lastEvent)
 
 
 
@@ -589,7 +709,7 @@
 
           const selectMode = !e.originalEvent.shiftKey
           const feature = e.features[0]
-          console.log(feature)
+          console.log('map click', feature)
           const res = parseInt(feature.id[1]) + 1
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
@@ -680,24 +800,21 @@
 
             }
           } else {  // if selection mode is on
-
-            // FIXME Sel mode false, click range erroneously deselects features
-
-            // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
             // boolean feature property for range - set during tile generation
-            const isRange = feature.properties.in_range
+            const inRange = feature.properties.in_range
+            // handle hexes that were deselected in base range when basemap changed, which removed {selected: false}
+            const deselectedFromBase = !this.selected.includes(feature.id) && inRange
             // if feature is part of the default range on initial map load before feature state is set
-            const defaultRange = !Object.keys(feature.state).length && isRange
-
-            // console.log(isRange, defaultRange, feature.state.selected)
+            const defaultRange = !Object.keys(feature.state).length && inRange
+            // set map state on hex click, accounting for situations when feature state is not yet state on initial load or basemap change
+            const selectedState = deselectedFromBase ? deselectedFromBase : defaultRange ? !inRange : !feature.state.selected
 
             // update map feature state
             this.map.setFeatureState(
               {
                 source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
                 id: feature.id
-              },
-              { selected: defaultRange ? !isRange : !feature.state.selected }
+              }, { selected: selectedState }
             )
 
             this.updateSelected(feature)
@@ -719,11 +836,11 @@
         }
       },
       mapRightClick(e: any) {
-        console.log('RIGHT CLICK')
+        // console.log('RIGHT CLICK')
         const event = e.originalEvent
         // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
         if (!this.drawMode && !event.ctrlKey && event.button !== 0) {
-          console.log(this.species)
+          // console.log(this.species)
           const feature = this.map.queryRenderedFeatures(e.point, { layers: [this.species, 'children'] })[0]
           // console.log(feature)
           const source = feature.source
@@ -751,6 +868,7 @@
               // add parent to children layer to keep totally separate from filtered based-hex values
               this.children.push(parent)
 
+              // console.log(feature.id, this.arrayIncludesItem(this.selected, feature.id))
 
               // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
               // match parent selected state to clicked hex selected state, push to array if selected
@@ -1162,11 +1280,43 @@
 </script>
 
 <style>
-  #map-2 {
-    width: 70%;
-    height: 800px;
-    background: purple;
+
+  body {
+    margin: 0;
+    padding: 0;
+    display: inline-block !important;
   }
+
+  #map-2 {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 75%;
+    margin-left: -2rem
+    /*display: block;*/
+
+  }
+
+  #sidebar {
+    position: absolute;
+    /*display: inline-block;*/
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 25%;
+    padding: 1rem
+  }
+
+  .select {
+    width: 75%;
+    height: 30px;
+  }
+
+  /*#map-2 {*/
+  /*  width: 70%;*/
+  /*  height: 800px;*/
+  /*  background: purple;*/
+  /*}*/
 
   .mapboxgl-ctrl-group button {
     color: black;
