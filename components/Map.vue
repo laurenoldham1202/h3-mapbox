@@ -407,24 +407,11 @@
                 },
               })
 
-              // console.log('BASE', this.filteredBase)
-              // console.log('FILTERED CHILDREN', this.filteredChildren)
-              // console.log('CHILDREN', this.children)
-
-
               this.filterOutParentHexes(this.species, this.filteredBase)
               this.filterOutParentHexes('children', this.filteredChildren)
               this.setChildFeatures()
               this.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
               this.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
-
-              // console.log('selected set')
-
-              //
-              //
-              // console.log(this.filteredChildren)
-              // console.log(this.children)
-
             }
 
           })
@@ -803,37 +790,21 @@
 
             }
           } else {  // if selection mode is on
-
-            // FIXME Sel mode false, click range erroneously deselects features
-
-            // TODO Make sure selected array includes all initially selected features? Or have separate deselected array?
             // boolean feature property for range - set during tile generation
             const inRange = feature.properties.in_range
-
             // handle hexes that were deselected in base range when basemap changed, which removed {selected: false}
             const deselectedFromBase = !this.selected.includes(feature.id) && inRange
-
             // if feature is part of the default range on initial map load before feature state is set
             const defaultRange = !Object.keys(feature.state).length && inRange
-
-            // console.log('is_range var:', isRange, defaultRange, feature.state.selected)
-
-            // console.log(feature.state)
-            // console.log('loaded as default range, has no feature state:', defaultRange)
-            // console.log('clicked in selected?', this.selected.includes(feature.id))
-            // console.log('in range:', isRange)
-
-            console.log('set to true:', feature.id, !this.selected.includes(feature.id) && inRange)
-
-            // console.log(defaultRange ? !isRange : !feature.state.selected)
+            // set map state on hex click, accounting for situations when feature state is not yet state on initial load or basemap change
+            const selectedState = deselectedFromBase ? deselectedFromBase : defaultRange ? !inRange : !feature.state.selected
 
             // update map feature state
             this.map.setFeatureState(
               {
                 source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
                 id: feature.id
-              },
-              { selected: deselectedFromBase ? deselectedFromBase : defaultRange ? !inRange : !feature.state.selected }
+              }, { selected: selectedState }
             )
 
             this.updateSelected(feature)
