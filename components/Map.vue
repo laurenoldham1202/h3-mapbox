@@ -5,32 +5,20 @@
     <div id="map-2"></div>
 
     <div id="sidebar" style="">
-      <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
-      <span style="line-height: 30px;">
-        SELECT: <strong>CLICK</strong> a grey hex
-        <br>
-        DESELECT: <strong>CLICK</strong> a pink hex
-        <br>
-        REFINE: <strong>CLICK + SHIFT</strong>
-        <br>
-        COLLAPSE: <strong>RIGHT CLICK</strong>
-        <br>
-        LASSO SELECT: <strong>SHIFT + DRAG</strong>
-        <br>
-        LASSO DESELECT: <strong>CTRL + DRAG</strong>
-      </span>
 
-      <hr>
 
-      <select v-model="species">
+      <span>Select a species:</span> <br>
+      <select v-model="species" class="select">
         <option v-for="option in options" :value="option.value">
           {{ option.text }}
         </option>
       </select>
       <br>
+      <br>
 
       <!-- TODO Add warning before switching seasons? Auto save or send? -->
-      <select :value="season"  @input="onSeasonChange">
+      <span>Select a season:</span> <br>
+      <select :value="season"  @input="onSeasonChange" class="select">
         <option v-for="option in seasonOptions" :value="option.value" :disabled="disableSeason(option.value)">
           {{ option.text }}
         </option>
@@ -49,29 +37,48 @@
 
       </div>
 
-      <hr>
-      <label for="basemap">Basemap: </label>
-
-      <select v-model="style" id="basemap">
+      <br><br>
+      <label for="basemap">Basemap: </label><br>
+      <select v-model="style" id="basemap" class="select">
         <option v-for="option in styleOptions" :value="option.value">
           {{ option.text }}
         </option>
       </select>
-      <br>
+
+      <hr>
+      # selected hexes: <strong>{{selected.length}}</strong>
+      <br><br>
+      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>
+      <hr>
+
+      <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
+      <span style="line-height: 30px;">
+        SELECT: <strong>CLICK</strong> a grey hex
+        <br>
+        DESELECT: <strong>CLICK</strong> a pink hex
+        <br>
+        REFINE: <strong>CLICK + SHIFT</strong>
+        <br>
+        COLLAPSE: <strong>RIGHT CLICK</strong>
+        <br>
+        LASSO SELECT: <strong>SHIFT + DRAG</strong>
+        <br>
+        LASSO DESELECT: <strong>CTRL + DRAG</strong>
+      </span>
+
+
+
 <!--      <input type="checkbox" id="checkbox" v-model="rangeOnly">-->
 <!--      <label for="checkbox">Selected range only</label>-->
 
 <!--      <button @click="rangeOnly = !rangeOnly">show new range only: {{ rangeOnly }}</button>-->
 <!--      <button @click="print">print filters</button>-->
 
-      <hr>
 <!--      Selected Hex Ids ({{selected.length}}):-->
-      # selected hexes: <strong>{{selected.length}}</strong>
+
 <!--      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>-->
 <!--      <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>-->
 
-      <hr>
-      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>
 
     </div>
 
@@ -1299,6 +1306,10 @@
     padding: 1rem
   }
 
+  .select {
+    width: 75%;
+    height: 30px;
+  }
 
   /*#map-2 {*/
   /*  width: 70%;*/
