@@ -28,6 +28,7 @@
         {{season}} season UNAVAILABLE for {{species}}
       </p>
 
+      <!--  ONLY DISPLAY IF SELECTED VALUES HAVE CHANGED, have save point here, not necessarily able to reload, add to species change, MENTION THIS IN TRAINING -->
       <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="displayMsg">
         CHANGE SEASONS?
         <br>Changing seasons will clear your map selections and cannot be retrieved.
