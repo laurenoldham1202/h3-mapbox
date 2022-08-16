@@ -4,7 +4,7 @@
 
     <div id="map-2"></div>
 
-    <div class="sidebar" style="padding: 0.5rem;">
+    <div id="sidebar" style="">
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
       <span style="line-height: 30px;">
         SELECT: <strong>CLICK</strong> a grey hex
@@ -50,12 +50,13 @@
       </div>
 
       <hr>
-      <select v-model="style">
+      <label for="basemap">Basemap: </label>
+
+      <select v-model="style" id="basemap">
         <option v-for="option in styleOptions" :value="option.value">
           {{ option.text }}
         </option>
       </select>
-      <br>
       <br>
 <!--      <input type="checkbox" id="checkbox" v-model="rangeOnly">-->
 <!--      <label for="checkbox">Selected range only</label>-->
@@ -64,12 +65,13 @@
 <!--      <button @click="print">print filters</button>-->
 
       <hr>
-      Selected Hex Ids ({{selected.length}}):
+<!--      Selected Hex Ids ({{selected.length}}):-->
+      # selected hexes: <strong>{{selected.length}}</strong>
 <!--      <div class="tmp" @click="copyToClipboard" style="width: 300px; height: 300px; margin-bottom: 0.75rem; border: 1px solid black; overflow: scroll; padding: 0.5rem; cursor: pointer">{{selected}}</div>-->
 <!--      <span v-if="copied" style="color: green;"><strong>IDs copied to clipboard!</strong></span>-->
 
       <hr>
-      <button @click="undo" :disabled="!lastEvent.event">UNDO</button>
+      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>
 
     </div>
 
@@ -1270,11 +1272,39 @@
 </script>
 
 <style>
-  #map-2 {
-    width: 70%;
-    height: 800px;
-    background: purple;
+
+  body {
+    margin: 0;
+    padding: 0;
+    display: inline-block !important;
   }
+
+  #map-2 {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 75%;
+    margin-left: -2rem
+    /*display: block;*/
+
+  }
+
+  #sidebar {
+    position: absolute;
+    /*display: inline-block;*/
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 25%;
+    padding: 1rem
+  }
+
+
+  /*#map-2 {*/
+  /*  width: 70%;*/
+  /*  height: 800px;*/
+  /*  background: purple;*/
+  /*}*/
 
   .mapboxgl-ctrl-group button {
     color: black;
