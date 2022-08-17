@@ -1303,10 +1303,12 @@
           }, {selected: false})
         } else if (event === 'click_deselect') {
           console.log('Need to click select', ids)
+          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+
           this.selected.push(...ids)
           this.map.setFeatureState({
-            source: source[0],
-            ...(source[0] === this.species && { sourceLayer: this.species }),
+            source: clickSource,
+            ...(clickSource === this.species && { sourceLayer: this.species }),
             id: ids[0]
           }, {selected: true})
         }
