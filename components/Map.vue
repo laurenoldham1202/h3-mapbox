@@ -275,7 +275,15 @@
           paint: {
             'fill-opacity': 0.3,
             'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-            // 'fill-color': 'blue'
+            // // 'fill-color': 'blue'
+            // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'],
+            //   !this.selected.length ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
+            // ], 'deeppink',  this.style === 'streets-v11' ? 'black' : '#fefefe'],
+            // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
+            //   !this.selected.length ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
+            // ], 'deeppink', 'black'],
+            // 'fill-opacity': this.style === 'streets-v11' ? 0.3 :
+            //   ['case', !this.selected.length ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false], 0.5, 0.3]
           },
           layout: {
             'fill-sort-key': ['+', ['get', 'h3_address']],
@@ -367,22 +375,15 @@
                 'visibility': 'visible'
               },
               paint: {
-
-                // if not selected amd street, black
-                // if not selected and sat, white
-                // if selected, always pink
+                // TODO STREAMLINE THESE EXPRESSIONS HERE AND IN CHILDREN LAYER
                 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'],
                   resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
                 ], 'deeppink',  this.style === 'streets-v11' ? 'black' : '#fefefe'],
-              // ...(!resetSelected && {'fill-outline-color': 'white'}),  // hot pink '#fc035e'
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
                   resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
                 ], 'deeppink', 'black'],
-                // 'fill-opacity': this.style === 'streets-v11' ? 0.3 : 0.5,
-                // if street, always 0.3
-                // if sat and selected, 0.5
-                // if sat and not selected, 0.3
-                'fill-opacity': this.style === 'streets-v11' ? 0.3 : ['case', resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false], 0.5, 0.3]
+                'fill-opacity': this.style === 'streets-v11' ? 0.3 :
+                  ['case', resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false], 0.5, 0.3]
               },
             })
 
@@ -419,14 +420,22 @@
                 source: 'children',
                 type: 'fill',
                 paint: {
-                  'fill-opacity': 0.3,
-                  'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-                  // 'fill-color': 'blue'
+                  // NEED TO ADD THESE STYLES TO ON LOAD CHILDREN LAYER
+                  'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], ['match', ['get', 'h3_address'], this.selected, true, false]
+                  ], 'deeppink',  this.style === 'streets-v11' ? 'black' : '#fefefe'],
+                  'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
+                     ['match', ['get', 'h3_address'], this.selected, true, false]
+                  ], 'deeppink', 'black'],
+                  'fill-opacity': this.style === 'streets-v11' ? 0.3 :
+                    ['case', ['match', ['get', 'h3_address'], this.selected, true, false], 0.5, 0.3]
                 },
                 layout: {
                   'fill-sort-key': ['+', ['get', 'h3_address']],
                 },
               })
+
+              console.log(this.style)
+              console.log(this.map.getPaintProperty('children', 'fill-opacity'))
 
               this.filterOutParentHexes(this.species, this.filteredBase)
               this.filterOutParentHexes('children', this.filteredChildren)
