@@ -49,7 +49,8 @@
       <hr>
       # selected hexes: <strong>{{selected.length}}</strong>
       <br><br>
-      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>
+<!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
+      <button @click="undoTest">UNDO TEST</button>
       <hr>
 
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
@@ -159,9 +160,11 @@
         layers: [] as any[],
         children: {} as any,
       },
+      pastActions: [] as any[],
       metadata: {} as any,
       popup: undefined as any,
-      style: 'streets-v11'
+      style: 'streets-v11',
+      count: 0,
     }),
     computed: {
       selectedOutput(): string {
@@ -172,6 +175,10 @@
       },
     },
     watch: {
+      pastActions() {
+        // console.log('ACTIONS:', this.pastActions)
+        this.count = 0
+      },
       style() {
         this.map.setStyle(`mapbox://styles/mapbox/${this.style}`)
 
@@ -455,7 +462,7 @@
           // TESTING: Add popup for each hex
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
-            this.popup.setHTML(e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
+            this.popup.setHTML(e.features[0].source + '<br>' + e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
           })
 
         } else {
@@ -676,8 +683,14 @@
             ids: [],
             layers: [this.species, 'children'],
             children: {},
-
           }
+
+          this.pastActions.push({
+            event: !this.deselectLasso ? 'lasso_select' : 'lasso_deselect',
+            ids: [],
+            layers: [this.species, 'children'],
+            children: {},
+          })
 
           // console.log(intersection)
           intersection.forEach(feature => {
@@ -710,7 +723,7 @@
 
           const selectMode = !e.originalEvent.shiftKey
           const feature = e.features[0]
-          console.log('map click', feature)
+          // console.log('map click', feature)
           const res = parseInt(feature.id[1]) + 1
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
@@ -796,6 +809,13 @@
                 children: {},
               }
 
+              this.pastActions.push({
+                event: parentSelected ? 'click_expand_selected' : 'click_expand_deselected',
+                ids: [feature.id],
+                layers: [feature.source],
+                children: {},
+              })
+
 
 
 
@@ -829,8 +849,17 @@
               ids: [feature.id],
               layers: [feature.source],
               children: {},
-
             }
+
+            this.pastActions.push({
+              event: this.map.getFeatureState({
+                source: feature.source, ...(feature.source === this.species && { sourceLayer: this.species }),
+                id: feature.id
+              }).selected ? 'click_select' : 'click_deselect',
+              ids: [feature.id],
+              layers: [feature.source],
+              children: {},
+            })
 
             // console.log(this.selected, this.selected.includes(feature.id))
           }
@@ -889,6 +918,13 @@
                 layers: [feature.source],
                 children: {}, // TODO Clear children in other events?
               }
+
+              this.pastActions.push({
+                event: this.arrayIncludesItem(this.selected, feature.id) ? 'click_collapse_selected' : 'click_collapse_deselected',
+                ids: [parent],
+                layers: [feature.source],
+                children: {}, // TODO Clear children in other events?
+              })
 
 
               // empty array for all children through res 6 for the selected parent hex
@@ -977,12 +1013,12 @@
 
         }
       },
-      undo() {
+      undo(lastEvent) {
         // console.log(this.lastEvent)
 
-        const event = this.lastEvent.event
-        const ids = this.lastEvent.ids
-        const source = this.lastEvent.layers
+        const event = lastEvent.event
+        const ids = lastEvent.ids
+        const source = lastEvent.layers
         if (event === 'lasso_select') {
           console.log('Need to deselect', ids)
           ids.forEach(id => {
@@ -1252,10 +1288,17 @@
 
         } else if (event === 'click_select') {
           console.log('Need to click deselect', ids)
+          // console.log(source)
+          // console.log(this.filteredBase, this.filteredBase.includes(ids[0]))
+          // // console.log(this.filteredChildren)
+          // console.log(this.children, this.filteredBase.includes(ids[0]))
+
+          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+          // console.log(this.selected)
           this.removeItemFromArray(this.selected, ids[0])
           this.map.setFeatureState({
-            source: source[0],
-            ...(source[0] === this.species && { sourceLayer: this.species }),
+            source: clickSource,
+            ...(clickSource === this.species && { sourceLayer: this.species }),
             id: ids[0]
           }, {selected: false})
         } else if (event === 'click_deselect') {
@@ -1268,7 +1311,7 @@
           }, {selected: true})
         }
 
-        this.clearLastEvent()
+        // this.clearLastEvent()
       },
       clearLastEvent() {
         this.lastEvent = {
@@ -1278,6 +1321,25 @@
           children: {},
         }
       },
+      undoTest() {
+        this.count++
+        // console.log(this.count)
+        // console.log(this.pastActions)
+        const actionNumber = this.pastActions.length - this.count
+        // console.log(this.pastActions[this.pastActions.length - this.count])
+
+        // TODO Clear on layer changes, when new action is performed after undoing
+        // TODO Account for empty pastActions
+        if (actionNumber >= 0) {
+          // TODO Disable undo button when actionNumber 0
+          this.undo(this.pastActions[actionNumber])
+        }
+
+
+
+
+
+      }
 
     },
   })
