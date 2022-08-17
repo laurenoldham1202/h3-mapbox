@@ -698,10 +698,12 @@
             if (!this.selected.includes(feature.properties.h3_address) && !this.deselectLasso) {
               this.selected.push(feature.properties.h3_address)
               this.lastEvent.ids.push(feature.properties.h3_address)
+              this.pastActions[this.pastActions.length - 1].ids.push(feature.properties.h3_address)
             } else if (this.selected.includes(feature.properties.h3_address) && this.deselectLasso) {
               // console.log(this.selected.length)
               this.removeItemFromArray(this.selected, feature.properties.h3_address)
-              this.lastEvent.ids.push(feature.properties.h3_address)
+              // this.lastEvent.ids.push(feature.properties.h3_address)
+              this.pastActions[this.pastActions.length - 1].ids.push(feature.properties.h3_address)
 
               // console.log(feature.properties.h3_address)
             }
@@ -1014,7 +1016,7 @@
         }
       },
       undo(lastEvent) {
-        // console.log(this.lastEvent)
+        console.log(lastEvent)
 
         const event = lastEvent.event
         const ids = lastEvent.ids
