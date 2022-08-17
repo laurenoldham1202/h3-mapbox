@@ -355,6 +355,7 @@
               maxzoom: 8,
             })
 
+            console.log(resetSelected)
             // TODO Return single feature outline?
             this.map.addLayer({
               id: this.species,
@@ -366,11 +367,22 @@
                 'visibility': 'visible'
               },
               paint: {
+
+                // if not selected amd street, black
+                // if not selected and sat, white
+                // if selected, always pink
+                'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'],
+                  resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
+                ], 'deeppink',  this.style === 'streets-v11' ? 'black' : '#fefefe'],
               // ...(!resetSelected && {'fill-outline-color': 'white'}),  // hot pink '#fc035e'
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
                   resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
                 ], 'deeppink', 'black'],
-                'fill-opacity': 0.3,
+                // 'fill-opacity': this.style === 'streets-v11' ? 0.3 : 0.5,
+                // if street, always 0.3
+                // if sat and selected, 0.5
+                // if sat and not selected, 0.3
+                'fill-opacity': this.style === 'streets-v11' ? 0.3 : ['case', resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false], 0.5, 0.3]
               },
             })
 
