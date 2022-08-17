@@ -294,13 +294,12 @@
         // TODO Handle antimeridian bugs
         // TODO Add multiple undos
         // TODO Add redo??
-        // TODO Allow season toggling without clearing prev season
         // TODO REdo selections to watch selected valuse and update map state from watcher
-        // TODO satellite base
         // TODO Add mechanism to save selected vals
         // TODO Add back rangeOnly option
         // TODO Add line range as layer
         // TODO Update collapse event to only look for queryFeatures instead of AllChildren
+        // TODO Add mass explode/collapse option?
 
 
 
@@ -549,6 +548,8 @@
             }
             this.displayMsg = false
           }
+
+          this.clearLastEvent()
         }
       },
       onSeasonChange(input: any) {
@@ -1267,13 +1268,16 @@
           }, {selected: true})
         }
 
+        this.clearLastEvent()
+      },
+      clearLastEvent() {
         this.lastEvent = {
           event: undefined,
           ids: [],
           layers: [],
           children: {},
         }
-      }
+      },
 
     },
   })
