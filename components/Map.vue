@@ -1369,24 +1369,43 @@
 
 <style>
 
-  body {
+  html, body {
     margin: 0;
     padding: 0;
-    display: inline-block !important;
   }
 
+  * {
+    box-sizing: border-box;
+  }
+  /*body {*/
+  /*  margin: 0;*/
+  /*  padding: 0;*/
+  /*  width: 100%;*/
+  /*  display: flex;*/
+  /*}*/
+
   #map-2 {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 75%;
-    margin-left: -2rem
+    /*position: absolute;*/
+    /*top: 0;*/
+    /*bottom: 0;*/
+    /*width: 75%;*/
+    /*margin-left: -2rem*/
     /*display: block;*/
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 75%;
+    padding: 0;
+    border-width: 0;
+    margin: 0;
+    overflow: hidden;
   }
 
   #sidebar {
     position: absolute;
-    /*display: inline-block;*/
+    display: flex;
+    flex-direction: column;
     top: 0;
     bottom: 0;
     right: 0;
