@@ -131,20 +131,26 @@
       species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
-        { text: 'arcter', value: 'arcter' },
-        { text: 'balshe1', value: 'balshe1' },
-        { text: 'brant', value: 'brant' },
-        { text: 'comter', value: 'comter' },
-        { text: 'parjae', value: 'parjae' },
-        { text: 'westan', value: 'westan' },
+        { text: 'Arctic Tern', value: 'arcter' },
+        { text: 'Balearic Shearwater', value: 'balshe1' },
+        { text: 'Brant', value: 'brant' },
+        { text: 'Common Tern', value: 'comter' },
+        { text: 'Parasitic Jaeger', value: 'parjae' },
+        { text: 'Western Tanager', value: 'westan' },
       ],
       season: 'breeding',
       seasonOptions: [
-        { text: 'breeding', value: 'breeding' },
-        { text: 'nonbreeding', value: 'nonbreeding' },
-        { text: 'prebreeding_migration', value: 'prebreeding_migration' },
-        { text: 'postbreeding_migration', value: 'postbreeding_migration' },
+        { text: 'Breeding', value: 'breeding' },
+        { text: 'Nonbreeding', value: 'nonbreeding' },
+        { text: 'Prebreeding migration', value: 'prebreeding_migration' },
+        { text: 'Postbreeding migration', value: 'postbreeding_migration' },
       ],
+      seasonText: {
+        breeding: 'Breeding',
+        nonbreeding: 'Nonbreeding',
+        'prebreeding_migration': 'Prebreeding migration',
+        'postrebreeding_migration': 'Postbreeding migration',
+      } as any,
       styleOptions: [
         { text: 'Street', value: 'streets-v11' },
         { text: 'Satellite', value: 'satellite-streets-v11' },
@@ -299,9 +305,7 @@
 
         // TODO Restrict lasso values!! and/or restructure so that selections and deselections are saved separately to improve performance
         // TODO Add displayMsg to prevent species change without saving selections??
-        // TODO Clear lastEvent on season or species change
         // TODO Handle antimeridian bugs
-        // TODO Add multiple undos
         // TODO Add redo??
         // TODO REdo selections to watch selected valuse and update map state from watcher
         // TODO Add mechanism to save selected vals
@@ -336,6 +340,7 @@
           this.map.fitBounds(coords, { padding: 100 })
         }
       },
+      // TODO CLEAR DISPLAY MSG IF UOPEN AND SPECIES CHANGED
       updateLayer(resetSelected = true) {
         // clear any existing popups when species is updated
         if (this.popup) {
@@ -356,7 +361,7 @@
               const seasonIncluded = Object.keys(speciesSeasons).includes(season.value)
               // if season is included, display 'mm-dd to mm-dd', otherwise display 'unavailable' for missing seasons
               const text = seasonIncluded ? `${speciesSeasons[season.value].start_date} to ${speciesSeasons[season.value].end_date}` : 'unavailable'
-              season.text = `${season.value} (${text})`
+              season.text = `${this.seasonText[season.value]} (${text})`
             })
 
             this.map.addSource(this.species, {
@@ -468,7 +473,7 @@
           // TESTING: Add popup for each hex
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
-            this.popup.setHTML(e.features[0].source + '<br>' + e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
+            // this.popup.setHTML(e.features[0].source + '<br>' + e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
           })
 
         } else {
