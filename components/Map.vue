@@ -185,6 +185,7 @@
     },
     watch: {
       pastActions() {
+        console.log(this.pastActions)
         this.count = 0
       },
       style() {
@@ -1350,6 +1351,7 @@
         // this.clearLastEvent()
       },
 
+      // TODO CHECK UNDO 1 ACTION, THEN DO NEW ACTION - WHAT HAPPENS?
       undoTest() {
         this.count++
         // TODO Can lastEvent.ids be made for single id since children is included??
@@ -1358,9 +1360,14 @@
           this.undo(this.pastActions[this.actionNumber])
         }
 
+        console.log(this.actionNumber, this.pastActions)
+
         if (this.actionNumber === 0) {
           this.pastActions = []
         }
+
+        this.removeItemFromArray(this.pastActions, this.pastActions[this.actionNumber])
+
       }
 
     },
@@ -1404,8 +1411,8 @@
 
   #sidebar {
     position: absolute;
-    display: flex;
-    flex-direction: column;
+    /*display: flex;*/
+    /*flex-direction: column;*/
     top: 0;
     bottom: 0;
     right: 0;
