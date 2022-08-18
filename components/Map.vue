@@ -50,7 +50,7 @@
       # selected hexes: <strong>{{selected.length}}</strong>
       <br><br>
 <!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
-      <button @click="undoTest" :disabled="(pastActions.length - count) <= 0">UNDO LAST ACTION</button>
+      <button @click="undoTest" :disabled="actionNumber <= 0">UNDO LAST ACTION</button>
       <hr>
 
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
@@ -173,12 +173,13 @@
       seasonFilter(): Array<any> {
         return ['==', ['get', 'season'], this.season]
       },
+      actionNumber(): number {
+        return this.pastActions.length - this.count
+      }
     },
     watch: {
       pastActions() {
-        // console.log('ACTIONS:', this.pastActions)
         this.count = 0
-        console.log(this.count)
       },
       style() {
         this.map.setStyle(`mapbox://styles/mapbox/${this.style}`)
@@ -1338,30 +1339,15 @@
 
       undoTest() {
         this.count++
-        // console.log(this.count)
-        console.log(this.pastActions)
-        const actionNumber = this.pastActions.length - this.count
-        // console.log(this.pastActions[this.pastActions.length - this.count])
-
-        console.log('undo action', actionNumber)
-
-
         // TODO Can lastEvent.ids be made for single id since children is included??
-        // TODO Clear on layer changes, when new action is performed after undoing
         // TODO REDO THIS LOGIC SO THAT NEW EVENT DOESNT STOP UNDO
-        if (actionNumber >= 0) {
-          // console.log('enabled')
-          // TODO Disable undo button when actionNumber 0
-          this.undo(this.pastActions[actionNumber])
+        if (this.actionNumber >= 0) {
+          this.undo(this.pastActions[this.actionNumber])
         }
 
-        if (actionNumber === 0) {
+        if (this.actionNumber === 0) {
           this.pastActions = []
         }
-
-
-
-
       }
 
     },
@@ -1413,18 +1399,12 @@
   button {
     border: 1px solid black;
     padding: 0.5rem;
+    cursor: pointer;
   }
   button:disabled {
     border-color: #7f828b;
     color: #7f828b;
-  }
-
-  .alert {
-    background: red
-  }
-
-  button {
-    cursor: pointer;
+    cursor: default;
   }
 
   #selected-ids {
