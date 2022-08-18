@@ -1058,9 +1058,11 @@
         } else if (event === 'click_collapse_selected') {
           console.log('Need to expand selected ', ids)
 
+          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+
           const id = ids[0]
           // find children of clicked feature, push to array for app-wide usage
-          const children = Object.keys(this.lastEvent.children)
+          const children = Object.keys(lastEvent.children)
           // console.log(children)
           this.children.push(...children)
 
@@ -1069,7 +1071,7 @@
           this.setChildFeatures()
 
           // filter out the clicked feature so that parent and children are not layered on top of each other
-          if (source[0] === this.species) {
+          if (clickSource === this.species) {
             this.filteredBase.push(id)
           } else {
             this.filteredChildren.push(id)
@@ -1081,12 +1083,12 @@
 
           // if a child hex has been filtered out (via collapse), remove it from filtered list when feature is reselected
           children.forEach((child: string) => {
-            this.map.setFeatureState({ source: 'children', id: child }, { selected: this.lastEvent.children[child] })
+            this.map.setFeatureState({ source: 'children', id: child }, { selected: lastEvent.children[child] })
 
-            if (!this.selected.includes(child) && this.lastEvent.children[child]) {
+            if (!this.selected.includes(child) && lastEvent.children[child]) {
               this.selected.push(child)
               // console.log('push to selected...', child)
-            } else if (this.selected.includes(child) && !this.lastEvent.children[child]) {
+            } else if (this.selected.includes(child) && !lastEvent.children[child]) {
               // TODO Only if in selected array?
               // console.log('PULL from selected...', child)
 
@@ -1105,7 +1107,7 @@
             this.removeItemFromArray(this.selected, id)
           }
 
-          if (source[0] === this.species) {
+          if (clickSource === this.species) {
             // TODO Check selected??
             // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
             this.filteredChildren.push(id)
@@ -1122,8 +1124,8 @@
           }
 
         } else if (event === 'click_collapse_deselected') {
-          // console.log('Need to expand deselected', ids)
-          // console.log('restore ', lastEvent.children)
+          console.log('Need to expand deselected', ids)
+          console.log('restore ', lastEvent.children)
 
           // console.log(lastEvent)
 
