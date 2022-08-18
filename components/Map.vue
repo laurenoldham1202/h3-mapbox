@@ -50,7 +50,7 @@
       # selected hexes: <strong>{{selected.length}}</strong>
       <br><br>
 <!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
-      <button @click="undoTest">UNDO TEST</button>
+      <button @click="undoTest" :disabled="(pastActions.length - count) <= 0">UNDO LAST ACTION</button>
       <hr>
 
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
@@ -178,6 +178,7 @@
       pastActions() {
         // console.log('ACTIONS:', this.pastActions)
         this.count = 0
+        console.log(this.count)
       },
       style() {
         this.map.setStyle(`mapbox://styles/mapbox/${this.style}`)
@@ -556,7 +557,11 @@
             this.displayMsg = false
           }
 
-          this.clearLastEvent()
+
+          // TODO FIX MESSAGING AND DISABLE IN SIDEBAR FOR MISSING SEASONS
+          // this.clearLastEvent()
+          // console.log('cleared')
+          this.pastActions = []
         }
       },
       onSeasonChange(input: any) {
@@ -1019,14 +1024,15 @@
 
         }
       },
-      undo(lastEvent) {
-        console.log('LAST EVENT:', lastEvent)
+      // TODO type
+      undo(lastEvent: any) {
+        // console.log('LAST EVENT:', lastEvent)
 
         const event = lastEvent.event
         const ids = lastEvent.ids
         const source = lastEvent.layers
         if (event === 'lasso_select') {
-          console.log('Need to deselect', ids)
+          // console.log('Need to deselect', ids)
           ids.forEach(id => {
             this.removeItemFromArray(this.selected, id)
             this.map.setFeatureState({
@@ -1041,7 +1047,7 @@
           })
 
         } else if (event === 'lasso_deselect') {
-          console.log('Need to select', ids)
+          // console.log('Need to select', ids)
           ids.forEach(id => {
             this.selected.push(id)
             this.map.setFeatureState({
@@ -1056,7 +1062,7 @@
           })
           // TODO See if we can restore partial children selections
         } else if (event === 'click_collapse_selected') {
-          console.log('Need to expand selected ', ids)
+          // console.log('Need to expand selected ', ids)
 
           const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
 
@@ -1124,13 +1130,13 @@
           }
 
         } else if (event === 'click_collapse_deselected') {
-          console.log('Need to expand deselected', ids)
-          console.log('restore ', lastEvent.children)
+          // console.log('Need to expand deselected', ids)
+          // console.log('restore ', lastEvent.children)
 
           // console.log(lastEvent)
 
           const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
-          console.log(clickSource)
+          // console.log(clickSource)
 
 
           // TODO NEED TO ACCOUNT FOR BASE HEX COLLAPSE WITH NO CHILDREN
@@ -1207,7 +1213,7 @@
           }
 
         } else if (event === 'click_expand_selected') {
-          console.log('Need to collapse selected', ids)
+          // console.log('Need to collapse selected', ids)
 
           // FIXME change species, select, expand, undo - CAN'T DESELECT
 
@@ -1261,7 +1267,7 @@
           this.setChildFeatures()
 
         } else if (event === 'click_expand_deselected') {
-          console.log('Need to collapse deselected', ids)
+          // console.log('Need to collapse deselected', ids)
 
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
@@ -1301,7 +1307,7 @@
 
 
         } else if (event === 'click_select') {
-          console.log('Need to click deselect', ids)
+          // console.log('Need to click deselect', ids)
           // console.log(source)
           // console.log(this.filteredBase, this.filteredBase.includes(ids[0]))
           // // console.log(this.filteredChildren)
@@ -1316,7 +1322,7 @@
             id: ids[0]
           }, {selected: false})
         } else if (event === 'click_deselect') {
-          console.log('Need to click select', ids)
+          // console.log('Need to click select', ids)
           const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
 
           this.selected.push(...ids)
@@ -1329,29 +1335,29 @@
 
         // this.clearLastEvent()
       },
-      clearLastEvent() {
-        this.lastEvent = {
-          event: undefined,
-          ids: [],
-          layers: [],
-          children: {},
-        }
-      },
+
       undoTest() {
         this.count++
         // console.log(this.count)
-        // console.log(this.pastActions)
+        console.log(this.pastActions)
         const actionNumber = this.pastActions.length - this.count
         // console.log(this.pastActions[this.pastActions.length - this.count])
+
+        console.log('undo action', actionNumber)
+
 
         // TODO Can lastEvent.ids be made for single id since children is included??
         // TODO Clear on layer changes, when new action is performed after undoing
         // TODO REDO THIS LOGIC SO THAT NEW EVENT DOESNT STOP UNDO
         if (actionNumber >= 0) {
+          // console.log('enabled')
           // TODO Disable undo button when actionNumber 0
           this.undo(this.pastActions[actionNumber])
         }
 
+        if (actionNumber === 0) {
+          this.pastActions = []
+        }
 
 
 
