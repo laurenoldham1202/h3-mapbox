@@ -350,6 +350,22 @@
           // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
 
+            console.log(this.seasonOptions)
+            console.log(this.metadata[this.species].season_dates)
+
+            const speciesSeasons = this.metadata[this.species].season_dates
+
+            this.seasonOptions.forEach(season => {
+              if (Object.keys(speciesSeasons).includes(season.value)) {
+                season.text = `${season.value} (${speciesSeasons[season.value].start_date} to ${speciesSeasons[season.value].end_date})`
+              } else {
+                season.text = `${season.value} (unavailable)`
+
+              }
+            })
+            // Object.entries(speciesSeasons).forEach(([season, dateObj]) => {
+            //
+            // })
 
             // console.log(this.selected)
 
