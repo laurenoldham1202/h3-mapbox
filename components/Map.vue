@@ -185,7 +185,7 @@
     },
     watch: {
       pastActions() {
-        console.log(this.pastActions)
+        // reset undo count any time a new action is performed
         this.count = 0
       },
       style() {
@@ -346,7 +346,7 @@
           this.map.fitBounds(coords, { padding: 100 })
         }
       },
-      updateLayer(resetSelected = true) {
+      updateLayer(resetDefaultSelections = true) {
         // clear any existing popups when species is updated
         if (this.popup) {
           this.popup.remove()
@@ -369,6 +369,8 @@
               season.text = `${this.seasonText[season.value]} (${text})`
             })
 
+            // const selectedHexExp = resetDefaultSelections ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
+            const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.selected, true, false] : ['get', 'in_range']
             this.map.addSource(this.species, {
               type: 'vector',
               promoteId: 'h3_address',
@@ -390,16 +392,19 @@
               },
               paint: {
               // ...(!resetSelected && {'fill-outline-color': 'white'}),  // hot pink '#fc035e'
-                'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
-                  resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
-                ], 'deeppink', 'black'],
+              //   'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
+              //     resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
+              //   ], 'deeppink', 'black'],
+                'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
                 'fill-opacity': 0.3,
               },
             })
 
             // console.log('diff fill color conditions')
 
-            if (resetSelected) {
+            console.log(resetDefaultSelections)
+
+            if (resetDefaultSelections) {
               // reset selected hexes any time a new species is selected
               this.resetSelected()
               // zoom to species extent on map
