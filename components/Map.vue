@@ -350,26 +350,14 @@
           // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
 
-            console.log(this.seasonOptions)
-            console.log(this.metadata[this.species].season_dates)
-
+            // season data for selected species
             const speciesSeasons = this.metadata[this.species].season_dates
-
             this.seasonOptions.forEach(season => {
-              if (Object.keys(speciesSeasons).includes(season.value)) {
-                season.text = `${season.value} (${speciesSeasons[season.value].start_date} to ${speciesSeasons[season.value].end_date})`
-              } else {
-                season.text = `${season.value} (unavailable)`
-
-              }
+              const seasonIncluded = Object.keys(speciesSeasons).includes(season.value)
+              // if season is included, display 'mm-dd to mm-dd', otherwise display 'unavailable' for missing seasons
+              const text = seasonIncluded ? `${speciesSeasons[season.value].start_date} to ${speciesSeasons[season.value].end_date}` : 'unavailable'
+              season.text = `${season.value} (${text})`
             })
-            // Object.entries(speciesSeasons).forEach(([season, dateObj]) => {
-            //
-            // })
-
-            // console.log(this.selected)
-
-
 
             this.map.addSource(this.species, {
               type: 'vector',
@@ -1385,7 +1373,6 @@
     width: 75%;
     margin-left: -2rem
     /*display: block;*/
-
   }
 
   #sidebar {
@@ -1399,15 +1386,9 @@
   }
 
   .select {
-    width: 75%;
+    width: 100%;
     height: 30px;
   }
-
-  /*#map-2 {*/
-  /*  width: 70%;*/
-  /*  height: 800px;*/
-  /*  background: purple;*/
-  /*}*/
 
   .mapboxgl-ctrl-group button {
     color: black;
