@@ -1047,7 +1047,7 @@
         const source = lastEvent.layers
         if (event === 'lasso_select') {
           // console.log('Need to deselect', ids)
-          ids.forEach(id => {
+          ids.forEach((id: any) => {
             this.removeItemFromArray(this.selected, id)
             this.map.setFeatureState({
               source: 'children',
@@ -1062,7 +1062,7 @@
 
         } else if (event === 'lasso_deselect') {
           // console.log('Need to select', ids)
-          ids.forEach(id => {
+          ids.forEach((id: any) => {
             this.selected.push(id)
             this.map.setFeatureState({
               source: 'children',
