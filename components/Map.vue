@@ -397,7 +397,7 @@
               paint: {
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
                 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
-                'fill-opacity': fillOpacity
+                'fill-opacity': fillOpacity,
               },
             })
 
