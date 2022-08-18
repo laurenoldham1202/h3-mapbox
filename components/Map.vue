@@ -1350,26 +1350,16 @@
 
         // this.clearLastEvent()
       },
-
-      // TODO CHECK UNDO 1 ACTION, THEN DO NEW ACTION - WHAT HAPPENS?
       undoTest() {
         this.count++
         // TODO Can lastEvent.ids be made for single id since children is included??
-        // TODO REDO THIS LOGIC SO THAT NEW EVENT DOESNT STOP UNDO
         if (this.actionNumber >= 0) {
           this.undo(this.pastActions[this.actionNumber])
         }
 
-        console.log(this.actionNumber, this.pastActions)
-
-        if (this.actionNumber === 0) {
-          this.pastActions = []
-        }
-
+        // remove undone action from list so user can undo an action, perform another, then continue to undo remaining actions
         this.removeItemFromArray(this.pastActions, this.pastActions[this.actionNumber])
-
       }
-
     },
   })
 </script>
