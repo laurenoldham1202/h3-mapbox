@@ -952,9 +952,12 @@
                   if (allChildren.includes(f.id)) {
                     // console.log(f.id, this.selected.includes(f.id))
                     this.lastEvent.children[f.id] = this.selected.includes(f.id)
+                    this.pastActions[this.pastActions.length - 1].children[f.id] = this.selected.includes(f.id)
                   }
                 })
               }
+
+              // console.log(this.pastActions)
 
 
 
@@ -963,6 +966,7 @@
                 // if a child hex is already plotted on the map, remove it from the array
                 if (this.children.includes(child)) {
                   this.lastEvent.children[child] = this.selected.includes(child)
+                  this.pastActions[this.pastActions.length - 1].children[child] = this.selected.includes(child)
                   // console.log(child)
                   this.removeItemFromArray(this.children, child)
                 }
@@ -1016,7 +1020,7 @@
         }
       },
       undo(lastEvent) {
-        console.log(lastEvent)
+        console.log('LAST EVENT:', lastEvent)
 
         const event = lastEvent.event
         const ids = lastEvent.ids
@@ -1081,10 +1085,10 @@
 
             if (!this.selected.includes(child) && this.lastEvent.children[child]) {
               this.selected.push(child)
-              console.log('push to selected...', child)
+              // console.log('push to selected...', child)
             } else if (this.selected.includes(child) && !this.lastEvent.children[child]) {
               // TODO Only if in selected array?
-              console.log('PULL from selected...', child)
+              // console.log('PULL from selected...', child)
 
               this.removeItemFromArray(this.selected, id)
             }
@@ -1118,15 +1122,21 @@
           }
 
         } else if (event === 'click_collapse_deselected') {
-          console.log('Need to expand deselected', ids)
-          console.log('restore ', this.lastEvent.children)
+          // console.log('Need to expand deselected', ids)
+          // console.log('restore ', lastEvent.children)
+
+          // console.log(lastEvent)
+
+          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+          console.log(clickSource)
+
 
           // TODO NEED TO ACCOUNT FOR BASE HEX COLLAPSE WITH NO CHILDREN
           // TODO CHECK ALL source[0] CONDITIONS W MULTI LAYERS
 
           const id = ids[0]
           // find children of clicked feature, push to array for app-wide usage
-          const children = Object.keys(this.lastEvent.children)
+          const children = Object.keys(lastEvent.children)
           // console.log(children)
           this.children.push(...children)
 
@@ -1135,7 +1145,7 @@
           this.setChildFeatures()
 
           // filter out the clicked feature so that parent and children are not layered on top of each other
-          if (source[0] === this.species) {
+          if (clickSource === this.species) {
             this.filteredBase.push(id)
           } else {
             this.filteredChildren.push(id)
@@ -1150,12 +1160,12 @@
             // console.log(this.lastEvent.children[child])
 
 
-            this.map.setFeatureState({ source: 'children', id: child }, { selected: this.lastEvent.children[child] })
+            this.map.setFeatureState({ source: 'children', id: child }, { selected: lastEvent.children[child] })
 
-            if (!this.selected.includes(child) && this.lastEvent.children[child]) {
+            if (!this.selected.includes(child) && lastEvent.children[child]) {
               this.selected.push(child)
               // console.log('push to selected...', child)
-            } else if (this.selected.includes(child) && !this.lastEvent.children[child]) {
+            } else if (this.selected.includes(child) && !lastEvent.children[child]) {
               // TODO Only if in selected array?
               // console.log('PULL from selected...', child)
 
@@ -1176,7 +1186,7 @@
             this.removeItemFromArray(this.selected, id)
           }
 
-          if (source[0] === this.species) {
+          if (clickSource === this.species) {
 
             // TODO Check selected??
             // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
@@ -1332,8 +1342,9 @@
         const actionNumber = this.pastActions.length - this.count
         // console.log(this.pastActions[this.pastActions.length - this.count])
 
+        // TODO Can lastEvent.ids be made for single id since children is included??
         // TODO Clear on layer changes, when new action is performed after undoing
-        // TODO Account for empty pastActions
+        // TODO REDO THIS LOGIC SO THAT NEW EVENT DOESNT STOP UNDO
         if (actionNumber >= 0) {
           // TODO Disable undo button when actionNumber 0
           this.undo(this.pastActions[actionNumber])
