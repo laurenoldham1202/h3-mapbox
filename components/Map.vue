@@ -382,12 +382,7 @@
             const streetStyle = this.style === 'streets-v11'
             const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.selected, true, false] : ['get', 'in_range']
             const unselectedOutline = streetStyle ? 'black' : 'white'
-            const fillOpacity: any = streetStyle ? 0.3 :
-              ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 0.5, 0.3]
-
-            // console.log(fillOpacity)
-              // ['case', resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false], 0.5, 0.3]
-
+            const fillOpacity: any = streetStyle ? 0.3 : ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 0.5, 0.2]
 
             // TODO Return single feature outline?
             this.map.addLayer({
@@ -400,22 +395,12 @@
                 'visibility': 'visible'
               },
               paint: {
-              // ...(!resetSelected && {'fill-outline-color': 'white'}),  // hot pink '#fc035e'
-              //   'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
-              //     resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
-              //   ], 'deeppink', 'black'],
-
-                //
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
                 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
                 'fill-opacity': fillOpacity
               },
             })
 
-            // console.log('diff fill color conditions')
-
-            // console.log('reset default?', resetDefaultSelections)
-            // console.log(this.selected.length)
 
             if (resetDefaultSelections) {
               // reset selected hexes any time a new species is selected
@@ -448,9 +433,9 @@
                 source: 'children',
                 type: 'fill',
                 paint: {
-                  'fill-opacity': 0.3,
-                  'fill-color': ['case', ['boolean', ['feature-state', 'selected'], false], 'deeppink', 'black'],
-                  // 'fill-color': 'blue'
+                  'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
+                  'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
+                  'fill-opacity': fillOpacity
                 },
                 layout: {
                   'fill-sort-key': ['+', ['get', 'h3_address']],
