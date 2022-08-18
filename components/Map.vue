@@ -370,7 +370,6 @@
             })
 
             // const selectedHexExp = resetDefaultSelections ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
-            const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.selected, true, false] : ['get', 'in_range']
             this.map.addSource(this.species, {
               type: 'vector',
               promoteId: 'h3_address',
@@ -379,6 +378,16 @@
               tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
               maxzoom: 8,
             })
+
+            const streetStyle = this.style === 'streets-v11'
+            const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.selected, true, false] : ['get', 'in_range']
+            const unselectedOutline = streetStyle ? 'black' : 'white'
+            const fillOpacity: any = streetStyle ? 0.3 :
+              ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 0.5, 0.3]
+
+            // console.log(fillOpacity)
+              // ['case', resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false], 0.5, 0.3]
+
 
             // TODO Return single feature outline?
             this.map.addLayer({
@@ -395,14 +404,18 @@
               //   'fill-color': ['case', ['boolean', ['feature-state', 'selected'],
               //     resetSelected ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
               //   ], 'deeppink', 'black'],
+
+                //
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
-                'fill-opacity': 0.3,
+                'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
+                'fill-opacity': fillOpacity
               },
             })
 
             // console.log('diff fill color conditions')
 
-            console.log(resetDefaultSelections)
+            // console.log('reset default?', resetDefaultSelections)
+            // console.log(this.selected.length)
 
             if (resetDefaultSelections) {
               // reset selected hexes any time a new species is selected
