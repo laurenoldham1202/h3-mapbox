@@ -207,6 +207,11 @@
         }
       },
       species(newSpecies, oldSpecies) {
+        // clear display message if open when species is changed
+        if (this.displayMsg) {
+          this.displayMsg = false
+        }
+
         // TODO Turn of ALL old species events, also check season changes
         this.map.off('click', [oldSpecies, 'children'], this.mapClick)
         this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
@@ -340,7 +345,6 @@
           this.map.fitBounds(coords, { padding: 100 })
         }
       },
-      // TODO CLEAR DISPLAY MSG IF UOPEN AND SPECIES CHANGED
       updateLayer(resetSelected = true) {
         // clear any existing popups when species is updated
         if (this.popup) {
