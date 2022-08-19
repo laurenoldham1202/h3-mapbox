@@ -52,6 +52,7 @@
 <!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
       <button @click="undoTest" :disabled="actionNumber <= 0">UNDO LAST ACTION</button>
       <button @click="download">download</button>
+      <button @click="save">save</button>
       <hr>
 
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
@@ -150,7 +151,7 @@
         breeding: 'Breeding',
         nonbreeding: 'Nonbreeding',
         'prebreeding_migration': 'Prebreeding migration',
-        'postrebreeding_migration': 'Postbreeding migration',
+        'postbrebreeding_migration': 'Postbreeding migration',
       } as any,
       styleOptions: [
         { text: 'Street', value: 'streets-v11' },
@@ -172,6 +173,7 @@
       popup: undefined as any,
       style: 'streets-v11',
       count: 0,
+      savedData: {} as any,
     }),
     computed: {
       selectedOutput(): string {
@@ -1365,7 +1367,7 @@
         this.removeItemFromArray(this.pastActions, this.pastActions[this.actionNumber])
       },
       download() {
-        console.log(this.selected)
+        // console.log(this.selected)
 
         // const kmlContent = tokml(geojson, {
         //   name: name,
@@ -1378,6 +1380,22 @@
         anchorEl.href = window.URL.createObjectURL(txtFile);
         anchorEl.download = `test.json`;
         anchorEl.click();
+      },
+      save() {
+        // console.log(this.selected)
+        if (!this.savedData[this.species]) {
+          this.savedData[this.species] = {}
+        }
+
+        this.savedData[this.species][this.season] = {
+          selected: this.selected, // TODO SAVE SELECTED DIFFERENCE INSTEAD OF FULL ARR?
+          filteredChildren: this.filteredChildren,
+          filteredBase: this.filteredBase,
+          children: this.children
+        }
+
+        console.log(this.savedData)
+
       }
     },
   })
@@ -1393,20 +1411,8 @@
   * {
     box-sizing: border-box;
   }
-  /*body {*/
-  /*  margin: 0;*/
-  /*  padding: 0;*/
-  /*  width: 100%;*/
-  /*  display: flex;*/
-  /*}*/
 
   #map-2 {
-    /*position: absolute;*/
-    /*top: 0;*/
-    /*bottom: 0;*/
-    /*width: 75%;*/
-    /*margin-left: -2rem*/
-    /*display: block;*/
     position: absolute;
     left: 0;
     top: 0;
