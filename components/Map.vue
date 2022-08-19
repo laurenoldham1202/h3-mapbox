@@ -18,7 +18,7 @@
 
       <!-- TODO Add warning before switching seasons? Auto save or send? -->
       <span>Select a season:</span> <br>
-      <select :value="season"  @input="onSeasonChange" class="select">
+      <select :value="season"  @input="onSeasonChange" class="select" :disabled="displayMsg">
         <option v-for="option in seasonOptions" :value="option.value" :disabled="disableSeason(option.value)">
           {{ option.text }}
         </option>
@@ -29,12 +29,13 @@
       </p>
 
 
-      <div class="alert-msg" style="border: 1px solid #bd580a; margin: 1rem 0;" v-show="displayMsg">
-        <div class="header" style="background: #bd580a; color: white; padding: 0.25rem; font-weight: 500;">
+      <!-- TODO ONLY DISPLAY IF SELECTED VALUES HAVE CHANGED, have save point here, not necessarily able to reload, add to species change, MENTION THIS IN TRAINING -->
+      <div class="alert-msg" :style="{borderColor: exported ? '#cc3340' : '#bd580a'}" style="border: 1px solid; margin: 1rem 0;" v-show="displayMsg">
+        <div class="header" :style="{background: exported ? '#cc3340' : '#bd580a'}" style="color: white; padding: 0.5rem; font-weight: 500;">
           <div v-if="!exported"><strong>Export {{seasonText[seasonChangeEvent?.oldVal]}} season data?</strong></div>
           <div v-if="exported"><strong>Confirm season change</strong></div>
         </div>
-        <div class="body" style="background: #f4e8df; padding: 0.25rem; display: flex; flex-direction: column;">
+        <div class="body" :style="{background: exported ? '#f6e4e5' : '#f4e8df'}" style="padding: 0.5rem; display: flex; flex-direction: column;">
           <div v-if="!exported">
             You must export your current selections before changing seasons. Map changes will be lost and cannot be retrieved once changed.
           </div>
@@ -42,36 +43,36 @@
             Check that your download was successful and confirm season change.
           </div>
           <div class="button-menu" style="margin-left: auto; margin-top: 0.75rem;">
+            <!-- TODO Check all these interactions, toggling seasons when canceled, toggling seasons when display open -->
             <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
             <button v-show="!exported" @click="download">Export</button>
-            <!-- TODO on confirm, set exported to false  -->
             <button v-show="exported" @click="seasonChange">Change season</button>
           </div>
         </div>
       </div>
 
-      <!--  ONLY DISPLAY IF SELECTED VALUES HAVE CHANGED, have save point here, not necessarily able to reload, add to species change, MENTION THIS IN TRAINING -->
-      <div :style="{background: exported ? 'orange' : '#f4e8df'}"
-        style="font-weight: 500; margin: 0.5rem 0; padding: 0.5rem; display: flex; flex-direction: column;" v-show="displayMsg">
-        <div style="margin-bottom: 0.75rem;">
-          <span v-show="!exported">
-            <div class="header" style="background: #bd580a">Export {{seasonText[seasonChangeEvent?.oldVal]}} season data?</div>
-            <br>Changing seasons will clear your map selections, which cannot be retrieved. You must export your current selections before changing seasons.
-          </span>
-          <span v-show="exported">CONFIRM season change from {{seasonChangeEvent?.oldVal}} to {{season}}</span>
-          <br>
-        </div>
-        <div class="button-menu" style="margin-left: auto;">
+<!--      &lt;!&ndash;  ONLY DISPLAY IF SELECTED VALUES HAVE CHANGED, have save point here, not necessarily able to reload, add to species change, MENTION THIS IN TRAINING &ndash;&gt;-->
+<!--      <div :style="{background: exported ? 'orange' : '#f4e8df'}"-->
+<!--        style="font-weight: 500; margin: 0.5rem 0; padding: 0.5rem; display: flex; flex-direction: column;" v-show="displayMsg">-->
+<!--        <div style="margin-bottom: 0.75rem;">-->
+<!--          <span v-show="!exported">-->
+<!--            <div class="header" style="background: #bd580a">Export {{seasonText[seasonChangeEvent?.oldVal]}} season data?</div>-->
+<!--            <br>Changing seasons will clear your map selections, which cannot be retrieved. You must export your current selections before changing seasons.-->
+<!--          </span>-->
+<!--          <span v-show="exported">CONFIRM season change from {{seasonChangeEvent?.oldVal}} to {{season}}</span>-->
+<!--          <br>-->
+<!--        </div>-->
+<!--        <div class="button-menu" style="margin-left: auto;">-->
 
-          <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
-  <!--        <button @click="seasonChange">Save and change season</button>-->
+<!--          <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>-->
+<!--  &lt;!&ndash;        <button @click="seasonChange">Save and change season</button>&ndash;&gt;-->
 
-          <button v-show="!exported" @click="download">Export</button>
-          <!-- TODO on confirm, set exported to false  -->
-          <button v-show="exported" @click="seasonChange">Change season</button>
-        </div>
+<!--          <button v-show="!exported" @click="download">Export</button>-->
+<!--          &lt;!&ndash; TODO on confirm, set exported to false  &ndash;&gt;-->
+<!--          <button v-show="exported" @click="seasonChange">Change season</button>-->
+<!--        </div>-->
 
-      </div>
+<!--      </div>-->
 
       <br><br>
       <label for="basemap">Basemap: </label><br>
@@ -249,6 +250,7 @@
           // this.download()
           // clear all children, filters, and selected hexes when season is changed
           this.resetLayer(this.species, true)
+          this.exported = false
         }
       },
       species(newSpecies, oldSpecies) {
