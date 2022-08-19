@@ -51,6 +51,7 @@
       <br><br>
 <!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
       <button @click="undoTest" :disabled="actionNumber <= 0">UNDO LAST ACTION</button>
+      <button @click="download">download</button>
       <hr>
 
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
@@ -256,7 +257,7 @@
         doubleClickZoom: false,
         boxZoom: false,
         dragRotate: false,
-        // projection: 'equalEarth'
+        // projection: 'globe',
       })
 
       this.map.doubleClickZoom.disable()
@@ -1362,6 +1363,21 @@
 
         // remove undone action from list so user can undo an action, perform another, then continue to undo remaining actions
         this.removeItemFromArray(this.pastActions, this.pastActions[this.actionNumber])
+      },
+      download() {
+        console.log(this.selected)
+
+        // const kmlContent = tokml(geojson, {
+        //   name: name,
+        //   documentName: name,
+        //   documentDescription: description
+        // });
+        //
+        const txtFile = new Blob([JSON.stringify(this.selected)], { type: 'text/json' });
+        const anchorEl = document.createElement('a');
+        anchorEl.href = window.URL.createObjectURL(txtFile);
+        anchorEl.download = `test.json`;
+        anchorEl.click();
       }
     },
   })
