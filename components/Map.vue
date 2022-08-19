@@ -28,13 +28,48 @@
         {{season}} season UNAVAILABLE for {{species}}
       </p>
 
+
+      <div class="alert-msg" style="border: 1px solid #bd580a; margin: 1rem 0;" v-show="displayMsg">
+        <div class="header" style="background: #bd580a; color: white; padding: 0.25rem; font-weight: 500;">
+          <div v-if="!exported"><strong>Export {{seasonText[seasonChangeEvent?.oldVal]}} season data?</strong></div>
+          <div v-if="exported"><strong>Confirm season change</strong></div>
+        </div>
+        <div class="body" style="background: #f4e8df; padding: 0.25rem; display: flex; flex-direction: column;">
+          <div v-if="!exported">
+            You must export your current selections before changing seasons. Map changes will be lost and cannot be retrieved once changed.
+          </div>
+          <div v-if="exported">
+            Check that your download was successful and confirm season change.
+          </div>
+          <div class="button-menu" style="margin-left: auto; margin-top: 0.75rem;">
+            <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
+            <button v-show="!exported" @click="download">Export</button>
+            <!-- TODO on confirm, set exported to false  -->
+            <button v-show="exported" @click="seasonChange">Change season</button>
+          </div>
+        </div>
+      </div>
+
       <!--  ONLY DISPLAY IF SELECTED VALUES HAVE CHANGED, have save point here, not necessarily able to reload, add to species change, MENTION THIS IN TRAINING -->
-      <div style="width: 300px; border: 1px solid red; background: yellow; font-weight: 500; margin: 0.5rem 0; padding: 0.5rem;" v-show="displayMsg">
-        CHANGE SEASONS?
-        <br>Changing seasons will clear your map selections and cannot be retrieved.
-        <br>
-        <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
-        <button @click="seasonChange">Change season</button>
+      <div :style="{background: exported ? 'orange' : '#f4e8df'}"
+        style="font-weight: 500; margin: 0.5rem 0; padding: 0.5rem; display: flex; flex-direction: column;" v-show="displayMsg">
+        <div style="margin-bottom: 0.75rem;">
+          <span v-show="!exported">
+            <div class="header" style="background: #bd580a">Export {{seasonText[seasonChangeEvent?.oldVal]}} season data?</div>
+            <br>Changing seasons will clear your map selections, which cannot be retrieved. You must export your current selections before changing seasons.
+          </span>
+          <span v-show="exported">CONFIRM season change from {{seasonChangeEvent?.oldVal}} to {{season}}</span>
+          <br>
+        </div>
+        <div class="button-menu" style="margin-left: auto;">
+
+          <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
+  <!--        <button @click="seasonChange">Save and change season</button>-->
+
+          <button v-show="!exported" @click="download">Export</button>
+          <!-- TODO on confirm, set exported to false  -->
+          <button v-show="exported" @click="seasonChange">Change season</button>
+        </div>
 
       </div>
 
@@ -51,8 +86,8 @@
       <br><br>
 <!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
       <button @click="undoTest" :disabled="actionNumber <= 0">UNDO LAST ACTION</button>
-      <button @click="download">download</button>
-      <button @click="save">save</button>
+<!--      <button @click="download">download</button>-->
+<!--      <button @click="save">save</button>-->
       <hr>
 
       <!-- TODO Add button to reset hexes, add button to 'smooth' range -->
@@ -151,7 +186,7 @@
         breeding: 'Breeding',
         nonbreeding: 'Nonbreeding',
         'prebreeding_migration': 'Prebreeding migration',
-        'postbrebreeding_migration': 'Postbreeding migration',
+        'postbreeding_migration': 'Postbreeding migration',
       } as any,
       styleOptions: [
         { text: 'Street', value: 'streets-v11' },
@@ -174,6 +209,8 @@
       style: 'streets-v11',
       count: 0,
       savedData: {} as any,
+      speciesData: {} as any,
+      exported: false,
     }),
     computed: {
       selectedOutput(): string {
@@ -187,6 +224,9 @@
       }
     },
     watch: {
+      selected() {
+
+      },
       pastActions() {
         // reset undo count any time a new action is performed
         this.count = 0
@@ -206,6 +246,7 @@
       },
       confirmSeasonChange(confirm) {
         if (confirm) {
+          // this.download()
           // clear all children, filters, and selected hexes when season is changed
           this.resetLayer(this.species, true)
         }
@@ -593,9 +634,9 @@
         // console.log(this.seasonChangeEvent)
       },
       seasonChange() {
+        console.log('seasonChange')
         this.confirmSeasonChange = true
         this.season = this.seasonChangeEvent.newVal
-
         this.displayMsg = false
 
         setTimeout(() => {
@@ -1367,19 +1408,23 @@
         this.removeItemFromArray(this.pastActions, this.pastActions[this.actionNumber])
       },
       download() {
-        // console.log(this.selected)
 
-        // const kmlContent = tokml(geojson, {
-        //   name: name,
-        //   documentName: name,
-        //   documentDescription: description
-        // });
-        //
+        console.log('download called')
         const txtFile = new Blob([JSON.stringify(this.selected)], { type: 'text/json' });
         const anchorEl = document.createElement('a');
         anchorEl.href = window.URL.createObjectURL(txtFile);
-        anchorEl.download = `test.json`;
+        anchorEl.download = `${this.species}_${this.seasonChangeEvent.oldVal}.json`;
         anchorEl.click();
+        // console.log(URL)
+
+        URL.revokeObjectURL(anchorEl.href)
+        // console.log(window)
+        setTimeout(() => {
+          this.exported = true
+          // console.log('after:', txtFile)
+
+        }, 1000)
+
       },
       save() {
         // console.log(this.selected)
@@ -1394,6 +1439,7 @@
           children: this.children
         }
 
+        // TODO Add dialog to restore previous season?
         console.log(this.savedData)
 
       }
@@ -1406,6 +1452,7 @@
   html, body {
     margin: 0;
     padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   * {
