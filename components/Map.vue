@@ -352,6 +352,10 @@
 
         this.updateLayer()
 
+        this.map.on('zoom', () => {
+          console.log(this.map.getZoom())
+        })
+
         // // TODO Return single feature outline?
 
 
@@ -420,8 +424,8 @@
               type: 'vector',
               promoteId: 'h3_address',
               // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
-              // tiles: ['http://localhost:8080/data/range_hexagons/{z}/{x}/{y}.pbf'],
-              tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}/{z}/{x}/{y}.pbf`],
+              tiles: ['http://localhost:8080/data/breeding/{z}/{x}/{y}.pbf'],
+              // tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}_checklists/{z}/{x}/{y}.pbf`],
               maxzoom: 8,
             })
 
@@ -434,13 +438,15 @@
             this.map.addLayer({
               id: this.species,
               source: this.species,
-              'source-layer': this.species,
+              'source-layer': 'aldfly',
+              // 'source-layer': this.species,
               type: 'fill',
               filter: this.seasonFilter,
               layout: {
                 'visibility': 'visible'
               },
               paint: {
+                // 'fill-opacity': 0.3
                 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
                 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
                 'fill-opacity': fillOpacity,
@@ -794,7 +800,7 @@
 
           const selectMode = !e.originalEvent.shiftKey
           const feature = e.features[0]
-          // console.log('map click', feature)
+          console.log('map click', feature)
           const res = parseInt(feature.id[1]) + 1
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
