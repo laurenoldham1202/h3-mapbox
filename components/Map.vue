@@ -463,24 +463,27 @@
               // 'source-layer': 'aldfly',
               'source-layer': `${this.species}_checklists`,
               type: 'circle',
+              // filter: ['all', this.seasonFilter, ['>', ['get', 'detected'], 0]],
               filter: this.seasonFilter,
               layout: {
-                'visibility': 'visible'
+                'visibility': 'visible',
+                // plot detected (1) values on top of undetected (0)
+                'circle-sort-key': ['+', ['get', 'detected']]
               },
               paint: {
-                'circle-opacity': 0.6,
-                'circle-color': 'blue',
-                'circle-radius': 2.5,
+                'circle-opacity': ['match', ['get', 'detected'], 0, 0.3, 1, 0.7, 0.3],
+                'circle-color': ['match', ['get', 'detected'], 0, 'red', 1, 'blue', 'black'],
+                'circle-radius': ['match', ['get', 'detected'], 0, 2, 1, 3, 2],
                 // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
                 // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
                 // 'fill-opacity': fillOpacity,
               },
             })
 
-            this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
+            // this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
 
             this.map.on('mousemove', `${this.species}_checklists`, (e) => {
-              console.log(e.features[0])
+              console.log(e.features[0].properties)
             })
 
 
