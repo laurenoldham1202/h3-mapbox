@@ -251,6 +251,10 @@
           // clear all children, filters, and selected hexes when season is changed
           this.resetLayer(this.species, true)
           this.exported = false
+
+          console.log('update season checklist filter')
+
+          this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
         }
       },
       species(newSpecies, oldSpecies) {
@@ -483,7 +487,7 @@
             // this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
 
             this.map.on('mousemove', `${this.species}_checklists`, (e) => {
-              console.log(e.features[0].properties)
+              // console.log(e.features[0].properties)
             })
 
 
@@ -675,7 +679,6 @@
         // console.log(this.seasonChangeEvent)
       },
       seasonChange() {
-        console.log('seasonChange')
         this.confirmSeasonChange = true
         this.season = this.seasonChangeEvent.newVal
         this.displayMsg = false
@@ -693,24 +696,21 @@
         // convert hex ids into geojson, preserving the indices
         const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
 
-        console.log(childrenPoly)
-
         childrenPoly.features.forEach((feature : any) => {
-          console.log(feature)
           const polygon = feature.geometry['coordinates']
 
           polygon[0].forEach((coord: any[], i: number) => {
             // compare one vertex longitude value against the next vertex lng value to see if it crosses antimeridian
             if (i < polygon[0].length - 1) {
-              const lng = polygon[0][i + 1][0];  // reference longitude coordinate
-              const prevLng = coord[0];  // preceding longitude coordinate
+              const lng = polygon[0][i + 1][0] // reference longitude coordinate
+              const prevLng = coord[0]  // preceding longitude coordinate
 
               // if lng minus preceding lng exceeds 180 degrees, ADD 360 degrees
               if (lng - prevLng <= -180) {
-                polygon[0][i + 1][0] += 360;
+                polygon[0][i + 1][0] += 360
               } else if (lng - prevLng >= 180) {
                 // if reference lng minus preceding lng is greater than 180 degrees, subtract 360 degrees
-                polygon[0][i + 1][0] -= 360;
+                polygon[0][i + 1][0] -= 360
               }
             }
           })
