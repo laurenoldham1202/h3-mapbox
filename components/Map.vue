@@ -436,13 +436,25 @@
               const text = seasonIncluded ? `${speciesSeasons[season.value].start_date} to ${speciesSeasons[season.value].end_date}` : 'unavailable'
               season.text = `${this.seasonText[season.value]} (${text})`
 
-              this.sessionData[season.value] = {
-                selected: [],
-                filteredBase: [],
-                filteredChildren: [],
-                children: [],
+              // if (!Object.keys(this.sessionData).length) {
+              // console.log('INITIAL SETTING:', this.sessionData)
+              if (!this.sessionData.hasOwnProperty(season.value)) {
+                // console.log('set ', season)
+
+                this.sessionData[season.value] = {
+                  selected: [],
+                  filteredBase: [],
+                  filteredChildren: [],
+                  children: [],
+                }
               }
+              // }
+
             })
+
+            // console.log(this.sessionData)
+
+            // console.log(this.sessionData[this.season].selected)
 
             // console.log(this.sessionData)
 
@@ -456,8 +468,10 @@
               maxzoom: 8,
             })
 
+            // console.log(this.seasonSelected)
+
             const streetStyle = this.style === 'streets-v11'
-            const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.seasonSelected, true, false] : ['get', 'in_range']
+            const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.sessionData[this.season].selected, true, false] : ['get', 'in_range']
             const unselectedOutline = streetStyle ? 'black' : 'white'
             const fillOpacity: any = streetStyle ? 0.3 : ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 0.5, 0.2]
 
@@ -676,12 +690,16 @@
           // this.sessionData[this.season].filteredBase = []
           // this.sessionData[this.season].children = []
 
+          // FIXME Make changes, change seasons, change back, then change basemap?
+
+
           this.filterOutParentHexes(layer, this.seasonFilteredBase, layer)
           this.filterOutParentHexes('children', this.seasonFilteredChildren)
           this.setChildFeatures()
 
           if (seasonChange) {
-            console.log('season changed')
+            // console.log('season changed')
+            // console.log(this.sessionData)
             // console.log(this.season)
             // console.log('before:', this.sessionData)
             this.resetSelected()
