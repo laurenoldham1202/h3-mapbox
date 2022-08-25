@@ -457,6 +457,33 @@
             })
 
 
+            this.map.addLayer({
+              id: `${this.species}_checklists`,
+              source: this.species,
+              // 'source-layer': 'aldfly',
+              'source-layer': `${this.species}_checklists`,
+              type: 'circle',
+              filter: this.seasonFilter,
+              layout: {
+                'visibility': 'visible'
+              },
+              paint: {
+                'circle-opacity': 0.6,
+                'circle-color': 'blue',
+                'circle-radius': 2.5,
+                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
+                // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
+                // 'fill-opacity': fillOpacity,
+              },
+            })
+
+            this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
+
+            this.map.on('mousemove', `${this.species}_checklists`, (e) => {
+              console.log(e.features[0])
+            })
+
+
             if (resetDefaultSelections) {
               // reset selected hexes any time a new species is selected
               this.resetSelected()
