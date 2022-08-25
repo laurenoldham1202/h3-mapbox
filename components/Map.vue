@@ -169,12 +169,12 @@
       species: 'aldfly',
       options: [
         { text: 'Alder Flycatcher', value: 'aldfly' },
-        { text: 'Arctic Tern', value: 'arcter' },
-        { text: 'Balearic Shearwater', value: 'balshe1' },
-        { text: 'Brant', value: 'brant' },
-        { text: 'Common Tern', value: 'comter' },
-        { text: 'Parasitic Jaeger', value: 'parjae' },
-        { text: 'Western Tanager', value: 'westan' },
+        // { text: 'Arctic Tern', value: 'arcter' },
+        // { text: 'Balearic Shearwater', value: 'balshe1' },
+        // { text: 'Brant', value: 'brant' },
+        // { text: 'Common Tern', value: 'comter' },
+        // { text: 'Parasitic Jaeger', value: 'parjae' },
+        // { text: 'Western Tanager', value: 'westan' },
       ],
       season: 'breeding',
       seasonOptions: [
@@ -251,8 +251,6 @@
           // clear all children, filters, and selected hexes when season is changed
           this.resetLayer(this.species, true)
           this.exported = false
-
-          console.log('update season checklist filter')
 
           this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
         }
@@ -474,10 +472,13 @@
                 // plot detected (1) values on top of undetected (0)
                 'circle-sort-key': ['+', ['get', 'detected']]
               },
+              // TODO NEED TO ADJUST STYLES FOR SATELLITE
               paint: {
                 'circle-opacity': ['match', ['get', 'detected'], 0, 0.3, 1, 0.7, 0.3],
-                'circle-color': ['match', ['get', 'detected'], 0, 'red', 1, 'blue', 'black'],
-                'circle-radius': ['match', ['get', 'detected'], 0, 2, 1, 3, 2],
+                'circle-color': ['match', ['get', 'detected'], 0, '#9c4363', 1, '#4405ff', 'black'],
+                'circle-radius': ['match', ['get', 'detected'], 0, 2, 1, 4, 2],
+                'circle-stroke-width': 1,
+                'circle-stroke-color': ['match', ['get', 'detected'], 0, 'transparent', 1, 'whitesmoke', 'transparent'],
                 // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
                 // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
                 // 'fill-opacity': fillOpacity,
@@ -486,9 +487,9 @@
 
             // this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
 
-            this.map.on('mousemove', `${this.species}_checklists`, (e) => {
-              // console.log(e.features[0].properties)
-            })
+            // this.map.on('mousemove', `${this.species}_checklists`, (e) => {
+            //   console.log(e.features[0].properties)
+            // })
 
 
             if (resetDefaultSelections) {
@@ -1476,21 +1477,24 @@
       },
       download() {
 
-        console.log('download called')
-        const txtFile = new Blob([JSON.stringify(this.selected)], { type: 'text/json' });
-        const anchorEl = document.createElement('a');
-        anchorEl.href = window.URL.createObjectURL(txtFile);
-        anchorEl.download = `${this.species}_${this.seasonChangeEvent.oldVal}.json`;
-        anchorEl.click();
-        // console.log(URL)
+        // console.log('download called')
+        // const txtFile = new Blob([JSON.stringify(this.selected)], { type: 'text/json' });
+        // const anchorEl = document.createElement('a');
+        // anchorEl.href = window.URL.createObjectURL(txtFile);
+        // anchorEl.download = `${this.species}_${this.seasonChangeEvent.oldVal}.json`;
+        // anchorEl.click();
+        // // console.log(URL)
+        //
+        // URL.revokeObjectURL(anchorEl.href)
+        // // console.log(window)
+        // setTimeout(() => {
+        //   this.exported = true
+        //   // console.log('after:', txtFile)
+        //
+        // }, 1000)
 
-        URL.revokeObjectURL(anchorEl.href)
-        // console.log(window)
-        setTimeout(() => {
-          this.exported = true
-          // console.log('after:', txtFile)
+        this.exported = true
 
-        }, 1000)
 
       },
       save() {
