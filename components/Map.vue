@@ -212,8 +212,19 @@
       savedData: {} as any,
       speciesData: {} as any,
       exported: false,
+      sessionData: {} as any,
     }),
     computed: {
+
+      // data: {
+      //   breeding: {
+      //     selected: []
+      //   },
+      //   nonbreeding: {
+      //     selected: []
+      //   }
+      // }
+
       selectedOutput(): string {
         return JSON.stringify(this.selected)
       },
@@ -422,7 +433,11 @@
               // if season is included, display 'mm-dd to mm-dd', otherwise display 'unavailable' for missing seasons
               const text = seasonIncluded ? `${speciesSeasons[season.value].start_date} to ${speciesSeasons[season.value].end_date}` : 'unavailable'
               season.text = `${this.seasonText[season.value]} (${text})`
+
+              this.sessionData[season.value] = {selected: []}
             })
+
+            console.log(this.sessionData)
 
             // const selectedHexExp = resetDefaultSelections ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.selected, true, false]
             this.map.addSource(this.species, {
