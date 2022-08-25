@@ -353,10 +353,13 @@
         this.updateLayer()
 
         this.map.on('zoom', () => {
-          console.log(this.map.getZoom())
+          // console.log(this.map.getZoom())
         })
 
         // // TODO Return single feature outline?
+
+        // TODO HANDLE LASSO SELECT ACROSS ANTIMERIDIAN
+        // TODO ADD CHECKLISTS
 
 
         // TODO Restrict lasso values!! and/or restructure so that selections and deselections are saved separately to improve performance
@@ -424,8 +427,8 @@
               type: 'vector',
               promoteId: 'h3_address',
               // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
-              tiles: ['http://localhost:8080/data/breeding/{z}/{x}/{y}.pbf'],
-              // tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}_checklists/{z}/{x}/{y}.pbf`],
+              // tiles: ['http://localhost:8080/data/breeding/{z}/{x}/{y}.pbf'],
+              tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}_v2/{z}/{x}/{y}.pbf`],
               maxzoom: 8,
             })
 
@@ -438,8 +441,8 @@
             this.map.addLayer({
               id: this.species,
               source: this.species,
-              'source-layer': 'aldfly',
-              // 'source-layer': this.species,
+              // 'source-layer': 'aldfly',
+              'source-layer': this.species,
               type: 'fill',
               filter: this.seasonFilter,
               layout: {
@@ -659,6 +662,32 @@
         this.children = this.uniqueValues(this.children)
         // convert hex ids into geojson, preserving the indices
         const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
+
+        console.log(childrenPoly)
+
+        childrenPoly.features.forEach((feature : any) => {
+          console.log(feature)
+          const polygon = feature.geometry['coordinates']
+
+          polygon[0].forEach((coord: any[], i: number) => {
+            // compare one vertex longitude value against the next vertex lng value to see if it crosses antimeridian
+            if (i < polygon[0].length - 1) {
+              const lng = polygon[0][i + 1][0];  // reference longitude coordinate
+              const prevLng = coord[0];  // preceding longitude coordinate
+
+              // if lng minus preceding lng exceeds 180 degrees, ADD 360 degrees
+              if (lng - prevLng <= -180) {
+                polygon[0][i + 1][0] += 360;
+              } else if (lng - prevLng >= 180) {
+                // if reference lng minus preceding lng is greater than 180 degrees, subtract 360 degrees
+                polygon[0][i + 1][0] -= 360;
+              }
+            }
+          })
+        })
+
+
+
         // apply geojson to map layer
         this.map.getSource('children').setData(childrenPoly)
       },
