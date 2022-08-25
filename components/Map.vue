@@ -226,7 +226,16 @@
       },
       seasonSelected(): string[] {
         return this.sessionData[this.season].selected
-      }
+      },
+      seasonFilteredBase(): string[] {
+        return this.sessionData[this.season].filteredBase
+      },
+      seasonFilteredChildren(): string[] {
+        return this.sessionData[this.season].filteredChildren
+      },
+      seasonChildren(): string[] {
+        return this.sessionData[this.season].children
+      },
     },
     watch: {
       selected() {
@@ -288,11 +297,11 @@
       //     // TODO Preserve filtered out values but remove selected filter
       //     // TODO CHeck if filteredBase is pop
       //
-      //     this.filteredBase = this.uniqueValues(this.filteredBase)
-      //     this.filteredChildren = this.uniqueValues(this.filteredChildren)
-      //     this.map.setFilter(this.species, this.filteredBase.length ? ['match', ['get', 'h3_address'], this.filteredBase, false, true] : null)
-      //     this.map.setFilter('children', this.filteredChildren.length ? ['match', ['get', 'h3_address'], this.filteredChildren, false, true] : null)
-      //     // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.filteredChildren, true, false])
+      //     this.seasonFilteredBase = this.uniqueValues(this.seasonFilteredBase)
+      //     this.seasonFilteredChildren = this.uniqueValues(this.seasonFilteredChildren)
+      //     this.map.setFilter(this.species, this.seasonFilteredBase.length ? ['match', ['get', 'h3_address'], this.seasonFilteredBase, false, true] : null)
+      //     this.map.setFilter('children', this.seasonFilteredChildren.length ? ['match', ['get', 'h3_address'], this.seasonFilteredChildren, false, true] : null)
+      //     // this.map.setFilter('children', ['match', ['get', 'h3_address'], this.seasonFilteredChildren, true, false])
       //   }
       // },
     },
@@ -427,10 +436,15 @@
               const text = seasonIncluded ? `${speciesSeasons[season.value].start_date} to ${speciesSeasons[season.value].end_date}` : 'unavailable'
               season.text = `${this.seasonText[season.value]} (${text})`
 
-              this.sessionData[season.value] = {selected: []}
+              this.sessionData[season.value] = {
+                selected: [],
+                filteredBase: [],
+                filteredChildren: [],
+                children: [],
+              }
             })
 
-            console.log(this.sessionData)
+            // console.log(this.sessionData)
 
             // const selectedHexExp = resetDefaultSelections ? ['get', 'in_range'] : ['match', ['get', 'h3_address'], this.seasonSelected, true, false]
             this.map.addSource(this.species, {
@@ -540,8 +554,8 @@
                 },
               })
 
-              this.filterOutParentHexes(this.species, this.filteredBase)
-              this.filterOutParentHexes('children', this.filteredChildren)
+              this.filterOutParentHexes(this.species, this.seasonFilteredBase)
+              this.filterOutParentHexes('children', this.seasonFilteredChildren)
               this.setChildFeatures()
               this.seasonSelected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
               this.seasonSelected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
@@ -645,25 +659,25 @@
       },
       resetLayer(layer: string, seasonChange: boolean) {
         if (this.map.getSource('children') && this.map.getSource(layer)) {
-          if (this.filteredBase.length) {
-            // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
-            this.filteredBase.forEach(hex => {
-              this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
-            })
-            this.seasonSelected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
+          // if (this.seasonFilteredBase.length) {
+          //   // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+          //   this.seasonFilteredBase.forEach(hex => {
+          //     this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
+          //   })
+          //   this.seasonSelected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          // }
+          //
+          // if (this.seasonSelected.length) {
+          //   this.seasonSelected.map(id => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
+          //   this.seasonSelected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+          // }
 
-          if (this.seasonSelected.length) {
-            this.seasonSelected.map(id => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
-            this.seasonSelected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
-          }
+          // this.sessionData[this.season].filteredChildren = []
+          // this.sessionData[this.season].filteredBase = []
+          // this.sessionData[this.season].children = []
 
-          this.filteredChildren = []
-          this.filteredBase = []
-          this.children = []
-
-          this.filterOutParentHexes(layer, this.filteredBase, layer)
-          this.filterOutParentHexes('children', this.filteredChildren)
+          this.filterOutParentHexes(layer, this.seasonFilteredBase, layer)
+          this.filterOutParentHexes('children', this.seasonFilteredChildren)
           this.setChildFeatures()
 
           if (seasonChange) {
@@ -731,9 +745,9 @@
       },
       setChildFeatures(): void {
         // ensure that there are no duplicate children
-        this.children = this.uniqueValues(this.children)
+        this.sessionData[this.season].children = this.uniqueValues(this.seasonChildren)
         // convert hex ids into geojson, preserving the indices
-        const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.children, (hex) => ({h3_address: hex}))
+        const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.seasonChildren, (hex) => ({h3_address: hex}))
 
         childrenPoly.features.forEach((feature : any) => {
           const polygon = feature.geometry['coordinates']
@@ -907,11 +921,11 @@
             // only allow user to drill down to h3 res 6
             if (res <= 5) {
 
-              // console.log('BEFORE CLICK filtered base:', this.filteredBase)
+              // console.log('BEFORE CLICK filtered base:', this.seasonFilteredBase)
 
               // find children of clicked feature, push to array for app-wide usage
               const children = h3.h3ToChildren(feature.id, res)
-              this.children.push(...children)
+              this.seasonChildren.push(...children)
 
               // TODO Make sure that resetting all child features scales with thousands of children
               // set child geojson features in layer
@@ -921,9 +935,9 @@
               // this.filtered.push(feature.id)
               // console.log(feature.source)
               if (feature.source === this.species) {
-                this.filteredBase.push(feature.id)
+                this.seasonFilteredBase.push(feature.id)
               } else {
-                this.filteredChildren.push(feature.id)
+                this.seasonFilteredChildren.push(feature.id)
               }
 
               // is parent hex selected on the map
@@ -944,11 +958,11 @@
                 // if (this.filtered.includes(child)) {
                 //   this.removeItemFromArray(this.filtered, child)
                 // }
-                if (this.filteredChildren.includes(child)) {
-                  this.removeItemFromArray(this.filteredChildren, child)
+                if (this.seasonFilteredChildren.includes(child)) {
+                  this.removeItemFromArray(this.seasonFilteredChildren, child)
                 }
-                if (this.filteredBase.includes(child)) {
-                  // this.removeItemFromArray(this.filteredBase, child)
+                if (this.seasonFilteredBase.includes(child)) {
+                  // this.removeItemFromArray(this.seasonFilteredBase, child)
                 }
               })
 
@@ -961,15 +975,15 @@
 
 
               if (feature.source === this.species) {
-                this.filterOutParentHexes(this.species, this.filteredBase)
+                this.filterOutParentHexes(this.species, this.seasonFilteredBase)
               } else {
-                // console.log('updated filtered children...', this.filteredChildren)
-                this.filterOutParentHexes('children', this.filteredChildren)
+                // console.log('updated filtered children...', this.seasonFilteredChildren)
+                this.filterOutParentHexes('children', this.seasonFilteredChildren)
               }
 
               // if the clicked hex is in the children array, remove it from array when hex is filtered out
-              if (this.arrayIncludesItem(this.children, feature.id)) {
-                this.removeItemFromArray(this.children, feature.id)
+              if (this.arrayIncludesItem(this.seasonChildren, feature.id)) {
+                this.removeItemFromArray(this.seasonChildren, feature.id)
               }
 
 
@@ -1069,9 +1083,9 @@
 
 
 
-              // console.log(this.children.includes(parent), parent)
+              // console.log(this.seasonChildren.includes(parent), parent)
               // add parent to children layer to keep totally separate from filtered based-hex values
-              this.children.push(parent)
+              this.seasonChildren.push(parent)
 
               // console.log(feature.id, this.arrayIncludesItem(this.seasonSelected, feature.id))
 
@@ -1137,11 +1151,11 @@
               allChildren.forEach((child: string) => {
 
                 // if a child hex is already plotted on the map, remove it from the array
-                if (this.children.includes(child)) {
+                if (this.seasonChildren.includes(child)) {
                   this.lastEvent.children[child] = this.seasonSelected.includes(child)
                   this.pastActions[this.pastActions.length - 1].children[child] = this.seasonSelected.includes(child)
                   // console.log(child)
-                  this.removeItemFromArray(this.children, child)
+                  this.removeItemFromArray(this.seasonChildren, child)
                 }
                 // if a child hex is selected (pink), turn off its selected map state and remove from selected array
                 if (this.seasonSelected.includes(child)) {
@@ -1155,37 +1169,39 @@
 
 
               if (source === this.species) {
-                // console.log('BASE:', this.filteredChildren)
+                // console.log('BASE:', this.seasonFilteredChildren)
                 // console.log('filter all children from base-hex layer AND children from children layer?')
-                this.filteredBase.push(...allChildren)
+                this.seasonFilteredBase.push(...allChildren)
                 // TODO STreamline the array within the func, tied to which layer is passed in
-                this.filterOutParentHexes(this.species, this.filteredBase)
+                this.filterOutParentHexes(this.species, this.seasonFilteredBase)
 
               } else {
 
                 // FIXME collapse 5, explode same, explode neighbor 6
 
-                this.removeItemFromArray(this.filteredChildren, parent)
-                this.filterOutParentHexes('children', this.filteredChildren)
+                this.removeItemFromArray(this.seasonFilteredChildren, parent)
+                this.filterOutParentHexes('children', this.seasonFilteredChildren)
 
-                this.filteredBase.push(...allChildren)
+                this.seasonFilteredBase.push(...allChildren)
                 // TODO STreamline the array within the func, tied to which layer is passed in
-                this.filterOutParentHexes(this.species, this.filteredBase)
+                this.filterOutParentHexes(this.species, this.seasonFilteredBase)
 
 
               }
 
-              // this.filterOutParentHexes('children', this.filteredChildren)
+              // this.filterOutParentHexes('children', this.seasonFilteredChildren)
               this.setChildFeatures()
 
 
-              // console.log(parent, this.filteredChildren)
+              // console.log(parent, this.seasonFilteredChildren)
 
 
             } else {
               console.log('CANNOT COLLAPSE FOR RES', clickedRes)
             }
           }
+
+          console.log(this.sessionData[this.season])
 
           //   // TODO Replace all w h3GetResolution
 
@@ -1232,13 +1248,13 @@
         } else if (event === 'click_collapse_selected') {
           // console.log('Need to expand selected ', ids)
 
-          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+          const clickSource = this.seasonFilteredBase.includes(ids[0]) ? 'children' : source[0]
 
           const id = ids[0]
           // find children of clicked feature, push to array for app-wide usage
           const children = Object.keys(lastEvent.children)
           // console.log(children)
-          this.children.push(...children)
+          this.seasonChildren.push(...children)
 
           // TODO Make sure that resetting all child features scales with thousands of children
           // set child geojson features in layer
@@ -1246,9 +1262,9 @@
 
           // filter out the clicked feature so that parent and children are not layered on top of each other
           if (clickSource === this.species) {
-            this.filteredBase.push(id)
+            this.seasonFilteredBase.push(id)
           } else {
-            this.filteredChildren.push(id)
+            this.seasonFilteredChildren.push(id)
           }
 
           // is parent hex selected on the map
@@ -1269,8 +1285,8 @@
               this.removeItemFromArray(this.seasonSelected, id)
             }
 
-            if (this.filteredChildren.includes(child)) {
-              this.removeItemFromArray(this.filteredChildren, child)
+            if (this.seasonFilteredChildren.includes(child)) {
+              this.removeItemFromArray(this.seasonFilteredChildren, child)
             }
           })
 
@@ -1284,17 +1300,17 @@
           if (clickSource === this.species) {
             // TODO Check selected??
             // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
-            this.filteredChildren.push(id)
-            this.filterOutParentHexes('children', this.filteredChildren)
+            this.seasonFilteredChildren.push(id)
+            this.filterOutParentHexes('children', this.seasonFilteredChildren)
 
-            this.filterOutParentHexes(this.species, this.filteredBase)
+            this.filterOutParentHexes(this.species, this.seasonFilteredBase)
           } else {
-            this.filterOutParentHexes('children', this.filteredChildren)
+            this.filterOutParentHexes('children', this.seasonFilteredChildren)
           }
 
           // if the clicked hex is in the children array, remove it from array when hex is filtered out
-          if (this.arrayIncludesItem(this.children, id)) {
-            this.removeItemFromArray(this.children, id)
+          if (this.arrayIncludesItem(this.seasonChildren, id)) {
+            this.removeItemFromArray(this.seasonChildren, id)
           }
 
         } else if (event === 'click_collapse_deselected') {
@@ -1303,7 +1319,7 @@
 
           // console.log(lastEvent)
 
-          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+          const clickSource = this.seasonFilteredBase.includes(ids[0]) ? 'children' : source[0]
           // console.log(clickSource)
 
 
@@ -1314,7 +1330,7 @@
           // find children of clicked feature, push to array for app-wide usage
           const children = Object.keys(lastEvent.children)
           // console.log(children)
-          this.children.push(...children)
+          this.seasonChildren.push(...children)
 
           // TODO Make sure that resetting all child features scales with thousands of children
           // set child geojson features in layer
@@ -1322,9 +1338,9 @@
 
           // filter out the clicked feature so that parent and children are not layered on top of each other
           if (clickSource === this.species) {
-            this.filteredBase.push(id)
+            this.seasonFilteredBase.push(id)
           } else {
-            this.filteredChildren.push(id)
+            this.seasonFilteredChildren.push(id)
           }
 
           // is parent hex selected on the map
@@ -1348,8 +1364,8 @@
               this.removeItemFromArray(this.seasonSelected, id)
             }
 
-            if (this.filteredChildren.includes(child)) {
-              this.removeItemFromArray(this.filteredChildren, child)
+            if (this.seasonFilteredChildren.includes(child)) {
+              this.removeItemFromArray(this.seasonFilteredChildren, child)
             }
 
           })
@@ -1366,18 +1382,18 @@
 
             // TODO Check selected??
             // if base-hex was exploded, collapsed, then undone, REMOVE PARENT FROM CHILDREN ARRAY
-            this.filteredChildren.push(id)
-            this.filterOutParentHexes('children', this.filteredChildren)
+            this.seasonFilteredChildren.push(id)
+            this.filterOutParentHexes('children', this.seasonFilteredChildren)
 
-            this.filterOutParentHexes(this.species, this.filteredBase)
+            this.filterOutParentHexes(this.species, this.seasonFilteredBase)
           } else {
 
-            this.filterOutParentHexes('children', this.filteredChildren)
+            this.filterOutParentHexes('children', this.seasonFilteredChildren)
           }
 
           // if the clicked hex is in the children array, remove it from array when hex is filtered out
-          if (this.arrayIncludesItem(this.children, id)) {
-            this.removeItemFromArray(this.children, id)
+          if (this.arrayIncludesItem(this.seasonChildren, id)) {
+            this.removeItemFromArray(this.seasonChildren, id)
           }
 
         } else if (event === 'click_expand_selected') {
@@ -1391,7 +1407,7 @@
           const clickedRes = h3.h3GetResolution(parent)
 
           // add parent to children layer to keep totally separate from filtered based-hex values
-          this.children.push(parent)
+          this.seasonChildren.push(parent)
 
           // // TODO Instead of setting feature state throughout code, just handle array and handle feature state in selected watcher?
           // match parent selected state to clicked hex selected state, push to array if selected
@@ -1407,8 +1423,8 @@
 
           allChildren.forEach((child: string) => {
             // if a child hex is already plotted on the map, remove it from the array
-            if (this.children.includes(child)) {
-              this.removeItemFromArray(this.children, child)
+            if (this.seasonChildren.includes(child)) {
+              this.removeItemFromArray(this.seasonChildren, child)
             }
             // if a child hex is selected (pink), turn off its selected map state and remove from selected array
             if (this.seasonSelected.includes(child)) {
@@ -1418,19 +1434,19 @@
           })
 
           if (source[0] === this.species) {
-            // console.log('BASE:', this.filteredChildren)
+            // console.log('BASE:', this.seasonFilteredChildren)
             // console.log('filter all children from base-hex layer AND children from children layer?')
-            this.filteredBase.push(...allChildren)
+            this.seasonFilteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes(this.species, this.filteredBase)
+            this.filterOutParentHexes(this.species, this.seasonFilteredBase)
 
           } else {
-            this.removeItemFromArray(this.filteredChildren, parent)
-            this.filterOutParentHexes('children', this.filteredChildren)
+            this.removeItemFromArray(this.seasonFilteredChildren, parent)
+            this.filterOutParentHexes('children', this.seasonFilteredChildren)
 
-            this.filteredBase.push(...allChildren)
+            this.seasonFilteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes(this.species, this.filteredBase)
+            this.filterOutParentHexes(this.species, this.seasonFilteredBase)
           }
           this.setChildFeatures()
 
@@ -1440,13 +1456,13 @@
           const parent = ids[0]
           const clickedRes = h3.h3GetResolution(parent)
           // add parent to children layer to keep totally separate from filtered based-hex values
-          this.children.push(parent)
+          this.seasonChildren.push(parent)
 
           const allChildren = h3.h3ToChildren(parent, clickedRes + 1)
           allChildren.forEach((child: string) => {
             // if a child hex is already plotted on the map, remove it from the array
-            if (this.children.includes(child)) {
-              this.removeItemFromArray(this.children, child)
+            if (this.seasonChildren.includes(child)) {
+              this.removeItemFromArray(this.seasonChildren, child)
             }
             // if a child hex is selected (pink), turn off its selected map state and remove from selected array
             if (this.seasonSelected.includes(child)) {
@@ -1456,15 +1472,15 @@
           })
 
           if (source[0] === this.species) {
-            this.filteredBase.push(...allChildren)
+            this.seasonFilteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes(this.species, this.filteredBase)
+            this.filterOutParentHexes(this.species, this.seasonFilteredBase)
           } else {
-            this.removeItemFromArray(this.filteredChildren, parent)
-            this.filterOutParentHexes('children', this.filteredChildren)
-            this.filteredBase.push(...allChildren)
+            this.removeItemFromArray(this.seasonFilteredChildren, parent)
+            this.filterOutParentHexes('children', this.seasonFilteredChildren)
+            this.seasonFilteredBase.push(...allChildren)
             // TODO STreamline the array within the func, tied to which layer is passed in
-            this.filterOutParentHexes(this.species, this.filteredBase)
+            this.filterOutParentHexes(this.species, this.seasonFilteredBase)
           }
           this.setChildFeatures()
 
@@ -1477,11 +1493,11 @@
         } else if (event === 'click_select') {
           // console.log('Need to click deselect', ids)
           // console.log(source)
-          // console.log(this.filteredBase, this.filteredBase.includes(ids[0]))
-          // // console.log(this.filteredChildren)
-          // console.log(this.children, this.filteredBase.includes(ids[0]))
+          // console.log(this.seasonFilteredBase, this.seasonFilteredBase.includes(ids[0]))
+          // // console.log(this.seasonFilteredChildren)
+          // console.log(this.seasonChildren, this.seasonFilteredBase.includes(ids[0]))
 
-          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+          const clickSource = this.seasonFilteredBase.includes(ids[0]) ? 'children' : source[0]
           // console.log(this.seasonSelected)
           this.removeItemFromArray(this.seasonSelected, ids[0])
           this.map.setFeatureState({
@@ -1491,7 +1507,7 @@
           }, {selected: false})
         } else if (event === 'click_deselect') {
           // console.log('Need to click select', ids)
-          const clickSource = this.filteredBase.includes(ids[0]) ? 'children' : source[0]
+          const clickSource = this.seasonFilteredBase.includes(ids[0]) ? 'children' : source[0]
 
           this.seasonSelected.push(...ids)
           this.map.setFeatureState({
@@ -1543,9 +1559,9 @@
 
         this.savedData[this.species][this.season] = {
           selected: this.seasonSelected, // TODO SAVE SELECTED DIFFERENCE INSTEAD OF FULL ARR?
-          filteredChildren: this.filteredChildren,
-          filteredBase: this.filteredBase,
-          children: this.children
+          filteredChildren: this.seasonFilteredChildren,
+          filteredBase: this.seasonFilteredBase,
+          children: this.seasonChildren
         }
 
         // TODO Add dialog to restore previous season?
