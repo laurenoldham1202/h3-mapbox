@@ -179,7 +179,7 @@
         // { text: 'Brant', value: 'brant' },
         // { text: 'Common Tern', value: 'comter' },
         // { text: 'Parasitic Jaeger', value: 'parjae' },
-        // { text: 'Western Tanager', value: 'westan' },
+        { text: 'Western Tanager', value: 'westan' },
       ],
       season: 'breeding',
       seasonOptions: [
@@ -230,16 +230,16 @@
         return this.pastActions.length - this.count
       },
       seasonSelected(): string[] {
-        return this.sessionData[this.season].selected
+        return this.sessionData[this.species][this.season].selected
       },
       seasonFilteredBase(): string[] {
-        return this.sessionData[this.season].filteredBase
+        return this.sessionData[this.species][this.season].filteredBase
       },
       seasonFilteredChildren(): string[] {
-        return this.sessionData[this.season].filteredChildren
+        return this.sessionData[this.species][this.season].filteredChildren
       },
       seasonChildren(): string[] {
-        return this.sessionData[this.season].children
+        return this.sessionData[this.species][this.season].children
       },
     },
     watch: {
@@ -285,16 +285,31 @@
           this.displayMsg = false
         }
 
+        this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
+
         // TODO Turn of ALL old species events, also check season changes
         this.map.off('click', [oldSpecies, 'children'], this.mapClick)
         this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
 
+
+
+
+
+
+
         // when species is changed, clear all children, filters, and selected hexes from previous species
-        this.resetLayer(oldSpecies, false)
+        // this.resetLayer(oldSpecies, false)
         // turn off old species visibility on map
-        this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
         // plot new species layer
         this.updateLayer()
+
+
+        this.checkTileData(this.metadata, newSpecies).then(() => {
+
+          // console.log(this.sessionData)
+          this.setChildFeatures()
+        })
+
       },
       // // TODO Add clear all selections, reset to initial range, etc.
       // rangeOnly() {
@@ -439,6 +454,13 @@
           // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
 
+            console.log('CHECK TILE DATA', this.sessionData)
+            if (!this.sessionData[this.species]) {
+
+              this.sessionData[this.species] = {}
+              // console.log(this.sessionData)
+            }
+
             // season data for selected species
             const speciesSeasons = this.metadata[this.species].season_dates
             this.seasonOptions.forEach(season => {
@@ -452,7 +474,7 @@
               if (!this.sessionData.hasOwnProperty(season.value)) {
                 // console.log('set ', season)
 
-                this.sessionData[season.value] = {
+                this.sessionData[this.species][season.value] = {
                   selected: [],
                   filteredBase: [],
                   filteredChildren: [],
@@ -465,7 +487,7 @@
 
             // console.log(this.sessionData)
 
-            // console.log(this.sessionData[this.season].selected)
+            // console.log(this.sessionData[this.species][this.season].selected)
 
             // console.log(this.sessionData)
 
@@ -475,14 +497,14 @@
               promoteId: 'h3_address',
               // tiles: ['http://127.0.0.1:8081/{z}/{x}/{y}.pbf'],
               // tiles: ['http://localhost:8080/data/breeding/{z}/{x}/{y}.pbf'],
-              tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}_v2/{z}/{x}/{y}.pbf`],
+              tiles: [`https://test.cdn.shorebirdviz.ebird.org/range_editor/${this.species}_v3/{z}/{x}/{y}.pbf`],
               maxzoom: 8,
             })
 
             // console.log(this.seasonSelected)
 
             const streetStyle = this.style === 'streets-v11'
-            const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.sessionData[this.season].selected, true, false] : ['get', 'in_range']
+            const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.sessionData[this.species][this.season].selected, true, false] : ['get', 'in_range']
             const unselectedOutline = streetStyle ? 'black' : 'white'
             const fillOpacity: any = streetStyle ? 0.3 : ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 0.5, 0.2]
 
@@ -618,7 +640,8 @@
           // TESTING: Add popup for each hex
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
-            // this.popup.setHTML(e.features[0].source + '<br>' + e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
+            // console.log(e.features[0])
+            this.popup.setHTML(e.features[0].source + '<br>' + e.features[0].properties.season + '<br>' + e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
           })
 
         } else {
@@ -674,10 +697,10 @@
       resetSelected() {
         // json response data for the selected season
         const seasonData = this.metadata[this.species].in_range_addresses[this.season]
-        if (seasonData && !this.sessionData[this.season].selected.length) {
+        if (seasonData && !this.sessionData[this.species][this.season].selected.length) {
           // only reset JSON data if season exists to prevent errors
           // this.seasonSelected = JSON.parse(JSON.stringify(seasonData))
-          this.sessionData[this.season].selected = JSON.parse(JSON.stringify(seasonData))
+          this.sessionData[this.species][this.season].selected = JSON.parse(JSON.stringify(seasonData))
         } else {
           console.log(`SEASON NOT AVAILABLE FOR ${this.species}`)
         }
@@ -701,11 +724,14 @@
           // }
 
           // console.log(this.season)
-          // this.sessionData[this.season].filteredChildren = []
-          // this.sessionData[this.season].filteredBase = []
-          // this.sessionData[this.season].children = []
+          // this.sessionData[this.species][this.season].filteredChildren = []
+          // this.sessionData[this.species][this.season].filteredBase = []
+          // this.sessionData[this.species][this.season].children = []
+          console.log(this.sessionData)
+          console.log('input layer:', layer)
 
-          Object.entries(this.sessionData).forEach(([season, obj]: any) => {
+          Object.entries(this.sessionData[this.species]).forEach(([season, obj]: any) => {
+            // console.log(obj)
 
             if (obj.filteredBase.length) {
               // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
@@ -739,7 +765,7 @@
             // console.log('after:', this.sessionData)
 
             // Object.values(this.sessionData).forEach((obj: any) => {
-            Object.entries(this.sessionData).forEach(([season, obj]: any) => {
+            Object.entries(this.sessionData[this.species]).forEach(([season, obj]: any) => {
 
               // console.log(obj.selected)
               // TODO Exclude selected season
@@ -811,8 +837,11 @@
         return Array.from(new Set(array))
       },
       setChildFeatures(): void {
+        console.log('SET CHILDREN')
+        console.log(this.sessionData)
         // ensure that there are no duplicate children
-        this.sessionData[this.season].children = this.uniqueValues(this.seasonChildren)
+        this.sessionData[this.species][this.season].children = this.uniqueValues(this.seasonChildren)
+        console.log(this.sessionData[this.species][this.season].children)
         // convert hex ids into geojson, preserving the indices
         const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.seasonChildren, (hex) => ({h3_address: hex}))
 
@@ -1268,7 +1297,7 @@
             }
           }
 
-          console.log(this.sessionData[this.season])
+          console.log(this.sessionData[this.species][this.season])
 
           //   // TODO Replace all w h3GetResolution
 
