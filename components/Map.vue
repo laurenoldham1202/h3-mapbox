@@ -18,11 +18,16 @@
 
       <!-- TODO Add warning before switching seasons? Auto save or send? -->
       <span>Select a season:</span> <br>
-      <select :value="season"  @input="onSeasonChange" class="select" :disabled="displayMsg">
+      <select v-model="season" class="select">
         <option v-for="option in seasonOptions" :value="option.value" :disabled="disableSeason(option.value)">
           {{ option.text }}
         </option>
       </select>
+<!--      <select :value="season"  @input="onSeasonChange" class="select" :disabled="displayMsg">-->
+<!--        <option v-for="option in seasonOptions" :value="option.value" :disabled="disableSeason(option.value)">-->
+<!--          {{ option.text }}-->
+<!--        </option>-->
+<!--      </select>-->
 
       <p style="color: red; font-weight: 500;" v-show="disableSeason(season)">
         {{season}} season UNAVAILABLE for {{species}}
@@ -257,6 +262,12 @@
           // TODO UPDATE STYLE AND ADD SELECTIONS
           this.updateLayer(false)
         })
+      },
+      season() {
+        this.resetLayer(this.species, true)
+        this.exported = false
+
+        this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
       },
       confirmSeasonChange(confirm) {
         if (confirm) {
