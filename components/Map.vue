@@ -694,26 +694,26 @@
           // this.sessionData[this.season].filteredBase = []
           // this.sessionData[this.season].children = []
 
-          Object.entries(this.sessionData).forEach(([season, obj]) => {
+          Object.entries(this.sessionData).forEach(([season, obj]: any) => {
 
             if (obj.filteredBase.length) {
               // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
-              obj.filteredBase.forEach(hex => {
-                this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
+              obj.filteredBase.forEach((id: string) => {
+                this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})
               })
-              obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+              obj.selected.map((id: string) => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
             }
 
             if (obj.selected.length) {
-              obj.selected.map(id => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
-              obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+              obj.selected.map((id: string) => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
+              obj.selected.map((id: string) => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
             }
           })
 
           // FIXME Make changes, change seasons, change back, then change basemap?
 
 
-          console.log(this.sessionData)
+          // console.log(this.sessionData)
 
           this.filterOutParentHexes(layer, this.seasonFilteredBase, layer)
           this.filterOutParentHexes('children', this.seasonFilteredChildren)
@@ -728,17 +728,17 @@
             // console.log('after:', this.sessionData)
 
             // Object.values(this.sessionData).forEach((obj: any) => {
-            Object.entries(this.sessionData).forEach(([season, obj]) => {
+            Object.entries(this.sessionData).forEach(([season, obj]: any) => {
 
               // console.log(obj.selected)
               // TODO Exclude selected season
               // @ts-ignore
               if (obj.selected.length) {
                 if (season === this.season) {
-                  console.log(obj.selected)
+                  // console.log(obj.selected)
                   // @ts-ignore
-                  obj.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
-                  obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
+                  obj.selected.map((id: string) => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+                  obj.selected.map((id: string) => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
 
 
                 } else {
