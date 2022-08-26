@@ -673,6 +673,9 @@
       },
       resetLayer(layer: string, seasonChange: boolean) {
         if (this.map.getSource('children') && this.map.getSource(layer)) {
+
+          // TODO DO THIS FOR NON-SELECTED SEASONS
+
           // if (this.seasonFilteredBase.length) {
           //   // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
           //   this.seasonFilteredBase.forEach(hex => {
@@ -686,12 +689,31 @@
           //   this.seasonSelected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
           // }
 
+          // console.log(this.season)
           // this.sessionData[this.season].filteredChildren = []
           // this.sessionData[this.season].filteredBase = []
           // this.sessionData[this.season].children = []
 
+          Object.entries(this.sessionData).forEach(([season, obj]) => {
+
+            if (obj.filteredBase.length) {
+              // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+              obj.filteredBase.forEach(hex => {
+                this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
+              })
+              obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+            }
+
+            if (obj.selected.length) {
+              obj.selected.map(id => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
+              obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+            }
+          })
+
           // FIXME Make changes, change seasons, change back, then change basemap?
 
+
+          console.log(this.sessionData)
 
           this.filterOutParentHexes(layer, this.seasonFilteredBase, layer)
           this.filterOutParentHexes('children', this.seasonFilteredChildren)
@@ -713,15 +735,31 @@
               // @ts-ignore
               if (obj.selected.length) {
                 if (season === this.season) {
+                  console.log(obj.selected)
                   // @ts-ignore
-
                   obj.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
+                  obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: true})})
 
 
                 } else {
+
+                  // if (obj.filteredBase.length) {
+                  //   // TODO HANDLE THIS IN EXPLODE EVENT? MAKE SURE MAP STATE MATCHES SELECTED AND PARENT IS REMOVED FROM SELECTED
+                  //   obj.filteredBase.forEach(hex => {
+                  //     this.map.setFeatureState({source: layer, sourceLayer: layer, id: hex}, {selected: false})
+                  //   })
+                  //   obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+                  // }
+                  //
+                  // if (obj.selected.length) {
+                  //   obj.selected.map(id => {this.map.setFeatureState({source: layer, sourceLayer: layer, id: id}, {selected: false})})
+                  //   obj.selected.map(id => {this.map.setFeatureState({source: 'children', id: id}, {selected: false})})
+                  // }
                   // @ts-ignore
 
-                  obj.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
+                  // obj.selected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
+                  // obj.filteredBase.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
+                  // obj.filteredChildren.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: false})})
                 }
 
               }
@@ -930,7 +968,7 @@
 
           const selectMode = !e.originalEvent.shiftKey
           const feature = e.features[0]
-          console.log('map click', feature)
+          // console.log('map click', feature)
           const res = parseInt(feature.id[1]) + 1
 
           // if select mode is off, i.e. if user is expanding or collapsing shapes
