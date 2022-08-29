@@ -883,14 +883,22 @@
         // FIXME Disable map events when displayMsg is up?
 
         // console.log(this.sessionData[this.species])
-        console.log(this.pastActions)
+        // console.log(this.pastActions)
+        if (this.pastActions.length) {
 
-        this.displayMsg = true
-        // console.log(input)
-        this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
-        // this.season = this.speciesChangeEvent.newVal
-        this.species = this.speciesChangeEvent.newVal
-        // console.log(this.speciesChangeEvent)
+          this.displayMsg = true
+          // console.log(input)
+          this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+          // this.season = this.speciesChangeEvent.newVal
+          this.species = this.speciesChangeEvent.newVal
+          // console.log(this.speciesChangeEvent)
+        } else {
+          console.log('update species')
+          this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+
+          this.speciesChange()
+        }
+
       },
       speciesChange() {
         this.confirmSpeciesChange = true
