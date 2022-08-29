@@ -280,6 +280,11 @@
         }
       },
       species(newSpecies, oldSpecies) {
+
+        // FIXME SWITCHING SPECIES NOT HONORING SEASON OR SELECTIONS PROPERLY
+        // Deselect in ald bre > westan > non > ald
+
+
         // clear display message if open when species is changed
         if (this.displayMsg) {
           this.displayMsg = false
@@ -302,8 +307,8 @@
         // turn off old species visibility on map
         // plot new species layer
         this.updateLayer()
-
-
+        //
+        //
         this.checkTileData(this.metadata, newSpecies).then(() => {
 
           // console.log(this.sessionData)
@@ -445,8 +450,15 @@
         if (this.popup) {
           this.popup.remove()
         }
+
+        console.log(this.map.getSource(this.species))
+
         // if the species hasn't been mapped yet...
         if (!this.map.getSource(this.species)) {
+
+
+          console.log('plot new layer for ', this.species)
+
           // fetch tile data if it hasn't been fetched yet
           if (!this.metadata[this.species]) {
             this.fetchTileData()
@@ -454,7 +466,6 @@
           // check for tile data before manipulating map
           this.checkTileData(this.metadata, this.species).then(() => {
 
-            console.log('CHECK TILE DATA', this.sessionData)
             if (!this.sessionData[this.species]) {
 
               this.sessionData[this.species] = {}
@@ -485,7 +496,7 @@
 
             })
 
-            // console.log(this.sessionData)
+            console.log(this.sessionData)
 
             // console.log(this.sessionData[this.species][this.season].selected)
 
@@ -645,8 +656,14 @@
           })
 
         } else {
+
+
+          console.log(`plot ${this.species} for ${this.season} season`)
+
+          this.resetLayer(this.species, true)
+
           // TODO Include this only once, not in both if and else statements?
-          this.resetSelected()
+          // this.resetSelected()
           // console.log(this.seasonSelected)
           // console.log(this.map.getPaintProperty(this.species, 'fill-color'))
           // FIXME Make it so that these values are properly handled in species watch clearing?
@@ -727,8 +744,8 @@
           // this.sessionData[this.species][this.season].filteredChildren = []
           // this.sessionData[this.species][this.season].filteredBase = []
           // this.sessionData[this.species][this.season].children = []
-          console.log(this.sessionData)
-          console.log('input layer:', layer)
+          // console.log(this.sessionData)
+          // console.log('input layer:', layer)
 
           Object.entries(this.sessionData[this.species]).forEach(([season, obj]: any) => {
             // console.log(obj)
@@ -837,11 +854,11 @@
         return Array.from(new Set(array))
       },
       setChildFeatures(): void {
-        console.log('SET CHILDREN')
-        console.log(this.sessionData)
+        // console.log('SET CHILDREN')
+        // console.log(this.sessionData)
         // ensure that there are no duplicate children
         this.sessionData[this.species][this.season].children = this.uniqueValues(this.seasonChildren)
-        console.log(this.sessionData[this.species][this.season].children)
+        // console.log(this.sessionData[this.species][this.season].children)
         // convert hex ids into geojson, preserving the indices
         const childrenPoly = geojson2h3.h3SetToFeatureCollection(this.seasonChildren, (hex) => ({h3_address: hex}))
 
