@@ -95,11 +95,11 @@
       </select>
 
       <hr>
-      # selected hexes: <strong>{{selected.length}}</strong>
+      # selected hexes: <strong v-if="sessionData[species] && seasonSelected">{{seasonSelected.length}}</strong>
       <br><br>
 <!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
       <button @click="undoTest" :disabled="actionNumber <= 0">UNDO LAST ACTION</button>
-<!--      <button @click="download">download</button>-->
+      <button @click="download">save species data</button>
 <!--      <button @click="save">save</button>-->
       <hr>
 
@@ -1707,11 +1707,13 @@
         // console.log(this.sessionData)
         // console.log(this.sessionData[this.speciesChangeEvent.oldVal])
 
+        const species = this.speciesChangeEvent ? this.speciesChangeEvent.oldVal : this.species
+
         const formatted: any = {}
 
-        Object.keys(this.sessionData[this.speciesChangeEvent.oldVal]).forEach(season => {
+        Object.keys(this.sessionData[species]).forEach(season => {
           // console.log(season)
-          formatted[season] = this.sessionData[this.speciesChangeEvent.oldVal][season].selected
+          formatted[season] = this.sessionData[species][season].selected
         })
 
         // console.log(formatted)
@@ -1721,7 +1723,7 @@
         const txtFile = new Blob([JSON.stringify(formatted)], { type: 'text/json' });
         const anchorEl = document.createElement('a');
         anchorEl.href = window.URL.createObjectURL(txtFile);
-        anchorEl.download = `${this.speciesChangeEvent.oldVal}.json`;
+        anchorEl.download = `${species}.json`;
         anchorEl.click();
         // console.log(URL)
 
