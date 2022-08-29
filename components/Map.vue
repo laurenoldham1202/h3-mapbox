@@ -48,14 +48,15 @@
         </div>
         <div class="body" :style="{background: exported ? '#f6e4e5' : '#f4e8df'}" style="padding: 0.5rem; display: flex; flex-direction: column;">
           <div v-if="!exported">
-            You must export current species data before changing species. Map changes will be lost and cannot be retrieved once changed.
+            You must export current species data before changing species.
+            <!-- Map changes will be lost and cannot be retrieved once changed. -->
           </div>
           <div v-if="exported">
             Check that your download was successful and confirm species change.
           </div>
           <div class="button-menu" style="margin-left: auto; margin-top: 0.75rem;">
             <!-- TODO Check all these interactions, toggling seasons when canceled, toggling seasons when display open -->
-            <button @click="confirmspeciesChange = false; displayMsg = false; season = speciesChangeEvent.oldVal">Cancel</button>
+            <button @click="confirmSpeciesChange = false; displayMsg = false; species = speciesChangeEvent.oldVal">Cancel</button>
             <button v-show="!exported" @click="download">Export</button>
             <button v-show="exported" @click="speciesChange">Change species</button>
           </div>
@@ -75,7 +76,7 @@
 <!--        </div>-->
 <!--        <div class="button-menu" style="margin-left: auto;">-->
 
-<!--          <button @click="confirmspeciesChange = false; displayMsg = false; season = speciesChangeEvent.oldVal">Cancel</button>-->
+<!--          <button @click="confirmSpeciesChange = false; displayMsg = false; season = speciesChangeEvent.oldVal">Cancel</button>-->
 <!--  &lt;!&ndash;        <button @click="speciesChange">Save and change season</button>&ndash;&gt;-->
 
 <!--          <button v-show="!exported" @click="download">Export</button>-->
@@ -204,7 +205,7 @@
         { text: 'Street', value: 'streets-v11' },
         { text: 'Satellite', value: 'satellite-streets-v11' },
       ],
-      confirmspeciesChange: false,
+      confirmSpeciesChange: false,
       displayMsg: false,
       deselectLasso: false,
       speciesChangeEvent: undefined as any,
@@ -276,7 +277,7 @@
         // TODO ADD BACK CHECKLISTS
         this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
       },
-      confirmspeciesChange(confirm) {
+      confirmSpeciesChange(confirm) {
         if (confirm) {
           this.exported = false
 
@@ -878,6 +879,12 @@
         }
       },
       onSpeciesChange(input: any) {
+
+        // FIXME Disable map events when displayMsg is up?
+
+        // console.log(this.sessionData[this.species])
+        console.log(this.pastActions)
+
         this.displayMsg = true
         // console.log(input)
         this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
@@ -886,13 +893,13 @@
         // console.log(this.speciesChangeEvent)
       },
       speciesChange() {
-        this.confirmspeciesChange = true
+        this.confirmSpeciesChange = true
         // this.season = this.speciesChangeEvent.newVal
         this.species = this.speciesChangeEvent.newVal
         this.displayMsg = false
 
         setTimeout(() => {
-          this.confirmspeciesChange = false
+          this.confirmSpeciesChange = false
         }, 2000)
       },
       uniqueValues(array: any[]): any[] {
