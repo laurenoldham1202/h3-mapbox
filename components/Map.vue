@@ -14,7 +14,7 @@
 <!--        </option>-->
 <!--      </select>-->
 
-            <select :value="species"  @input="onSeasonChange" class="select">
+            <select :value="species"  @input="onSpeciesChange" class="select">
               <option v-for="option in options" :value="option.value">
                 {{ option.text }}
               </option>
@@ -29,7 +29,7 @@
           {{ option.text }}
         </option>
       </select>
-<!--      <select :value="season"  @input="onSeasonChange" class="select" :disabled="displayMsg">-->
+<!--      <select :value="season"  @input="onSpeciesChange" class="select" :disabled="displayMsg">-->
 <!--        <option v-for="option in seasonOptions" :value="option.value" :disabled="disableSeason(option.value)">-->
 <!--          {{ option.text }}-->
 <!--        </option>-->
@@ -43,21 +43,21 @@
       <!-- TODO ONLY DISPLAY IF SELECTED VALUES HAVE CHANGED, have save point here, not necessarily able to reload, add to species change, MENTION THIS IN TRAINING -->
       <div class="alert-msg" :style="{borderColor: exported ? '#cc3340' : '#bd580a'}" style="border: 1px solid; margin: 1rem 0;" v-show="displayMsg">
         <div class="header" :style="{background: exported ? '#cc3340' : '#bd580a'}" style="color: white; padding: 0.5rem; font-weight: 500;">
-          <div v-if="!exported"><strong>Export {{seasonText[seasonChangeEvent?.oldVal]}} season data?</strong></div>
-          <div v-if="exported"><strong>Confirm season change</strong></div>
+          <div v-if="!exported"><strong>Export {{seasonText[speciesChangeEvent?.oldVal]}} species data?</strong></div>
+          <div v-if="exported"><strong>Confirm species change</strong></div>
         </div>
         <div class="body" :style="{background: exported ? '#f6e4e5' : '#f4e8df'}" style="padding: 0.5rem; display: flex; flex-direction: column;">
           <div v-if="!exported">
-            You must export your current selections before changing seasons. Map changes will be lost and cannot be retrieved once changed.
+            You must export current species data before changing species. Map changes will be lost and cannot be retrieved once changed.
           </div>
           <div v-if="exported">
-            Check that your download was successful and confirm season change.
+            Check that your download was successful and confirm species change.
           </div>
           <div class="button-menu" style="margin-left: auto; margin-top: 0.75rem;">
             <!-- TODO Check all these interactions, toggling seasons when canceled, toggling seasons when display open -->
-            <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>
+            <button @click="confirmspeciesChange = false; displayMsg = false; season = speciesChangeEvent.oldVal">Cancel</button>
             <button v-show="!exported" @click="download">Export</button>
-            <button v-show="exported" @click="seasonChange">Change season</button>
+            <button v-show="exported" @click="speciesChange">Change species</button>
           </div>
         </div>
       </div>
@@ -67,20 +67,20 @@
 <!--        style="font-weight: 500; margin: 0.5rem 0; padding: 0.5rem; display: flex; flex-direction: column;" v-show="displayMsg">-->
 <!--        <div style="margin-bottom: 0.75rem;">-->
 <!--          <span v-show="!exported">-->
-<!--            <div class="header" style="background: #bd580a">Export {{seasonText[seasonChangeEvent?.oldVal]}} season data?</div>-->
+<!--            <div class="header" style="background: #bd580a">Export {{seasonText[speciesChangeEvent?.oldVal]}} season data?</div>-->
 <!--            <br>Changing seasons will clear your map selections, which cannot be retrieved. You must export your current selections before changing seasons.-->
 <!--          </span>-->
-<!--          <span v-show="exported">CONFIRM season change from {{seasonChangeEvent?.oldVal}} to {{season}}</span>-->
+<!--          <span v-show="exported">CONFIRM season change from {{speciesChangeEvent?.oldVal}} to {{season}}</span>-->
 <!--          <br>-->
 <!--        </div>-->
 <!--        <div class="button-menu" style="margin-left: auto;">-->
 
-<!--          <button @click="confirmSeasonChange = false; displayMsg = false; season = seasonChangeEvent.oldVal">Cancel</button>-->
-<!--  &lt;!&ndash;        <button @click="seasonChange">Save and change season</button>&ndash;&gt;-->
+<!--          <button @click="confirmspeciesChange = false; displayMsg = false; season = speciesChangeEvent.oldVal">Cancel</button>-->
+<!--  &lt;!&ndash;        <button @click="speciesChange">Save and change season</button>&ndash;&gt;-->
 
 <!--          <button v-show="!exported" @click="download">Export</button>-->
 <!--          &lt;!&ndash; TODO on confirm, set exported to false  &ndash;&gt;-->
-<!--          <button v-show="exported" @click="seasonChange">Change season</button>-->
+<!--          <button v-show="exported" @click="speciesChange">Change season</button>-->
 <!--        </div>-->
 
 <!--      </div>-->
@@ -204,10 +204,10 @@
         { text: 'Street', value: 'streets-v11' },
         { text: 'Satellite', value: 'satellite-streets-v11' },
       ],
-      confirmSeasonChange: false,
+      confirmspeciesChange: false,
       displayMsg: false,
       deselectLasso: false,
-      seasonChangeEvent: undefined as any,
+      speciesChangeEvent: undefined as any,
       // TODO type
       lastEvent: {
         event: undefined as any,
@@ -276,7 +276,7 @@
         // TODO ADD BACK CHECKLISTS
         this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
       },
-      confirmSeasonChange(confirm) {
+      confirmspeciesChange(confirm) {
         if (confirm) {
           this.exported = false
 
@@ -288,7 +288,7 @@
           // this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
 
 
-          console.log(this.seasonChangeEvent)
+          console.log(this.speciesChangeEvent)
 
 
           // clear display message if open when species is changed
@@ -296,10 +296,10 @@
             this.displayMsg = false
           }
 
-          this.map.setLayoutProperty(this.seasonChangeEvent.oldVal, 'visibility', 'none')
+          this.map.setLayoutProperty(this.speciesChangeEvent.oldVal, 'visibility', 'none')
 
           // TODO Turn of ALL old species events, also check season changes
-          this.map.off('click', [this.seasonChangeEvent.oldVal, 'children'], this.mapClick)
+          this.map.off('click', [this.speciesChangeEvent.oldVal, 'children'], this.mapClick)
           this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
 
 
@@ -315,7 +315,7 @@
           this.updateLayer()
           //
           //
-          this.checkTileData(this.metadata, this.seasonChangeEvent.newVal).then(() => {
+          this.checkTileData(this.metadata, this.speciesChangeEvent.newVal).then(() => {
 
             // console.log(this.sessionData)
             this.setChildFeatures()
@@ -765,7 +765,7 @@
           console.log(`SEASON NOT AVAILABLE FOR ${this.species}`)
         }
       },
-      resetLayer(layer: string, seasonChange: boolean) {
+      resetLayer(layer: string, speciesChange: boolean) {
         if (this.map.getSource('children') && this.map.getSource(layer)) {
 
           // TODO DO THIS FOR NON-SELECTED SEASONS
@@ -816,7 +816,7 @@
           this.filterOutParentHexes('children', this.seasonFilteredChildren)
           this.setChildFeatures()
 
-          if (seasonChange) {
+          if (speciesChange) {
             // console.log('season changed')
             // console.log(this.sessionData)
             // console.log(this.season)
@@ -877,22 +877,22 @@
           this.pastActions = []
         }
       },
-      onSeasonChange(input: any) {
+      onSpeciesChange(input: any) {
         this.displayMsg = true
         // console.log(input)
-        this.seasonChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
-        // this.season = this.seasonChangeEvent.newVal
-        this.species = this.seasonChangeEvent.newVal
-        // console.log(this.seasonChangeEvent)
+        this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+        // this.season = this.speciesChangeEvent.newVal
+        this.species = this.speciesChangeEvent.newVal
+        // console.log(this.speciesChangeEvent)
       },
-      seasonChange() {
-        this.confirmSeasonChange = true
-        // this.season = this.seasonChangeEvent.newVal
-        this.species = this.seasonChangeEvent.newVal
+      speciesChange() {
+        this.confirmspeciesChange = true
+        // this.season = this.speciesChangeEvent.newVal
+        this.species = this.speciesChangeEvent.newVal
         this.displayMsg = false
 
         setTimeout(() => {
-          this.confirmSeasonChange = false
+          this.confirmspeciesChange = false
         }, 2000)
       },
       uniqueValues(array: any[]): any[] {
@@ -1688,24 +1688,37 @@
         this.removeItemFromArray(this.pastActions, this.pastActions[this.actionNumber])
       },
       download() {
+        // TODO Current setup doesn't save data for seasons that haven't been loaded yet - can be handled by matt?
+        // console.log(this.sessionData)
+        // console.log(this.sessionData[this.speciesChangeEvent.oldVal])
+
+        const formatted: any = {}
+
+        Object.keys(this.sessionData[this.speciesChangeEvent.oldVal]).forEach(season => {
+          // console.log(season)
+          formatted[season] = this.sessionData[this.speciesChangeEvent.oldVal][season].selected
+        })
+
+        // console.log(formatted)
+
 
         // console.log('download called')
-        // const txtFile = new Blob([JSON.stringify(this.seasonSelected)], { type: 'text/json' });
-        // const anchorEl = document.createElement('a');
-        // anchorEl.href = window.URL.createObjectURL(txtFile);
-        // anchorEl.download = `${this.species}_${this.seasonChangeEvent.oldVal}.json`;
-        // anchorEl.click();
-        // // console.log(URL)
-        //
-        // URL.revokeObjectURL(anchorEl.href)
-        // // console.log(window)
-        // setTimeout(() => {
-        //   this.exported = true
-        //   // console.log('after:', txtFile)
-        //
-        // }, 1000)
+        const txtFile = new Blob([JSON.stringify(formatted)], { type: 'text/json' });
+        const anchorEl = document.createElement('a');
+        anchorEl.href = window.URL.createObjectURL(txtFile);
+        anchorEl.download = `${this.speciesChangeEvent.oldVal}.json`;
+        anchorEl.click();
+        // console.log(URL)
 
-        this.exported = true
+        URL.revokeObjectURL(anchorEl.href)
+        // console.log(window)
+        setTimeout(() => {
+          this.exported = true
+          // console.log('after:', txtFile)
+
+        }, 1000)
+
+        // this.exported = true
 
 
       },
