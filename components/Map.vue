@@ -8,11 +8,17 @@
 
 
       <span>Select a species:</span> <br>
-      <select v-model="species" class="select">
-        <option v-for="option in options" :value="option.value">
-          {{ option.text }}
-        </option>
-      </select>
+<!--      <select v-model="species" class="select">-->
+<!--        <option v-for="option in options" :value="option.value">-->
+<!--          {{ option.text }}-->
+<!--        </option>-->
+<!--      </select>-->
+
+            <select :value="species"  @input="onSeasonChange" class="select">
+              <option v-for="option in options" :value="option.value">
+                {{ option.text }}
+              </option>
+            </select>
       <br>
       <br>
 
@@ -267,16 +273,53 @@
         this.resetLayer(this.species, true)
         this.exported = false
 
+        // TODO ADD BACK CHECKLISTS
         this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
       },
       confirmSeasonChange(confirm) {
         if (confirm) {
-          // this.download()
-          // clear all children, filters, and selected hexes when season is changed
-          this.resetLayer(this.species, true)
           this.exported = false
 
-          this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
+          // this.download()
+          // clear all children, filters, and selected hexes when season is changed
+          // this.resetLayer(this.species, true)
+          // this.exported = false
+          //
+          // this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
+
+
+          console.log(this.seasonChangeEvent)
+
+
+          // clear display message if open when species is changed
+          if (this.displayMsg) {
+            this.displayMsg = false
+          }
+
+          this.map.setLayoutProperty(this.seasonChangeEvent.oldVal, 'visibility', 'none')
+
+          // TODO Turn of ALL old species events, also check season changes
+          this.map.off('click', [this.seasonChangeEvent.oldVal, 'children'], this.mapClick)
+          this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
+
+
+
+
+
+
+
+          // when species is changed, clear all children, filters, and selected hexes from previous species
+          // this.resetLayer(oldSpecies, false)
+          // turn off old species visibility on map
+          // plot new species layer
+          this.updateLayer()
+          //
+          //
+          this.checkTileData(this.metadata, this.seasonChangeEvent.newVal).then(() => {
+
+            // console.log(this.sessionData)
+            this.setChildFeatures()
+          })
         }
       },
       species(newSpecies, oldSpecies) {
@@ -284,36 +327,36 @@
         // FIXME SWITCHING SPECIES NOT HONORING SEASON OR SELECTIONS PROPERLY
         // Deselect in ald bre > westan > non > ald
 
-
-        // clear display message if open when species is changed
-        if (this.displayMsg) {
-          this.displayMsg = false
-        }
-
-        this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
-
-        // TODO Turn of ALL old species events, also check season changes
-        this.map.off('click', [oldSpecies, 'children'], this.mapClick)
-        this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
-
-
-
-
-
-
-
-        // when species is changed, clear all children, filters, and selected hexes from previous species
-        // this.resetLayer(oldSpecies, false)
-        // turn off old species visibility on map
-        // plot new species layer
-        this.updateLayer()
+        //
+        // // clear display message if open when species is changed
+        // if (this.displayMsg) {
+        //   this.displayMsg = false
+        // }
+        //
+        // this.map.setLayoutProperty(oldSpecies, 'visibility', 'none')
+        //
+        // // TODO Turn of ALL old species events, also check season changes
+        // this.map.off('click', [oldSpecies, 'children'], this.mapClick)
+        // this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
         //
         //
-        this.checkTileData(this.metadata, newSpecies).then(() => {
-
-          // console.log(this.sessionData)
-          this.setChildFeatures()
-        })
+        //
+        //
+        //
+        //
+        //
+        // // when species is changed, clear all children, filters, and selected hexes from previous species
+        // // this.resetLayer(oldSpecies, false)
+        // // turn off old species visibility on map
+        // // plot new species layer
+        // this.updateLayer()
+        // //
+        // //
+        // this.checkTileData(this.metadata, newSpecies).then(() => {
+        //
+        //   // console.log(this.sessionData)
+        //   this.setChildFeatures()
+        // })
 
       },
       // // TODO Add clear all selections, reset to initial range, etc.
@@ -838,12 +881,14 @@
         this.displayMsg = true
         // console.log(input)
         this.seasonChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
-        this.season = this.seasonChangeEvent.newVal
+        // this.season = this.seasonChangeEvent.newVal
+        this.species = this.seasonChangeEvent.newVal
         // console.log(this.seasonChangeEvent)
       },
       seasonChange() {
         this.confirmSeasonChange = true
-        this.season = this.seasonChangeEvent.newVal
+        // this.season = this.seasonChangeEvent.newVal
+        this.species = this.seasonChangeEvent.newVal
         this.displayMsg = false
 
         setTimeout(() => {
