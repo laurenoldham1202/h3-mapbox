@@ -310,6 +310,7 @@
           }
 
           this.map.setLayoutProperty(this.speciesChangeEvent.oldVal, 'visibility', 'none')
+          this.map.setLayoutProperty(`${this.speciesChangeEvent.oldVal}_checklists`, 'visibility', 'none')
 
           // TODO Turn of ALL old species events, also check season changes
           this.map.off('click', [this.speciesChangeEvent.oldVal, 'children'], this.mapClick)
@@ -631,7 +632,7 @@
             // this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
 
             this.map.on('mousemove', `${this.species}_checklists`, (e) => {
-              console.log(e.features[0].properties)
+              console.log(e.features[0].source, e.features[0].properties)
             })
 
             // FIXME SHIFT + RIGHT CLICK ON CHILDREN DOES WEIRD STUFF
@@ -724,6 +725,7 @@
 
         } else {
 
+          // console.log(this.map.getLayer)
 
           // console.log(`plot ${this.species} for ${this.season} season`)
 
@@ -737,6 +739,8 @@
           this.seasonSelected.map(id => {this.map.setFeatureState({source: this.species, sourceLayer: this.species, id: id}, {selected: true})})
 
           this.map.setLayoutProperty(this.species, 'visibility', 'visible')
+          this.map.setLayoutProperty(`${this.species}_checklists`, 'visibility', 'visible')
+
 
         }
 
