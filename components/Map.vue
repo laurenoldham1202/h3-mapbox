@@ -718,7 +718,7 @@
           this.popup = new M.Popup({closeButton: false})
           this.map.on('mousemove', [this.species, 'children'], (e: any) => {
             // console.log(e.features[0])
-            this.popup.setHTML(e.features[0].source + '<br>' + e.features[0].properties.season + '<br>' + e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
+            // this.popup.setHTML(e.features[0].source + '<br>' + e.features[0].properties.season + '<br>' + e.features[0].id).setLngLat(e.lngLat).addTo(this.map)
           })
 
         } else {
@@ -904,19 +904,41 @@
 
         // FIXME Disable map events when displayMsg is up?
 
-        // console.log(this.sessionData[this.species])
+        // console.log(this.sessionData)
+        // console.log(this.metadata)
+
+        this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+
+        let requireConfirmation = false
+
+        Object.entries(this.sessionData[this.speciesChangeEvent.oldVal]).forEach(([season, seasonData]: any) => {
+          if (seasonData.selected.length) {
+            // console.log('updated length:', seasonData.selected.length)
+            // console.log('original length:', this.metadata[this.speciesChangeEvent.oldVal].in_range_addresses[season].length)
+
+            if (seasonData.selected.length !== this.metadata[this.speciesChangeEvent.oldVal].in_range_addresses[season].length) {
+              requireConfirmation = true
+            }
+          }
+        })
+
+        // console.log(requireConfirmation)
+
+
         // console.log(this.pastActions)
-        if (this.pastActions.length) {
+        // if (this.pastActions.length) {
+        if (requireConfirmation) {
 
           this.displayMsg = true
           // console.log(input)
-          this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+          // this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
           // this.season = this.speciesChangeEvent.newVal
           this.species = this.speciesChangeEvent.newVal
           // console.log(this.speciesChangeEvent)
         } else {
-          this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+          // this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
           console.log(`update from ${this.speciesChangeEvent.oldVal} to ${this.speciesChangeEvent.newVal}`)
+          // console.log(this.session)
 
           this.speciesChange()
         }
@@ -1732,6 +1754,7 @@
         // console.log(this.sessionData[this.speciesChangeEvent.oldVal])
 
         const species = this.speciesChangeEvent ? this.speciesChangeEvent.oldVal : this.species
+        // console.log(species)
 
         const formatted: any = {}
 
