@@ -631,7 +631,7 @@
 
             // this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
 
-            this.map.on('mousemove', `${this.species}_checklists`, (e) => {
+            this.map.on('mousemove', `${this.species}_checklists`, (e: any) => {
               console.log(e.features[0].source, e.features[0].properties)
             })
 
