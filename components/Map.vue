@@ -280,7 +280,7 @@
         this.exported = false
 
         // TODO ADD BACK CHECKLISTS
-        // this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
+        this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
       },
       confirmSpeciesChange(confirm) {
         // console.log(confirm)
@@ -601,37 +601,38 @@
             })
 
 
-            // this.map.addLayer({
-            //   id: `${this.species}_checklists`,
-            //   source: this.species,
-            //   // 'source-layer': 'aldfly',
-            //   'source-layer': `${this.species}_checklists`,
-            //   type: 'circle',
-            //   // filter: ['all', this.seasonFilter, ['>', ['get', 'detected'], 0]],
-            //   filter: this.seasonFilter,
-            //   layout: {
-            //     'visibility': 'visible',
-            //     // plot detected (1) values on top of undetected (0)
-            //     'circle-sort-key': ['+', ['get', 'detected']]
-            //   },
-            //   // TODO NEED TO ADJUST STYLES FOR SATELLITE
-            //   paint: {
-            //     'circle-opacity': ['match', ['get', 'detected'], 0, 0.3, 1, 0.7, 0.3],
-            //     'circle-color': ['match', ['get', 'detected'], 0, '#9c4363', 1, '#4405ff', 'black'],
-            //     'circle-radius': ['match', ['get', 'detected'], 0, 2, 1, 4, 2],
-            //     'circle-stroke-width': 1,
-            //     'circle-stroke-color': ['match', ['get', 'detected'], 0, 'transparent', 1, 'whitesmoke', 'transparent'],
-            //     // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
-            //     // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
-            //     // 'fill-opacity': fillOpacity,
-            //   },
-            // })
+            this.map.addLayer({
+              id: `${this.species}_checklists`,
+              source: this.species,
+              // 'source-layer': 'aldfly',
+              'source-layer': `${this.species}_checklists`,
+              type: 'circle',
+              // filter: ['all', this.seasonFilter, ['>', ['get', 'detected'], 0]],
+              filter: this.seasonFilter,
+              layout: {
+                'visibility': 'visible',
+                // plot detected (1) values on top of undetected (0)
+                'circle-sort-key': ['+', ['get', 'count']]
+              },
+              // TODO NEED TO ADJUST STYLES FOR SATELLITE
+              paint: {
+                'circle-opacity': ['match', ['get', 'count'], 0, 0.3, 1, 0.7, 0.7],
+                'circle-color': ['match', ['get', 'count'], 0, '#9c4363', 1, '#4405ff', '#4405ff'],
+                // 'circle-radius': ['match', ['get', 'count'], 0, 2, 1, 4, 8],
+                'circle-radius': {property: 'count', stops: [[0, 2], [1, 3], [5, 6], [10, 12], [100, 16]]},
+                'circle-stroke-width': 1,
+                'circle-stroke-color': ['match', ['get', 'count'], 0, 'transparent', 1, 'whitesmoke', 'whitesmoke'],
+                // 'fill-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', 'black'],
+                // 'fill-outline-color': ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 'deeppink', unselectedOutline],
+                // 'fill-opacity': fillOpacity,
+              },
+            })
 
             // this.map.setFilter(`${this.species}_checklists`, ['>', ['get', 'detected'], 0])
 
-            // this.map.on('mousemove', `${this.species}_checklists`, (e) => {
-            //   console.log(e.features[0].properties)
-            // })
+            this.map.on('mousemove', `${this.species}_checklists`, (e) => {
+              console.log(e.features[0].properties)
+            })
 
             // FIXME SHIFT + RIGHT CLICK ON CHILDREN DOES WEIRD STUFF
 
