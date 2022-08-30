@@ -267,9 +267,12 @@
           this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
 
 
+
+          // this.map.removeLayer(this.species)
+          // this.map.removeSource(this.species)
           // FIXME LAYER UPDATE ON STYLE CHANGE DOESNT WORK
           // TODO UPDATE STYLE AND ADD SELECTIONS
-          this.updateLayer(true)
+          this.updateLayer(false)
         })
       },
       season() {
@@ -499,10 +502,12 @@
           this.popup.remove()
         }
 
-        // console.log(this.map.getSource(this.species))
+        console.log(this.map.getSource(this.species))
 
         // if the species hasn't been mapped yet...
         if (!this.map.getSource(this.species)) {
+
+          console.log(`${this.species} source DOES NOT exist...`)
 
 
           // console.log('plot new layer for ', this.species)
@@ -530,8 +535,8 @@
 
               // if (!Object.keys(this.sessionData).length) {
               // console.log('INITIAL SETTING:', this.sessionData)
-              if (!this.sessionData.hasOwnProperty(season.value)) {
-                // console.log('set ', season)
+              if (!this.sessionData[this.species].hasOwnProperty(season.value)) {
+                console.log('set ', season)
 
                 this.sessionData[this.species][season.value] = {
                   selected: [],
@@ -561,10 +566,13 @@
             })
 
             // console.log(this.seasonSelected)
-            // console.log(this.sessionData[this.species][this.season].selected)
+            // console.log(resetDefaultSelections)
+            console.log(this.sessionData)
+            console.log(this.sessionData[this.species][this.season].selected)
 
             const streetStyle = this.style === 'streets-v11'
             const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.sessionData[this.species][this.season].selected, true, false] : ['get', 'in_range']
+            console.log(selectedHexExp)
             const unselectedOutline = streetStyle ? 'black' : 'white'
             const fillOpacity: any = streetStyle ? 0.3 : ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 0.5, 0.2]
 
@@ -1237,7 +1245,7 @@
         }
       },
       mapRightClick(e: any) {
-        console.log(this.sessionData[this.species][this.season])
+        // console.log(this.sessionData[this.species][this.season])
         // console.log('RIGHT CLICK')
         const event = e.originalEvent
         // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
