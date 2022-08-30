@@ -280,6 +280,8 @@
         this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
       },
       confirmSpeciesChange(confirm) {
+
+        // TODO Set exported to false
         if (confirm) {
           this.exported = false
 
@@ -291,7 +293,7 @@
           // this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
 
 
-          console.log(this.speciesChangeEvent)
+          // console.log(this.speciesChangeEvent)
 
 
           // clear display message if open when species is changed
@@ -303,7 +305,7 @@
 
           // TODO Turn of ALL old species events, also check season changes
           this.map.off('click', [this.speciesChangeEvent.oldVal, 'children'], this.mapClick)
-          this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
+          this.map.off('contextmenu', [this.speciesChangeEvent.oldVal, 'children'], this.mapRightClick)
 
 
 
@@ -497,13 +499,13 @@
           this.popup.remove()
         }
 
-        console.log(this.map.getSource(this.species))
+        // console.log(this.map.getSource(this.species))
 
         // if the species hasn't been mapped yet...
         if (!this.map.getSource(this.species)) {
 
 
-          console.log('plot new layer for ', this.species)
+          // console.log('plot new layer for ', this.species)
 
           // fetch tile data if it hasn't been fetched yet
           if (!this.metadata[this.species]) {
@@ -542,7 +544,7 @@
 
             })
 
-            console.log(this.sessionData)
+            // console.log(this.sessionData)
 
             // console.log(this.sessionData[this.species][this.season].selected)
 
@@ -559,7 +561,7 @@
             })
 
             // console.log(this.seasonSelected)
-            console.log(this.sessionData[this.species][this.season].selected)
+            // console.log(this.sessionData[this.species][this.season].selected)
 
             const streetStyle = this.style === 'streets-v11'
             const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.sessionData[this.species][this.season].selected, true, false] : ['get', 'in_range']
@@ -660,7 +662,7 @@
                 },
               })
 
-              console.log('children replotted')
+              // console.log('children replotted')
 
               // console.log(this.sessionData)
               this.filterOutParentHexes(this.species, this.seasonFilteredBase)
@@ -1235,6 +1237,7 @@
         }
       },
       mapRightClick(e: any) {
+        console.log(this.sessionData[this.species][this.season])
         // console.log('RIGHT CLICK')
         const event = e.originalEvent
         // prevent collapse on select or deselect lasso, which can trigger contextMenu event - event.button === 0 for right click
@@ -1381,7 +1384,7 @@
             }
           }
 
-          console.log(this.sessionData[this.species][this.season])
+          // console.log(this.sessionData[this.species][this.season])
 
           //   // TODO Replace all w h3GetResolution
 
