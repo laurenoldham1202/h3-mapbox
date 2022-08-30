@@ -266,8 +266,10 @@
           this.map.off('click', [this.species, 'children'], this.mapClick)
           this.map.off('contextmenu', [this.species, 'children'], this.mapRightClick)
 
+
+          // FIXME LAYER UPDATE ON STYLE CHANGE DOESNT WORK
           // TODO UPDATE STYLE AND ADD SELECTIONS
-          this.updateLayer(false)
+          this.updateLayer(true)
         })
       },
       season() {
@@ -557,6 +559,7 @@
             })
 
             // console.log(this.seasonSelected)
+            console.log(this.sessionData[this.species][this.season].selected)
 
             const streetStyle = this.style === 'streets-v11'
             const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.sessionData[this.species][this.season].selected, true, false] : ['get', 'in_range']
@@ -615,6 +618,7 @@
             //   console.log(e.features[0].properties)
             // })
 
+            // FIXME SHIFT + RIGHT CLICK ON CHILDREN DOES WEIRD STUFF
 
             if (resetDefaultSelections) {
               // reset selected hexes any time a new species is selected
@@ -656,6 +660,9 @@
                 },
               })
 
+              console.log('children replotted')
+
+              // console.log(this.sessionData)
               this.filterOutParentHexes(this.species, this.seasonFilteredBase)
               this.filterOutParentHexes('children', this.seasonFilteredChildren)
               this.setChildFeatures()
