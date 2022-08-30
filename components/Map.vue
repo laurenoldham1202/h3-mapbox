@@ -283,10 +283,15 @@
         this.map.setFilter(`${this.species}_checklists`, this.seasonFilter)
       },
       confirmSpeciesChange(confirm) {
+        // console.log(confirm)
 
         // TODO Set exported to false
         if (confirm) {
+          // console.log('confirmed!')
           this.exported = false
+          this.confirmSpeciesChange = false
+
+          // this.pastActions = []
 
           // this.download()
           // clear all children, filters, and selected hexes when season is changed
@@ -502,12 +507,12 @@
           this.popup.remove()
         }
 
-        console.log(this.map.getSource(this.species))
+        // console.log(this.map.getSource(this.species))
 
         // if the species hasn't been mapped yet...
         if (!this.map.getSource(this.species)) {
 
-          console.log(`${this.species} source DOES NOT exist...`)
+          // console.log(`${this.species} source DOES NOT exist...`)
 
 
           // console.log('plot new layer for ', this.species)
@@ -536,7 +541,7 @@
               // if (!Object.keys(this.sessionData).length) {
               // console.log('INITIAL SETTING:', this.sessionData)
               if (!this.sessionData[this.species].hasOwnProperty(season.value)) {
-                console.log('set ', season)
+                // console.log('set ', season)
 
                 this.sessionData[this.species][season.value] = {
                   selected: [],
@@ -567,12 +572,12 @@
 
             // console.log(this.seasonSelected)
             // console.log(resetDefaultSelections)
-            console.log(this.sessionData)
-            console.log(this.sessionData[this.species][this.season].selected)
+            // console.log(this.sessionData)
+            // console.log(this.sessionData[this.species][this.season].selected)
 
             const streetStyle = this.style === 'streets-v11'
             const selectedHexExp = !resetDefaultSelections ? ['match', ['get', 'h3_address'], this.sessionData[this.species][this.season].selected, true, false] : ['get', 'in_range']
-            console.log(selectedHexExp)
+            // console.log(selectedHexExp)
             const unselectedOutline = streetStyle ? 'black' : 'white'
             const fillOpacity: any = streetStyle ? 0.3 : ['case', ['boolean', ['feature-state', 'selected'], selectedHexExp], 0.5, 0.2]
 
@@ -719,7 +724,7 @@
         } else {
 
 
-          console.log(`plot ${this.species} for ${this.season} season`)
+          // console.log(`plot ${this.species} for ${this.season} season`)
 
           this.resetLayer(this.species, true)
 
@@ -910,22 +915,23 @@
           this.species = this.speciesChangeEvent.newVal
           // console.log(this.speciesChangeEvent)
         } else {
-          console.log('update species')
           this.speciesChangeEvent = {oldVal: input.srcElement._value, newVal: input.target.value}
+          console.log(`update from ${this.speciesChangeEvent.oldVal} to ${this.speciesChangeEvent.newVal}`)
 
           this.speciesChange()
         }
 
       },
       speciesChange() {
+        // console.log('speciesChange called....')
         this.confirmSpeciesChange = true
         // this.season = this.speciesChangeEvent.newVal
         this.species = this.speciesChangeEvent.newVal
         this.displayMsg = false
 
-        setTimeout(() => {
-          this.confirmSpeciesChange = false
-        }, 2000)
+        // setTimeout(() => {
+        //   this.confirmSpeciesChange = false
+        // }, 2000)
       },
       uniqueValues(array: any[]): any[] {
         return Array.from(new Set(array))
@@ -1018,7 +1024,7 @@
         return [swPixel, nePixel]
       },
       copyToClipboard(): void {
-        navigator.clipboard.writeText(this.seasonSelectedOutput)
+        navigator.clipboard.writeText(this.sessionData)
         this.copied = true
         setTimeout(() => {
           this.copied = false
