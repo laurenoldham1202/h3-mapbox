@@ -219,7 +219,8 @@
       pastActions: [] as any[],
       metadata: {} as any,
       popup: undefined as any,
-      style: 'streets-v11',
+      // style: 'streets-v11',
+      style: 'satellite-streets-v11',
       count: 0,
       savedData: {} as any,
       speciesData: {} as any,
@@ -618,7 +619,8 @@
               // TODO NEED TO ADJUST STYLES FOR SATELLITE
               paint: {
                 'circle-opacity': ['match', ['get', 'count'], 0, 0.3, 1, 0.7, 0.7],
-                'circle-color': ['match', ['get', 'count'], 0, '#9c4363', 1, '#4405ff', '#4405ff'],
+                // 'circle-color': ['match', ['get', 'count'], 0, '#9c4363', 1, '#4405ff', '#4405ff'],
+                'circle-color': ['match', ['get', 'count'], 0, '#fc6fe9', 1, 'deepskyblue', 'deepskyblue'],
                 // 'circle-radius': ['match', ['get', 'count'], 0, 2, 1, 4, 8],
                 'circle-radius': {property: 'count', stops: [[0, 2], [1, 3], [5, 6], [10, 12], [100, 16]]},
                 'circle-stroke-width': 1,
