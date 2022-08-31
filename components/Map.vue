@@ -97,6 +97,12 @@
       <hr>
       # selected hexes: <strong v-if="sessionData[species] && seasonSelected">{{seasonSelected.length}}</strong>
       <br><br>
+
+
+      <input type="checkbox" id="pos_checklist" v-model="posChecklist">
+      <label for="pos_checklist"> Checklists</label><br>
+
+
 <!--      <button @click="undo" :disabled="!lastEvent.event">UNDO LAST</button>-->
       <button @click="undoTest" :disabled="actionNumber <= 0">UNDO LAST ACTION</button>
       <button @click="download">save species data</button>
@@ -226,6 +232,7 @@
       speciesData: {} as any,
       exported: false,
       sessionData: {} as any,
+      posChecklist: true,
     }),
     computed: {
       selectedOutput(): string {
@@ -251,6 +258,10 @@
       },
     },
     watch: {
+      posChecklist(x) {
+        console.log(x)
+        this.map.setLayoutProperty(`${this.species}_checklists`, 'visibility', this.posChecklist ? 'visible' : 'none')
+      },
       selected() {
 
       },
@@ -612,7 +623,7 @@
               // filter: ['all', this.seasonFilter, ['>', ['get', 'detected'], 0]],
               filter: this.seasonFilter,
               layout: {
-                'visibility': 'visible',
+                'visibility': this.posChecklist ? 'visible' : 'none',
                 // plot detected (1) values on top of undetected (0)
                 'circle-sort-key': ['+', ['get', 'count']]
               },
@@ -620,7 +631,7 @@
               paint: {
                 'circle-opacity': ['match', ['get', 'count'], 0, 0.3, 1, 0.7, 0.7],
                 // 'circle-color': ['match', ['get', 'count'], 0, '#9c4363', 1, '#4405ff', '#4405ff'],
-                'circle-color': ['match', ['get', 'count'], 0, '#fc6fe9', 1, 'deepskyblue', 'deepskyblue'],
+                'circle-color': ['match', ['get', 'count'], 0, '#f7b5db', 1, 'deepskyblue', 'deepskyblue'],
                 // 'circle-radius': ['match', ['get', 'count'], 0, 2, 1, 4, 8],
                 'circle-radius': {property: 'count', stops: [[0, 2], [1, 3], [5, 6], [10, 12], [100, 16]]},
                 'circle-stroke-width': 1,
