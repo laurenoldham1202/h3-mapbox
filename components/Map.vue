@@ -417,6 +417,7 @@
         doubleClickZoom: false,
         boxZoom: false,
         dragRotate: false,
+        maxZoom: 11,
         // projection: 'globe',
       })
 
@@ -614,6 +615,9 @@
             })
 
 
+            const zeroColor = streetStyle ? '#9c4363' : '#f7b5db'
+            const posColor = streetStyle ? '#4405ff' : '#0061fc'
+
             this.map.addLayer({
               id: `${this.species}_checklists`,
               source: this.species,
@@ -629,9 +633,11 @@
               },
               // TODO NEED TO ADJUST STYLES FOR SATELLITE
               paint: {
-                'circle-opacity': ['match', ['get', 'count'], 0, 0.3, 1, 0.7, 0.7],
+                'circle-opacity': ['match', ['get', 'count'], 0, streetStyle ? 0.3 : 0.5, 1, 0.7, 0.7],
                 // 'circle-color': ['match', ['get', 'count'], 0, '#9c4363', 1, '#4405ff', '#4405ff'],
-                'circle-color': ['match', ['get', 'count'], 0, '#f7b5db', 1, 'deepskyblue', 'deepskyblue'],
+                //FIXME use diff expression for this condition
+                'circle-color': ['match', ['get', 'count'], 0, zeroColor, 1, posColor, posColor],
+                // 'circle-color': ['match', ['get', 'count'], 0, '#f7b5db', 1, '#0061fc', '#0061fc'],
                 // 'circle-radius': ['match', ['get', 'count'], 0, 2, 1, 4, 8],
                 'circle-radius': {property: 'count', stops: [[0, 2], [1, 3], [5, 6], [10, 12], [100, 16]]},
                 'circle-stroke-width': 1,
@@ -676,6 +682,7 @@
                 promoteId: 'h3_address',
               })
 
+              // FIXME check children style if satellite base layer is default
               this.map.addLayer({
                 id: 'children',
                 source: 'children',
